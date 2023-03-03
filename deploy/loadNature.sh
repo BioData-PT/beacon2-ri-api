@@ -2,7 +2,7 @@ natureData=/home/ubuntu/beacon/natureDataFiles
 metadataDir=$natureData/metadata
 genomicDataDir=$natureData/genomicData
 
-DB_PASSWD="example"
+DB_PASSWD="Wk3vjWScUaukdSJ62LJFnpgHK8AaBdJ2um8s2528me3"
 
 mongoimport --jsonArray --uri "mongodb://root:$DB_PASSWD@127.0.0.1:27017/beacon?authSource=admin" --file $metadataDir/analyses*.json --collection analyses
 mongoimport --jsonArray --uri "mongodb://root:$DB_PASSWD@127.0.0.1:27017/beacon?authSource=admin" --file $metadataDir/biosamples*.json --collection biosamples
