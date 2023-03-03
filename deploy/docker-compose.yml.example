@@ -24,11 +24,13 @@ services:
 
   training-ui:
     #image: beacon2ri/training_ui:v0.1
-    #image: training-ui-pt
     build: ../training-ui-files
     hostname: beacon_training_ui    
     ports:
       - 8080:8080
+    environment:
+      USERNAME:root
+      PASSWORD:example
     networks:
       - beacon-priv
 
@@ -76,6 +78,7 @@ services:
       # - ../ui/static:/beacon/ui/static
       # - ../ui/templates:/beacon/ui/templates
       - ./conf.py:/beacon/beacon/conf.py
+      - ./secret.py:/beacon/beacon/secret.py
       - ./logger.yml:/beacon/beacon/logger.yml
       - ./ontologies:/beacon/ontologies
     ports:
