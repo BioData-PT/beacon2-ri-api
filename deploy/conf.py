@@ -76,11 +76,13 @@ beacon_handovers = [
 #
 
 try:
-    from secret import DB_PASSWD
+    from beacon.secret import DB_PASSWD
     database_password = DB_PASSWD
-except Exception:
+    print("Imported DB_PASSWD successfully!")
+except Exception as e:
     database_password = 'example'
     print("WARNING: YOU SHOULD CREATE A SECRET.PY FILE LIKE THE EXAMPLE TO USE A CUSTOM PASSWORD, CURRENTLY USING THE DEFAULT (INSECURE)!")
+    print("Exception text when trying to import: ", repr(e))
 
 database_host = 'mongo'
 database_port = 27017
