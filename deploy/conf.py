@@ -52,7 +52,7 @@ service_url = 'https://beacon.ega-archive.org/api/services'
 entry_point = False
 is_open = True
 documentation_url = 'https://github.com/EGA-archive/beacon-2.x/'  # Documentation of the service
-environment = 'test'  # Environment (production, development or testing/staging deployments)
+environment = 'development'  # Environment (production, development or testing/staging deployments)
 
 # GA4GH
 ga4gh_service_type_group = 'org.ga4gh'
@@ -74,10 +74,17 @@ beacon_handovers = [
 #
 # Database connection
 #
+try:
+    from secret import DB_PASSWD
+    database_password = DB_PASSWD
+except Exception:
+    database_password = 'example'
+    print("WARNING: YOU SHOULD CREATE A SECRET.PY FILE LIKE THE EXAMPLE TO USE A CUSTOM PASSWORD, CURRENTLY USING THE DEFAULT (INSECURE)!")
+
 database_host = 'mongo'
 database_port = 27017
 database_user = 'root'
-database_password = 'example'
+#database_password = 'example'
 database_name = 'beacon'
 database_auth_source = 'admin'
 # database_schema = 'public' # comma-separated list of schemas
