@@ -74,10 +74,18 @@ beacon_handovers = [
 #
 # Database connection
 #
+
+try:
+    from secret import DB_PASSWD
+    database_password = DB_PASSWD
+except Exception:
+    database_password = 'example'
+    print("WARNING: YOU SHOULD CREATE A SECRET.PY FILE LIKE THE EXAMPLE TO USE A CUSTOM PASSWORD, CURRENTLY USING THE DEFAULT (INSECURE)!")
+
 database_host = 'mongo'
 database_port = 27017
 database_user = 'root'
-database_password = 'example'
+
 database_name = 'beacon'
 database_auth_source = 'admin'
 # database_schema = 'public' # comma-separated list of schemas
