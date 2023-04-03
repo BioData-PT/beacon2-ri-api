@@ -1,5 +1,5 @@
 natureData=/home/ubuntu/beacon/natureDataFiles
-metadataDir=$natureData/metadata
+metadataDir=$natureData/mappingMar27metadata/
 genomicDataDir=$natureData/genomicData
 
 DB_PASSWD="Wk3vjWScUaukdSJ62LJFnpgHK8AaBdJ2um8s2528me3"
