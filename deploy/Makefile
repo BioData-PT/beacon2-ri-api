@@ -15,6 +15,7 @@ up-db:
 
 up: up-db
 	docker-compose up -d beacon
+	docker-compose up -d training-ui
 
 rebuild:
 	docker-compose rm -sf beacon && \
