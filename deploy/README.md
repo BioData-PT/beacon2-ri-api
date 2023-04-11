@@ -6,7 +6,8 @@ Files that you need to change (look at the \*.example files!):
 - secret.py
 - docker-compose.yml
 
-
+Additional configurations:
+- When the containers for the API and UI are up and running you may want to make them available for external use over HTTPS, for that install nginx and use the configuration on ../nginx_host.conf file
 
 ## Prerequisites
 
