@@ -75,7 +75,7 @@
       ]
     },
     "variantInternalId": "chr21_9411318_C_T",
-    "position": {
+    "_position": {
       "start": [
         9411317
       ],
@@ -124,7 +124,7 @@
         null
       ]
     },
-    "position": {
+    "_position": {
       "end": [
         9411327
       ],
@@ -311,7 +311,7 @@
         null
       ]
     },
-    "position": {
+    "_position": {
       "end": [
         9411410
       ],
@@ -398,7 +398,7 @@
         "MODIFIER"
       ]
     },
-    "position": {
+    "_position": {
       "assemblyId": "hs37",
       "refseqId": "21",
       "end": [
@@ -449,7 +449,7 @@
   },
   {
     "variantInternalId": "chr21_9411602_T_C",
-    "position": {
+    "_position": {
       "assemblyId": "hs37",
       "end": [
         9411602
@@ -647,7 +647,7 @@
         "CHR_START-MIR3648-1"
       ]
     },
-    "position": {
+    "_position": {
       "refseqId": "21",
       "end": [
         9411609
@@ -673,7 +673,7 @@
   },
   {
     "variantInternalId": "chr21_9411645_A_G",
-    "position": {
+    "_position": {
       "assemblyId": "hs37",
       "start": [
         9411644
@@ -846,7 +846,7 @@
         "MODIFIER"
       ]
     },
-    "position": {
+    "_position": {
       "assemblyId": "hs37",
       "end": [
         9411785
@@ -921,7 +921,7 @@
         "CHR_START-MIR3648-1"
       ]
     },
-    "position": {
+    "_position": {
       "refseqId": "21",
       "end": [
         9412269
@@ -1071,7 +1071,7 @@
       ]
     },
     "variantInternalId": "chr21_9412358_TA_T",
-    "position": {
+    "_position": {
       "assemblyId": "hs37",
       "start": [
         9412357
@@ -1133,7 +1133,7 @@
         null
       ]
     },
-    "position": {
+    "_position": {
       "assemblyId": "hs37",
       "start": [
         9412357
@@ -1283,7 +1283,7 @@
       ]
     },
     "variantInternalId": "chr21_9412441_TATA_T",
-    "position": {
+    "_position": {
       "assemblyId": "hs37",
       "start": [
         9412440
@@ -1333,7 +1333,7 @@
   },
   {
     "variantInternalId": "chr21_9412503_C_A",
-    "position": {
+    "_position": {
       "end": [
         9412503
       ],
