@@ -3,10 +3,10 @@
 #
 # Beacon general info
 #
-beacon_id = 'org.ega-archive.ga4gh-approval-beacon-test'  # ID of the Beacon
-beacon_name = 'GA4GH Approval Beacon Test'  # Name of the Beacon service
+beacon_id = 'beacon-biodata-portugal'  # ID of the Beacon
+beacon_name = 'Beaconv2 at Biodata.pt in Portugal'  # Name of the Beacon service
 api_version = 'v2.0.0'  # Version of the Beacon implementation
-uri = 'https://beacon-giab-test.ega-archive.org'
+uri = 'https://beacon.biodata.pt/api/'  # URI of the Beacon service
 
 #
 # Beacon granularity
@@ -17,18 +17,15 @@ max_beacon_granularity = "record"
 #
 #  Organization info
 #
-org_id = 'EGA'  # Id of the organization
-org_name = 'European Genome-Phenome Archive (EGA)'  # Full name
-org_description = ('The European Genome-phenome Archive (EGA) '
-                   'is a service for permanent archiving and sharing '
-                   'of all types of personally identifiable genetic '
-                   'and phenotypic data resulting from biomedical research projects.')
-org_adress = ('C/ Dr. Aiguader, 88'
-              'PRBB Building'
-              '08003 Barcelona, Spain')
-org_welcome_url = 'https://ega-archive.org/'
-org_contact_url = 'mailto:beacon.ega@crg.eu'
-org_logo_url = 'https://ega-archive.org/images/logo.png'
+org_id = 'BioData.pt'  # Id of the organization
+org_name = 'BioData.pt'  # Full name
+org_description = ('BioData.pt is the Portuguese distributed e-infrastructure for biological data and the Portuguese node of ELIXIR. It supports the national scientific system through best practices in data management and state of the art data analysis.')
+org_adress = ('Associação BIP4DAB'
+              'Rua da Quinta Grande, 6.'
+              '2780-156 Oeiras, Portugal')
+org_welcome_url = 'https://biodata.pt'
+org_contact_url = 'mailto:info@biodata.pt'
+org_logo_url = 'https://biodata.pt/sites/default/files/BioData%20Logo_colour%20corrected_transp%20bg_2.png'
 org_info = ''
 
 #
@@ -38,8 +35,8 @@ description = (r"This <a href='https://beacon-project.io/'>Beacon</a> "
                r"is based on the GA4GH Beacon "
                r"<a href='https://github.com/ga4gh-beacon/specification-v2/blob/master/beacon.yaml'>v2.0</a>")
 version = 'v2.0'
-welcome_url = 'https://beacon.ega-archive.org/'
-alternative_url = 'https://beacon.ega-archive.org/api'
+welcome_url = 'https://beacon.biodata.pt/'
+alternative_url = 'https://beacon.biodata.pt/api/'
 create_datetime = '2021-11-29T12:00:00.000000'
 update_datetime = ''
 # update_datetime will be created when initializing the beacon, using the ISO 8601 format
@@ -48,10 +45,10 @@ update_datetime = ''
 # Service
 #
 service_type = 'org.ga4gh:beacon:1.0.0'  # service type
-service_url = 'https://beacon.ega-archive.org/api/services'
+service_url = 'https://beacon.biodata.pt/api/service-info'
 entry_point = False
 is_open = True
-documentation_url = 'https://github.com/EGA-archive/beacon-2.x/'  # Documentation of the service
+documentation_url = 'https://github.com/BioData-PT/beacon2-ri-api'  # Documentation of the service
 environment = 'development'  # Environment (production, development or testing/staging deployments)
 
 # GA4GH
