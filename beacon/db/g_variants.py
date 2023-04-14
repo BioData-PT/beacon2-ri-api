@@ -131,16 +131,24 @@ def get_biosamples_of_variant(entry_id: Optional[str], qparams: RequestParams):
     query = {"$and": [{"variantInternalId": entry_id}]}
     query = apply_request_parameters(query, qparams)
     query = apply_filters(query, qparams.query.filters)
-    biosample_ids = client.beacon.genomicVariations \
-        .find_one(query, {"caseLevelData.biosamplesId": 1, "_id": 0})
-    biosample_ids = [ r for r in biosample_ids ] if biosample_ids else []
-
+    
+    variantDoc = client.beacon.genomicVariations \
+        .find_one(query)
+    
+    # extract biosample ids from g_variant document
+    biosample_ids = []
+    if "caseLevelData" in variantDoc:
+        for case in variantDoc["caseLevelData"]:
+            if "biosampleId" in case and case["biosampleId"]:
+                biosample_ids.append(case["biosampleId"])
+    
+    # build query to find all matches for ids in biosample collection
     query = apply_request_parameters({}, qparams)
-    query = query_ids(query, biosample_ids)
+    query["id"] = {"$in": biosample_ids}
     query = apply_filters(query, qparams.query.filters)
-
+    
     schema = DefaultSchemas.BIOSAMPLES
-    count = get_count(client.beacon.biosamples, query)
+    count = len(biosample_ids)
     docs = get_documents(
         client.beacon.biosamples,
         query,
