@@ -1,6 +1,8 @@
 natureData=/home/ubuntu/beacon/natureDataFiles
 metadataDir=$natureData/mappingMar27metadata/
 genomicDataDir=$natureData/genomicData
+#metadataDir=data/mydata/cineca
+#genomicDataDir=data/mydata/cineca
 
 DB_PASSWD="example"
 source secret.py # import db passwd
