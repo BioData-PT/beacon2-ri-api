@@ -10,11 +10,14 @@ from bson import json_util
 
 LOG = logging.getLogger(__name__)
 
+POSITION_FIELD = "_position"
+#POSITION_FIELD = "position" # some people use this
+
 VARIANTS_PROPERTY_MAP = {
-    "assemblyId": "position.assemblyId",
-    "referenceName": "position.refseqId",
-    "start": "position.start",
-    "end": "position.end",
+    "assemblyId": f"{POSITION_FIELD}.assemblyId",
+    "referenceName": f"{POSITION_FIELD}.refseqId",
+    "start": f"{POSITION_FIELD}.start",
+    "end": f"{POSITION_FIELD}.end",
     "referenceBases": "referenceBases",
     "alternateBases": "alternateBases",
     "variantType": "variantType",
