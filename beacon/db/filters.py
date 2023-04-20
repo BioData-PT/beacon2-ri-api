@@ -72,9 +72,11 @@ def apply_ontology_filter(query: dict, filter: OntologyFilter) -> dict:
 def format_value(value: Union[str, List[int]]) -> Union[List[int], str, int, float]:
     if isinstance(value, list):
         return value
+    
     elif value.isnumeric():
         if float(value).is_integer():
-            return int(value)
+            #return int(value)
+            return value # chromossome id is int in string format
         else:
             return float(value)
     else:
