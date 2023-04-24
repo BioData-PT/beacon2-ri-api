@@ -29,8 +29,8 @@ services:
     ports:
       - 8080:8080
     environment:
-      USERNAME:root
-      PASSWORD:example
+      USERNAME: root
+      PASSWORD: example
     networks:
       - beacon-priv
 
