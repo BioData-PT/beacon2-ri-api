@@ -1,4 +1,4 @@
-natureData=realpath ../../natureDataFiles
+natureData=../../natureDataFiles
 metadataDir=$natureData/april2023
 genomicDataDir=$natureData/april2023
 #metadataDir=data/mydata/cineca
