@@ -8,7 +8,12 @@ Files that you need to change (look at the \*.example files!):
 - beacon2-ri-api/training-ui-files/secret.py (use the script in the same directory to generate a key)
 
 Additional configurations:
-- When the containers for the API and UI are up and running you may want to make them available for external use over HTTPS, for that install nginx and use the configuration that better suits you on nginx_confs directory. Use the simple.conf file if you only intend to have a Beaconv2 running, the other is used if you also configure a test environment
+
+- Nginx:
+    - When the containers for the API and UI are up and running you may want to make them available for external use over HTTPS, for that install nginx and use the configuration that better suits you on nginx_confs directory. 
+    - Use the simple.conf file if you only intend to have a Beaconv2 running, beacon_w_test is used if you also configure a test environment running on another instance.
+    - You'll need to change the server name and the paths to the certificates.
+    - Careful with the favicon.ico path (it is in beacon2-ri-api/deploy by default). Nginx user (www-data) needs to have read permissions on it and execute permissions on ALL the directories in the path.
 
 ## Prerequisites
 
