@@ -13,7 +13,7 @@ Additional configurations:
     - When the containers for the API and UI are up and running you may want to make them available for external use over HTTPS, for that install nginx and use the configuration that better suits you on nginx_confs directory. 
     - Use the simple.conf file if you only intend to have a Beaconv2 running, beacon_w_test is used if you also configure a test environment running on another instance, in that case the other instance needs to use the beacon_test_instance config.
     - You'll need to change the server name and the paths to the certificates.
-    - Careful with the favicon.ico path (it is in beacon2-ri-api/deploy by default). Nginx user (www-data) needs to have read permissions on it and execute permissions on ALL the directories in the path.
+    - Careful with the favicon.ico path (it is in beacon2-ri-api/deploy by default). Nginx user (www-data) needs to have read permissions on it and execute permissions on **ALL** the directories in the path.
 
 ## Prerequisites
 
