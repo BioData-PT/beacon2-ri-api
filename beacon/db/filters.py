@@ -253,7 +253,8 @@ def format_value(value: Union[str, List[int]]) -> Union[List[int], str, int, flo
     
     elif value.isnumeric():
         if float(value).is_integer():
-            return int(value)
+            #return int(value)
+            return value # chromossome id is int in string format
         else:
             return float(value)
     

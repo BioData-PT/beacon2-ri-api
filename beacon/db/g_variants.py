@@ -12,6 +12,9 @@ from aiohttp import web
 
 LOG = logging.getLogger(__name__)
 
+POSITION_FIELD = "_position"
+#POSITION_FIELD = "position" # some people use this
+
 VARIANTS_PROPERTY_MAP = {
     "assemblyId": "_position.assemblyId",
     "Chromosome": "_position.refseqId",
@@ -207,16 +210,26 @@ def get_biosamples_of_variant(entry_id: Optional[str], qparams: RequestParams):
     collection = 'g_variants'
     query = {"$and": [{"variantInternalId": entry_id}]}
     query = apply_request_parameters(query, qparams)
-    query = apply_filters(query, qparams.query.filters, collection)
-    count = get_count(client.beacon.genomicVariations, query)
-    biosample_ids = client.beacon.genomicVariations \
-        .find_one(query, {"caseLevelData.biosampleId": 1, "_id": 0})
+    query = apply_filters(query, qparams.query.filters)
     
-    biosample_ids=get_cross_query_variants(biosample_ids,'biosampleId','id')
-    query = apply_filters(biosample_ids, qparams.query.filters, collection)
-
-    query = include_resultset_responses(query, qparams)
+    variantDoc = client.beacon.genomicVariations \
+        .find_one(query)
+    
+    # extract biosample ids from g_variant document
+    biosample_ids = []
+    if "caseLevelData" in variantDoc:
+        for case in variantDoc["caseLevelData"]:
+            if "biosampleId" in case and case["biosampleId"]:
+                biosample_ids.append(case["biosampleId"])
+    
+    # build query to find all matches for ids in biosample collection
+    query = apply_request_parameters({}, qparams)
+    query["id"] = {"$in": biosample_ids}
+    query = apply_filters(query, qparams.query.filters)
+    
     schema = DefaultSchemas.BIOSAMPLES
+    
+    # handle MISS case
     include = qparams.query.include_resultset_responses
     if include == 'MISS':
         pre_docs = get_documents(
@@ -242,12 +255,15 @@ def get_biosamples_of_variant(entry_id: Optional[str], qparams: RequestParams):
         )
         count = get_count(client.beacon.biosamples, negative_query)
     else:
+        # normal case (HIT)
+        count = len(biosample_ids)
         docs = get_documents(
             client.beacon.biosamples,
             query,
             qparams.query.pagination.skip,
             qparams.query.pagination.limit
         )
+
     return schema, count, docs
 
 
