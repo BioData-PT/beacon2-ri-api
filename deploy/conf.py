@@ -4,7 +4,7 @@
 # Beacon general info
 #
 import os
-
+import logging
 
 beacon_id = 'pt.biodata.beacon'  # ID of the Beacon
 beacon_name = 'Beaconv2 at Biodata.pt in Portugal'  # Name of the Beacon service
@@ -81,7 +81,9 @@ database_password = os.getenv('DB_PASSWD')
 if database_password is None:
     database_password = 'example'
     print("WARNING: YOU SHOULD DEFINE A 'DB_PASSWD' ENV VARIABLE IN 'deploy/.env' LIKE IN THE EXAMPLE TO USE A CUSTOM PASSWORD, CURRENTLY USING THE DEFAULT PASSWORD (INSECURE)!")
+    logging.warning("warning: default passwd for DB in use")
 else:
+    logging.info("Imported db passwd successfully!")
     print("Imported DB_PASSWD successfully!")
 
 database_host = 'mongo'

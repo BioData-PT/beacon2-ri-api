@@ -23,14 +23,14 @@ services:
   ###########################################
 
   training-ui:
-    #image: beacon2ri/training_ui:v0.1
+    image: pt-beacon/training_ui:v0.1
     build: ../training-ui-files
     hostname: beacon_training_ui    
     ports:
       - 8080:8080
     environment:
       USERNAME: root
-      PASSWORD: example
+      PASSWORD: ${DB_PASSWD}
     networks:
       - beacon-priv
 
@@ -45,7 +45,7 @@ services:
       - 27017:27017
     environment:
       MONGO_INITDB_ROOT_USERNAME: root
-      MONGO_INITDB_ROOT_PASSWORD: example
+      MONGO_INITDB_ROOT_PASSWORD: ${DB_PASSWD}
       MONGO_INITDB_DATABASE: beacon
     volumes:
       - ./mongo-init/:/docker-entrypoint-initdb.d/:ro
@@ -59,8 +59,8 @@ services:
       - 8081:8081
     environment:
       ME_CONFIG_MONGODB_ADMINUSERNAME: root
-      ME_CONFIG_MONGODB_ADMINPASSWORD: example
-      ME_CONFIG_MONGODB_URL: mongodb://root:example@mongo:27017/
+      ME_CONFIG_MONGODB_ADMINPASSWORD: ${DB_PASSWD}
+      ME_CONFIG_MONGODB_URL: mongodb://root:${DB_PASSWD}@mongo:27017/
     networks:
       - beacon-priv
 
@@ -70,7 +70,7 @@ services:
 
   beacon:
     build: ..
-    image: egarchive/beacon:2.0
+    image: pt/beacon:2.0
     hostname: beacon
     container_name: beacon
     volumes:

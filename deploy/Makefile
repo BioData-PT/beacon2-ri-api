@@ -1,13 +1,17 @@
+SHELL := /bin/bash
+
 all: down up load reindex rebuild
 
 load:
-	mongoimport --jsonArray --uri "mongodb://root:example@127.0.0.1:27017/beacon?authSource=admin" --file data/analyses*.json --collection analyses
-	mongoimport --jsonArray --uri "mongodb://root:example@127.0.0.1:27017/beacon?authSource=admin" --file data/biosamples*.json --collection biosamples
-	mongoimport --jsonArray --uri "mongodb://root:example@127.0.0.1:27017/beacon?authSource=admin" --file data/cohorts*.json --collection cohorts
-	mongoimport --jsonArray --uri "mongodb://root:example@127.0.0.1:27017/beacon?authSource=admin" --file data/datasets*.json --collection datasets
-	mongoimport --jsonArray --uri "mongodb://root:example@127.0.0.1:27017/beacon?authSource=admin" --file data/individuals*.json --collection individuals
-	mongoimport --jsonArray --uri "mongodb://root:example@127.0.0.1:27017/beacon?authSource=admin" --file data/runs*.json --collection runs
-	mongoimport --jsonArray --uri "mongodb://root:example@127.0.0.1:27017/beacon?authSource=admin" --file data/genomicVariations*.json --collection genomicVariations
+	DB_PASSWD="example"
+	source .env
+	mongoimport --jsonArray --uri "mongodb://root:${DB_PASSWD}@127.0.0.1:27017/beacon?authSource=admin" --file data/analyses*.json --collection analyses
+	mongoimport --jsonArray --uri "mongodb://root:${DB_PASSWD}@127.0.0.1:27017/beacon?authSource=admin" --file data/biosamples*.json --collection biosamples
+	mongoimport --jsonArray --uri "mongodb://root:${DB_PASSWD}@127.0.0.1:27017/beacon?authSource=admin" --file data/cohorts*.json --collection cohorts
+	mongoimport --jsonArray --uri "mongodb://root:${DB_PASSWD}@127.0.0.1:27017/beacon?authSource=admin" --file data/datasets*.json --collection datasets
+	mongoimport --jsonArray --uri "mongodb://root:${DB_PASSWD}@127.0.0.1:27017/beacon?authSource=admin" --file data/individuals*.json --collection individuals
+	mongoimport --jsonArray --uri "mongodb://root:${DB_PASSWD}@127.0.0.1:27017/beacon?authSource=admin" --file data/runs*.json --collection runs
+	mongoimport --jsonArray --uri "mongodb://root:${DB_PASSWD}@127.0.0.1:27017/beacon?authSource=admin" --file data/genomicVariations*.json --collection genomicVariations
 
 up-db:
 	docker-compose up -d db && \
