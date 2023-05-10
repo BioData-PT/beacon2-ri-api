@@ -81,6 +81,7 @@ services:
       - ./secret.py:/beacon/beacon/secret.py
       - ./logger.yml:/beacon/beacon/logger.yml
       - ./ontologies:/beacon/ontologies
+      - ./.env:/beacon/.env
     environment:
       DB_PASSWD: ${DB_PASSWD}
     ports:

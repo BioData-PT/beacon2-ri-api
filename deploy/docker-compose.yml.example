@@ -74,13 +74,16 @@ services:
     hostname: beacon
     container_name: beacon
     volumes:
-      # - ../beacon:/beacon/beacon  # inject the code, so we see the modifications "live"
+      - ../beacon:/beacon/beacon  # inject the code, so we see the modifications "live"
       # - ../ui/static:/beacon/ui/static
       # - ../ui/templates:/beacon/ui/templates
       - ./conf.py:/beacon/beacon/conf.py
       - ./secret.py:/beacon/beacon/secret.py
       - ./logger.yml:/beacon/beacon/logger.yml
       - ./ontologies:/beacon/ontologies
+      - ./.env:/beacon/.env
+    environment:
+      DB_PASSWD: ${DB_PASSWD}
     ports:
       - "5050:5050"
     networks:
