@@ -1,4 +1,5 @@
 #docker-compose.yml
-secret.py
+
+.env
 
 data/mydata
