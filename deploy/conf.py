@@ -3,6 +3,9 @@
 #
 # Beacon general info
 #
+import os
+import logging
+
 beacon_id = 'pt.biodata.beacon'  # ID of the Beacon
 beacon_name = 'Beaconv2 at Biodata.pt in Portugal'  # Name of the Beacon service
 api_version = 'v2.0.0'  # Version of the Beacon implementation
@@ -25,7 +28,7 @@ org_adress = ('Associação BIP4DAB'
               '2780-156 Oeiras, Portugal')
 org_welcome_url = 'https://biodata.pt'
 org_contact_url = 'mailto:info@biodata.pt'
-org_logo_url = 'https://biodata.pt/sites/default/files/BioData%20Logo_colour%20corrected_transp%20bg_2.png'
+org_logo_url = r'https://biodata.pt/sites/default/files/BioData%20Logo_colour%20corrected_transp%20bg_2.png'
 org_info = ''
 
 #
@@ -72,14 +75,16 @@ beacon_handovers = [
 # Database connection
 #
 
-try:
-    from beacon.secret import DB_PASSWD
-    database_password = DB_PASSWD
-    print("Imported DB_PASSWD successfully!")
-except Exception as e:
+
+database_password = os.getenv('DB_PASSWD')
+
+if database_password is None:
     database_password = 'example'
-    print("WARNING: YOU SHOULD CREATE A SECRET.PY FILE LIKE THE EXAMPLE TO USE A CUSTOM PASSWORD, CURRENTLY USING THE DEFAULT (INSECURE)!")
-    print("Exception text when trying to import: ", repr(e))
+    print("WARNING: YOU SHOULD DEFINE A 'DB_PASSWD' ENV VARIABLE IN 'deploy/.env' LIKE IN THE EXAMPLE TO USE A CUSTOM PASSWORD, CURRENTLY USING THE DEFAULT PASSWORD (INSECURE)!")
+    logging.warning("warning: default passwd for DB in use")
+else:
+    logging.info("Imported db passwd successfully!")
+    print("Imported DB_PASSWD successfully!")
 
 database_host = 'mongo'
 database_port = 27017

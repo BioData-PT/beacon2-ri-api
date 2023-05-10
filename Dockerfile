@@ -1,6 +1,7 @@
 ##########################
 ## Build env
 ##########################
+
 FROM python:3.10-buster AS BUILD
 
 ENV DEBIAN_FRONTEND noninteractive
@@ -15,6 +16,7 @@ RUN apt-get install -y --no-install-recommends \
 RUN pip install --upgrade pip
 COPY requirements.txt /tmp/requirements.txt
 RUN pip install -r /tmp/requirements.txt
+
 
 ##########################
 ## Final image
@@ -37,7 +39,7 @@ RUN apt-get update && \
     rm -rf /var/lib/apt/lists/* /etc/apt/sources.list.d/nginx.list && \
     apt-get purge -y --auto-remove
 
-COPY deploy/nginx.conf        /beacon/nginx.conf
+#COPY deploy/nginx.conf        /beacon/nginx.conf
 COPY deploy/supervisord.conf  /beacon/supervisord.conf
 COPY deploy/entrypoint.sh     /usr/local/bin/entrypoint.sh
 COPY beacon                   /beacon/beacon
