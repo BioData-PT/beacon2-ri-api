@@ -155,18 +155,21 @@ def get_ontology_field_name(ontology_id:str, term_id:str, collection:str):
 
 
         if '.' in field:
-            final_field = ''
-            field_split = field.split('.')
-            del field_split[-1]
-            for item in field_split:
-                if final_field == '':
-                    final_field = item
-                else:
-                    final_field = final_field + '.' + item
-            final_dict={}
-            final_dict['field']=final_field
-            final_dict['label']=label
-            return final_dict
+            try:
+                final_field = ''
+                field_split = field.split('.')
+                del field_split[-1]
+                for item in field_split:
+                    if final_field == '':
+                        final_field = item
+                    else:
+                        final_field = final_field + '.' + item
+                final_dict={}
+                final_dict['field']=final_field
+                final_dict['label']=label
+                return final_dict
+            except Exception:
+                pass
         else:
             pass
 
@@ -248,7 +251,7 @@ def get_filtering_object(terms_ids: list, collection_name: str):
         except Exception:
             pass
         
-            
+    #path = "beacon/db/filtering_terms/filtering_terms_{}.txt".format(collection_name)
     path = "/beacon/beacon/db/filtering_terms/filtering_terms_{}.txt".format(collection_name)
     with open(path, 'w') as f:
         for item in list_of_ontologies:
