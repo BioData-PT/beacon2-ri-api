@@ -6,7 +6,9 @@ Files that you need to change (look at the \*.example files!):
 - .env  (define the password for the db user, only use letters and numbers)
 - beacon2-ri-api/training-ui-files/secret.py (use the script in the same directory to generate a key)
 
-Everytime you need to run reindex.py everytime you recreate your DB (you can run it on the beacon container or on the host)
+Everytime you need to run reindex.py everytime you recreate your DB (you can run it on the beacon container or on the host):
+	- To run on container: `docker compose exec beacon python3 beacon/reindex.py`
+	- To run on host: `python3 reindex.py` # you need to download the appropriate python modules
 
 Additional configurations:
 
