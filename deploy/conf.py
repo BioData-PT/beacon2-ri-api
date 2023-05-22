@@ -10,7 +10,7 @@ import logging
 beacon_id = 'pt.biodata.beacon'  # ID of the Beacon
 beacon_name = 'Beaconv2 at Biodata.pt in Portugal'  # Name of the Beacon service
 api_version = 'v2.0.0'  # Version of the Beacon implementation
-uri = 'https://beacon.biodata.pt'  # URI of the Beacon service
+uri = 'https://beacon.biodata.pt/api/'  # URI of the Beacon service
 
 #
 # Beacon granularity

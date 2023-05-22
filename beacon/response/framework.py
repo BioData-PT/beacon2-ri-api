@@ -235,7 +235,7 @@ async def beacon_map(request):
                 "openAPIEndpointsDefinition": "https://raw.githubusercontent.com/ga4gh-beacon/beacon-v2-Models/main/BEACON-V2-Model/cohorts/endpoints.json",
                 "rootUrl": conf.uri + "cohorts",
                 "singleEntryUrl": conf.uri + "cohorts/{id}",
-                "filteringTermsUrl": conf.uri + "filtering_terms/cohorts",
+                "filteringTermsUrl": conf.uri + "cohorts/filtering_terms",
                 "endpoints": {
                     "analysis": {
                         "returnedEntryType": "analysis",
@@ -256,7 +256,7 @@ async def beacon_map(request):
                 "openAPIEndpointsDefinition": "https://raw.githubusercontent.com/ga4gh-beacon/beacon-v2-Models/main/BEACON-V2-Model/datasets/endpoints.json",
                 "rootUrl": conf.uri + "datasets",
                 "singleEntryUrl": conf.uri + "datasets/{id}",
-                "filteringTermsUrl": conf.uri + "filtering_terms/datasets",
+                "filteringTermsUrl": conf.uri + "datasets/filtering_terms",
                 "endpoints": {
                     "analysis": {
                         "returnedEntryType": "analysis",
@@ -309,7 +309,7 @@ async def beacon_map(request):
                 "openAPIEndpointsDefinition": "https://raw.githubusercontent.com/ga4gh-beacon/beacon-v2-Models/main/BEACON-V2-Model/individuals/endpoints.json",
                 "rootUrl": conf.uri + "individuals",
                 "singleEntryUrl": conf.uri + "individuals/{id}",
-                "filteringTermsUrl": conf.uri + "filtering_terms/individuals",
+                "filteringTermsUrl": conf.uri + "individuals/filtering_terms",
                 "endpoints": {
                     "analysis": {
                         "returnedEntryType": "analysis",
