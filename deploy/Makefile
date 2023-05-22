@@ -1,10 +1,15 @@
 SHELL := /bin/bash
 
+include .env # import DB_PASSWD
+
 all: down up load reindex rebuild
 
 load:
-	DB_PASSWD="example"
-	source .env
+	if [ -z ${DB_PASSWD} ] ; then\
+		echo "DB_PASSWD is not set, set it up in the .env file";\
+		exit 1;\
+	fi
+	uri="mongodb://root:${DB_PASSWD}@127.0.0.1:27017/beacon?authSource=admin"
 	mongoimport --jsonArray --uri "mongodb://root:${DB_PASSWD}@127.0.0.1:27017/beacon?authSource=admin" --file data/analyses*.json --collection analyses
 	mongoimport --jsonArray --uri "mongodb://root:${DB_PASSWD}@127.0.0.1:27017/beacon?authSource=admin" --file data/biosamples*.json --collection biosamples
 	mongoimport --jsonArray --uri "mongodb://root:${DB_PASSWD}@127.0.0.1:27017/beacon?authSource=admin" --file data/cohorts*.json --collection cohorts
