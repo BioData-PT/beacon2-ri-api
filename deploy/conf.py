@@ -1,5 +1,6 @@
 """Beacon Configuration."""
-
+import os
+import logging
 #
 # Beacon general info
 #
@@ -9,7 +10,7 @@ import logging
 beacon_id = 'pt.biodata.beacon'  # ID of the Beacon
 beacon_name = 'Beaconv2 at Biodata.pt in Portugal'  # Name of the Beacon service
 api_version = 'v2.0.0'  # Version of the Beacon implementation
-uri = 'https://beacon.biodata.pt/api/'  # URI of the Beacon service
+uri = 'https://beacon.biodata.pt'  # URI of the Beacon service
 
 #
 # Beacon granularity
@@ -23,8 +24,8 @@ max_beacon_granularity = "record"
 org_id = 'BioData.pt'  # Id of the organization
 org_name = 'BioData.pt'  # Full name
 org_description = ('BioData.pt is the Portuguese distributed e-infrastructure for biological data and the Portuguese node of ELIXIR. It supports the national scientific system through best practices in data management and state of the art data analysis.')
-org_adress = ('Associação BIP4DAB'
-              'Rua da Quinta Grande, 6.'
+org_adress = ('Associação BIP4DAB, '
+              'Rua da Quinta Grande, 6., '
               '2780-156 Oeiras, Portugal')
 org_welcome_url = 'https://biodata.pt'
 org_contact_url = 'mailto:info@biodata.pt'
@@ -74,7 +75,6 @@ beacon_handovers = [
 #
 # Database connection
 #
-
 
 database_password = os.getenv('DB_PASSWD')
 
