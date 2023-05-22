@@ -1,5 +1,6 @@
 """Beacon Configuration."""
-
+import os
+import logging
 #
 # Beacon general info
 #
@@ -72,14 +73,14 @@ beacon_handovers = [
 # Database connection
 #
 
-try:
-    from beacon.secret import DB_PASSWD
-    database_password = DB_PASSWD
-    print("Imported DB_PASSWD successfully!")
-except Exception as e:
+database_password = os.getenv('DB_PASSWD')
+
+if database_password is None:
     database_password = 'example'
-    print("WARNING: YOU SHOULD CREATE A SECRET.PY FILE LIKE THE EXAMPLE TO USE A CUSTOM PASSWORD, CURRENTLY USING THE DEFAULT (INSECURE)!")
-    print("Exception text when trying to import: ", repr(e))
+    print("WARNING: YOU SHOULD DEFINE A 'DB_PASSWD' ENV VARIABLE IN 'deploy/.env' LIKE IN THE EXAMPLE TO USE A CUSTOM PASSWORD, CURRENTLY USING THE DEFAULT PASSWORD (INSECURE)!")
+    logging.warning("warning: default passwd for DB in use")
+else:
+    logging.info("Imported db passwd successfully!")
 
 database_host = 'mongo'
 database_port = 27017
