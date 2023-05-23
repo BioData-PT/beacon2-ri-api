@@ -17,7 +17,7 @@ from beacon.response.build_response import (
     build_beacon_resultset_response_by_dataset
 )
 from beacon.utils.stream import json_stream
-from beacon.db.datasets import get_datasets
+from beacon.db.datasets import get_datasets, get_public_datasets
 from beacon.utils.auth import resolve_token
 
 LOG = logging.getLogger(__name__)
@@ -48,13 +48,18 @@ def generic_handler(db_fn, request=None):
         json_body = await request.json() if request.method == "POST" and request.has_body and request.can_read_body else {}
         qparams = RequestParams(**json_body).from_request(request)
 
-        LOG.debug(qparams)
+        LOG.debug(f"Query Params = {qparams}")
         
         search_datasets = []
         authenticated=False
         access_token = request.headers.get('Authorization')
-        LOG.debug(access_token)
-        if access_token is not None:
+        LOG.debug(f"Auth token = {access_token}")
+        
+        if access_token is None:
+            list_of_dataset_dicts = [doc["name"] for doc in get_public_datasets()]
+            LOG.debug(f"list of pub datasets = {list_of_dataset_dicts}")
+        # Authorized acess
+        else:
             try:
                 specific_datasets = qparams.query.request_parameters['datasets']
             except Exception:
@@ -118,6 +123,7 @@ def generic_handler(db_fn, request=None):
                 LOG.debug(specific_datasets_unauthorized)
                 LOG.debug(list_of_dataset_dicts)
 
+            # if specific_datasets = []
             else:
                 qparams.query.request_parameters = {}
                 qparams.query.request_parameters['datasets'] = '*******'
@@ -147,8 +153,6 @@ def generic_handler(db_fn, request=None):
                     dict_dataset['ids'] = ['Unauthorized dataset']
                     list_of_dataset_dicts.append(dict_dataset)
                 LOG.debug(list_of_dataset_dicts)
-        else:
-            list_of_dataset_dicts=[]
 
         qparams = RequestParams(**json_body).from_request(request)
         
