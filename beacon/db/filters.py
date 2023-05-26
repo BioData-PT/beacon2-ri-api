@@ -277,9 +277,14 @@ def format_operator(operator: Operator) -> str:
         return "$lte"
 
 def apply_alphanumeric_filter(query: dict, filter: AlphanumericFilter, collection: str) -> dict:
-    LOG.debug(filter.value)
+
     formatted_value = format_value(filter.value)
     formatted_operator = format_operator(filter.operator)
+    
+    LOG.debug(f"filter id = {filter.id}")
+    LOG.debug(f"filter op = {formatted_operator}")
+    LOG.debug(f"filter val = {formatted_value}")
+    
     if collection == 'g_variants':
         if filter.id == "_position.refseqId":
             filter.value = str(filter.value)
@@ -290,6 +295,7 @@ def apply_alphanumeric_filter(query: dict, filter: AlphanumericFilter, collectio
         formatted_operator = format_operator(filter.operator)
         query[filter.id] = { formatted_operator: formatted_value }
     elif isinstance(formatted_value,str):
+        
         if formatted_operator == "$eq":
             if '%' in filter.value:
                 try: 
@@ -315,10 +321,9 @@ def apply_alphanumeric_filter(query: dict, filter: AlphanumericFilter, collectio
                         query['$or']=[]
                 except Exception:
                     query['$or']=[]
-                query_term = filter.id + '.' + 'label'
-                query_id={}
-                query_id[query_term]=filter.value
-                query['$or'].append(query_id) 
+                
+                query['$or'].append({ filter.id : formatted_value })
+                query['$or'].append({ filter.id + ".label" : formatted_value })
                     
         elif formatted_operator == "$ne":
             if '%' in filter.value:
@@ -346,10 +351,29 @@ def apply_alphanumeric_filter(query: dict, filter: AlphanumericFilter, collectio
                 except Exception:
                     query['$nor']=[]
 
-                query_term = filter.id + '.' + 'label'
-                query_id={}
-                query_id[query_term]=filter.value
-                query['$nor'].append(query_id) 
+                query['$nor'].append({ filter.id : formatted_value })
+                query['$nor'].append({ filter.id + ".label" : formatted_value })
+        
+        # if operator is < or >
+        elif formatted_operator in ("$lte", "$lt","$gte", "$gt"):
+            if '%' in filter.value:
+                LOG.error("Not implemented yet")
+                return query
+
+            else:
+                
+                # add param for normal id
+                if filter.id not in query:
+                    query[filter.id] = {}
+                
+                query[filter.id] = {formatted_operator : formatted_value}
+                
+                # repeat process for id + label
+                if filter.id not in query:
+                    query[filter.id] = {}
+                
+                query[filter.id] = {formatted_operator : formatted_value}
+                
     else:
         query['measurementValue.quantity.value'] = { formatted_operator: float(formatted_value) }
         if "LOINC" in filter.id:
