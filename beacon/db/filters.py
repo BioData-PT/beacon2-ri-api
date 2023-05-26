@@ -290,6 +290,11 @@ def apply_alphanumeric_filter(query: dict, filter: AlphanumericFilter, collectio
         formatted_operator = format_operator(filter.operator)
         query[filter.id] = { formatted_operator: formatted_value }
     elif isinstance(formatted_value,str):
+        
+        # add compatibility for fields that don't require .label
+        # e.g. "id"
+        query['$or'] = { filter.id : formatted_value }
+        
         if formatted_operator == "$eq":
             if '%' in filter.value:
                 try: 
