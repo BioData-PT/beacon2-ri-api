@@ -45,7 +45,8 @@ verify:
 	beacon-verifier http://localhost:5050/api/
 
 reindex:
-	python3 reindex.py
+	#python3 reindex.py
+	docker compose exec beacon python3 beacon/reindex.py
 
 # only works with justfile (https://github.com/casey/just#recipe-parameters)
 test COLLECTION REQUEST:
