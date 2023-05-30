@@ -1,6 +1,6 @@
 natureData=../../natureDataFiles
-metadataDir=$natureData/april2023
-genomicDataDir=$natureData/april2023
+metadataDir=$natureData/dataToLoad
+genomicDataDir=$natureData/dataToLoad
 #metadataDir=data/mydata/cineca
 #genomicDataDir=data/mydata/cineca
 
