@@ -24,7 +24,7 @@ services:
   # training-ui
   ###########################################
 
-  training-ui:
+  ui:
     image: pt-beacon/training_ui:v0.1
     build: ../training-ui-files
     hostname: beacon_training_ui    
