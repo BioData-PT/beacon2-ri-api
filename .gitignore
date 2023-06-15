@@ -129,3 +129,10 @@ deploy/ontologies/*.obo
 deploy/ontologies/*.owl*
 .antlr/
 
+# ontologies
+beacon/db/descendants/
+!beacon/db/descendants/test.txt
+beacon/db/ontologies/
+!beacon/db/ontologies/test.txt
+beacon/db/similarities/
+!beacon/db/similarities/test.txt
