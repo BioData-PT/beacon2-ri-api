@@ -23,9 +23,17 @@ from utils import get_filtering_documents
 
 ONTOLOGY_REGEX = re.compile(r"([_A-Za-z0-9]+):([_A-Za-z0-9^\-]+)")
 
+database_password = os.getenv('DB_PASSWD')
+
+database_host = 'mongo'
+database_port = 27017
+database_user = 'root'
+database_name = 'beacon'
+database_auth_source = 'admin'
+      
 client = MongoClient(
     #"mongodb://127.0.0.1:27017/"
-    "mongodb://root:example@mongo:27017/beacon?authSource=admin"
+    f"mongodb://{database_user}:{database_password}@{database_host}:{database_port}/{database_name}?authSource={database_auth_source}"
 
 )
 
