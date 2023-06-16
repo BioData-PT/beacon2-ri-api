@@ -174,35 +174,44 @@ def apply_ontology_filter(query: dict, filter: OntologyFilter, collection: str) 
             0,
             1
         )
-            
+        
+        # get label from the term to find descendants
+        # (label might not exist)
         for doc_term in docs:
             label = doc_term['label']
-        query_filtering={}
-        query_filtering['$and']=[]
-        query_filtering['$and'].append(dict_scope)
-        dict_regex={}
-        try:
+        else:
+            LOG.debug(f"No label found for {filter.id}, skipping descendants")
+            label = None
+            
+        # if label exists, then search descendants
+        if label:
+            query_filtering={}
+            query_filtering['$and']=[]
+            query_filtering['$and'].append(dict_scope)
+            dict_regex={}
             dict_regex['$regex']=label
-        except Exception:
-            dict_regex['$regex']=''
-        dict_id['id']=dict_regex
-        query_filtering['$and'].append(dict_id)
-        docs_2 = get_documents(
-            client.beacon.filtering_terms,
-            query_filtering,
-            0,
-            1
-        )
-        for doc2 in docs_2:
-            query_terms = doc2['id']
-        query_terms = query_terms.split(':')
-        query_term = query_terms[0] + '.id'
-        query_id={}
-        for desc in list_descendant:
+                
+            dict_id['id']=dict_regex
+            query_filtering['$and'].append(dict_id)
+            docs_2 = get_documents(
+                client.beacon.filtering_terms,
+                query_filtering,
+                0,
+                1
+            )
+            for doc2 in docs_2:
+                query_terms = doc2['id']
+            else:
+                query_terms = None
+            LOG.debug(f"query_terms = {query_terms}")
+            query_terms = query_terms.split(':')
+            query_term = query_terms[0] + '.id'
             query_id={}
-            query_id[query_term]=desc
-            query['$or'].append(query_id)
-
+            for desc in list_descendant:
+                query_id={}
+                query_id[query_term]=desc
+                query['$or'].append(query_id)
+    # --- end of descendant terms ---
 
     if is_filter_id_required:
         query_filtering={}
@@ -214,11 +223,11 @@ def apply_ontology_filter(query: dict, filter: OntologyFilter, collection: str) 
         dict_id['id']=filter.id
         query_filtering['$and'].append(dict_id)
         docs = get_documents(
-        client.beacon.filtering_terms,
-        query_filtering,
-        0,
-        1
-    )
+            client.beacon.filtering_terms,
+            query_filtering,
+            0,
+            1
+        )
         
         for doc_term in docs:
             label = doc_term['label']
@@ -232,10 +241,10 @@ def apply_ontology_filter(query: dict, filter: OntologyFilter, collection: str) 
         query_filtering['$and'].append(dict_id)
         docs_2 = get_documents(
         client.beacon.filtering_terms,
-        query_filtering,
-        0,
-        1
-    )
+            query_filtering,
+            0,
+            1
+        )
         for doc2 in docs_2:
             query_terms = doc2['id']
         query_terms = query_terms.split(':')
