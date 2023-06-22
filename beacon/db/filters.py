@@ -56,7 +56,6 @@ def apply_filters(query: dict, filters: List[dict], collection: str) -> dict:
 
 
 def apply_ontology_filter(query: dict, filter: OntologyFilter, collection: str) -> dict:
-    
     is_filter_id_required = True
 
     # Search similar
@@ -138,27 +137,28 @@ def apply_ontology_filter(query: dict, filter: OntologyFilter, collection: str) 
 
     # Apply descendant terms
     if filter.include_descendant_terms == True:
+        
+        # create $or clause if it doesn't exist
+        if "$or" not in query:
+            query["$or"] = []
+            
         is_filter_id_required = False
-        ontology=filter.id.replace("\n","")
-        LOG.debug(ontology)
-        ontology_list=ontology.split(':')
+        ontology = filter.id.replace("\n","")
+        ontology_list = ontology.split(':')
         list_descendant = []
+        
+        
         try:
-            path = "./beacon/descendants/{}{}.txt".format(ontology_list[0],ontology_list[1])
+            path = "./beacon/db/descendants/{}{}.txt".format(ontology_list[0], ontology_list[1])
             LOG.debug(path)
             with open(path, 'r') as f:
                 for line in f:
                     line=line.replace("\n","")
                     list_descendant.append(line)
         except Exception:
+            LOG.error("Error while opening descendant file")
             pass
-        try: 
-            if query['$or']:
-                pass
-            else:
-                query['$or']=[]
-        except Exception:
-            query['$or']=[]
+            
         list_descendant.append(filter.id)
         query_filtering={}
         query_filtering['$and']=[]
@@ -168,6 +168,7 @@ def apply_ontology_filter(query: dict, filter: OntologyFilter, collection: str) 
         dict_id={}
         dict_id['id']=filter.id
         query_filtering['$and'].append(dict_id)
+        # get doc of term
         docs = get_documents(
             client.beacon.filtering_terms,
             query_filtering,
@@ -178,20 +179,28 @@ def apply_ontology_filter(query: dict, filter: OntologyFilter, collection: str) 
         # get label from the term to find descendants
         # (label might not exist)
         for doc_term in docs:
+            LOG.debug(f"Filtering doc found! {doc_term}")
             label = doc_term['label']
+            break
         else:
-            LOG.debug(f"No label found for {filter.id}, skipping descendants")
+            LOG.debug(f"No doc found for {filter.id}, skipping descendants")
+            # add id = filter.id to query so it doesnt return an empty query (matches everything)
+            query['$or'].append({ 
+                "$and": [
+                    { "id": filter.id }
+                ]
+            })
             label = None
             
         # if label exists, then search descendants
         if label:
             query_filtering={}
-            query_filtering['$and']=[]
+            query_filtering['$and'] = []
             query_filtering['$and'].append(dict_scope)
             dict_regex={}
             dict_regex['$regex']=label
                 
-            dict_id['id']=dict_regex
+            dict_id['id'] = dict_regex
             query_filtering['$and'].append(dict_id)
             docs_2 = get_documents(
                 client.beacon.filtering_terms,
@@ -199,14 +208,19 @@ def apply_ontology_filter(query: dict, filter: OntologyFilter, collection: str) 
                 0,
                 1
             )
+            
             for doc2 in docs_2:
                 query_terms = doc2['id']
+                break
             else:
                 query_terms = None
             LOG.debug(f"query_terms = {query_terms}")
             query_terms = query_terms.split(':')
             query_term = query_terms[0] + '.id'
             query_id={}
+            
+            LOG.debug(f"descendant terms: {list_descendant}")
+            # add descendant terms to query
             for desc in list_descendant:
                 query_id={}
                 query_id[query_term]=desc
@@ -250,8 +264,6 @@ def apply_ontology_filter(query: dict, filter: OntologyFilter, collection: str) 
         query_terms = query_terms.split(':')
         query_term = query_terms[0] + '.id'
         query[query_term]=filter.id
-
-   
 
     LOG.debug("QUERY: %s", query)
     return query
@@ -332,7 +344,11 @@ def apply_alphanumeric_filter(query: dict, filter: AlphanumericFilter, collectio
                     query['$or']=[]
                 
                 query['$or'].append({ filter.id : formatted_value })
-                query['$or'].append({ filter.id + ".label" : formatted_value })
+                # if field does not end on "id" or "label" try to search for them too
+                last_id_field = filter.id.split(".")[-1]
+                if last_id_field not in ("id", "label"):
+                    query['$or'].append({ filter.id + ".id" : formatted_value })
+                    query['$or'].append({ filter.id + ".label" : formatted_value })
                     
         elif formatted_operator == "$ne":
             if '%' in filter.value:
@@ -359,9 +375,13 @@ def apply_alphanumeric_filter(query: dict, filter: AlphanumericFilter, collectio
                         query['$nor']=[]
                 except Exception:
                     query['$nor']=[]
-
+                
                 query['$nor'].append({ filter.id : formatted_value })
-                query['$nor'].append({ filter.id + ".label" : formatted_value })
+                # if field does not end on "id" or "label" try to search for them too
+                last_id_field = filter.id.split(".")[-1]
+                if last_id_field not in ("id", "label"):
+                    query['$nor'].append({ filter.id + ".id" : formatted_value })
+                    query['$nor'].append({ filter.id + ".label" : formatted_value })
         
         # if operator is < or >
         elif formatted_operator in ("$lte", "$lt","$gte", "$gt"):
