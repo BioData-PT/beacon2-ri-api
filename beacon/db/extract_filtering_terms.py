@@ -186,12 +186,18 @@ def insert_all_ontology_terms_used():
     collections = client.beacon.list_collection_names()
     if 'filtering_terms' in collections:
         collections.remove('filtering_terms')
+    
+    # put genomicVariations at the end
+    collections = [c for c in collections if c != 'genomicVariations']
+    collections.append('genomicVariations')
+    
     print("Collections:", collections)
     for c_name in collections:
         terms_ids = find_ontology_terms_used(c_name)
         terms = get_filtering_object(terms_ids, c_name)
         if len(terms) > 0:
             client.beacon.filtering_terms.insert_many(terms)
+        print(f"Finished {c_name}")
 
 def find_ontology_terms_used(collection_name: str) -> List[Dict]:
     print(collection_name)
