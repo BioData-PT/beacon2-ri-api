@@ -48,6 +48,13 @@ reindex:
 	#python3 reindex.py
 	docker compose exec beacon python3 beacon/reindex.py
 
+mongosh:
+	if [ -z ${DB_PASSWD} ] ; then\
+		echo "DB_PASSWD is not set, set it up in the .env file";\
+		exit 1;\
+	fi
+	docker compose exec db mongosh beacon -u root -p ${DB_PASSWD} --authenticationDatabase admin
+
 # only works with justfile (https://github.com/casey/just#recipe-parameters)
 test COLLECTION REQUEST:
 	http POST http://localhost:5050/api/{{COLLECTION}}/ --json < {{REQUEST}}
