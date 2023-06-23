@@ -35,9 +35,9 @@ org_info = ''
 #
 # Project info
 #
-description = (r"This <a href='https://beacon-project.io/'>Beacon</a> "
-               r"is based on the GA4GH Beacon "
-               r"<a href='https://github.com/ga4gh-beacon/specification-v2/blob/master/beacon.yaml'>v2.0</a>")
+description = (r"Portuguese Beacon hosted at BioData.pt containing data from a Portuguese "
+               r"cohort of stage II and III colorectal cancer patients "
+               r"study available at: https://www.nature.com/articles/s41525-021-00177-w")
 version = 'v2.0'
 welcome_url = 'https://beacon.biodata.pt/'
 alternative_url = 'https://beacon.biodata.pt/api/'
