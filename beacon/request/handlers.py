@@ -1,5 +1,6 @@
 import json
 import asyncio
+import copy
 import logging
 from aiohttp import web
 from aiohttp.web_request import Request
@@ -28,12 +29,21 @@ def collection_handler(db_fn, request=None):
         # Get params
         json_body = await request.json() if request.method == "POST" and request.has_body and request.can_read_body else {}
         qparams = RequestParams(**json_body).from_request(request)
+        LOG.debug(f"Query Params = {qparams}")
         entry_id = request.match_info["id"] if "id" in request.match_info else None
+        
+        # backup qparams before db_fn modifies it
+        qparams_backup = copy.deepcopy(qparams)
+        
         # Get response
         entity_schema, count, records = db_fn(entry_id, qparams)
         response_converted = (
             [r for r in records] if records else []
         )
+        
+        # restore qparams
+        qparams = qparams_backup
+        
         response = build_beacon_collection_response(
             response_converted, count, qparams, lambda x, y: x, entity_schema
         )
@@ -50,12 +60,22 @@ def generic_handler(db_fn, request=None):
         # Get params
         json_body = await request.json() if request.method == "POST" and request.has_body and request.can_read_body else {}
         qparams = RequestParams(**json_body).from_request(request)
+        LOG.debug(f"Query Params = {qparams}")
         entry_id = request.match_info.get('id', None)
+
+        # backup qparams before db_fn modifies it
+        qparams_backup = copy.deepcopy(qparams)
 
         # Get response
         entity_schema, count, records = db_fn(entry_id, qparams)
         response_converted = records
 
+        LOG.debug(f"*** Difference between qparams ***"
+                  f"\nQparams changed: {qparams.dict()}"
+                  f"\nQparams backup: {qparams_backup.dict()}")
+        # restore qparams
+        qparams = qparams_backup
+        
         response = None
 
         if qparams.query.requested_granularity == Granularity.BOOLEAN:
