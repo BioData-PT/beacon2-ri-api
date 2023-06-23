@@ -130,10 +130,11 @@ deploy/ontologies/*.owl*
 .antlr/
 
 # ontologies
-beacon/db/descendants/
+beacon/db/descendants/*
 !beacon/db/descendants/test.txt
-beacon/db/ontologies/
+beacon/db/ontologies/*
 !beacon/db/ontologies/test.txt
-beacon/db/similarities/
+beacon/db/similarities/*
 !beacon/db/similarities/test.txt
-beacon/db/filtering_terms/
+beacon/db/filtering_terms/*
+!beacon/db/filtering_terms/test.txt
