@@ -1,6 +1,6 @@
 natureData=../../natureDataFiles
-metadataDir=$natureData/april2023
-genomicDataDir=$natureData/april2023
+metadataDir=$natureData/dataToLoad
+genomicDataDir=$natureData/dataToLoad
 #metadataDir=data/mydata/cineca
 #genomicDataDir=data/mydata/cineca
 
@@ -13,7 +13,4 @@ mongoimport --jsonArray --uri "mongodb://root:$DB_PASSWD@127.0.0.1:27017/beacon?
 mongoimport --jsonArray --uri "mongodb://root:$DB_PASSWD@127.0.0.1:27017/beacon?authSource=admin" --file $metadataDir/datasets*.json --collection datasets
 mongoimport --jsonArray --uri "mongodb://root:$DB_PASSWD@127.0.0.1:27017/beacon?authSource=admin" --file $metadataDir/individuals*.json --collection individuals
 mongoimport --jsonArray --uri "mongodb://root:$DB_PASSWD@127.0.0.1:27017/beacon?authSource=admin" --file $metadataDir/runs*.json --collection runs
-
-mongoimport --jsonArray --uri "mongodb://root:$DB_PASSWD@127.0.0.1:27017/beacon?authSource=admin" --file $genomicDataDir/genomicVariations*.json --collection genomicVariations
-#mongoimport --jsonArray --uri "mongodb://root:$DB_PASSWD@127.0.0.1:27017/beacon?authSource=admin" --file $genomicDataDir/genomicVariations*.json.gz --collection genomicVariations
-
+mongoimport --jsonArray --uri "mongodb://root:$DB_PASSWD@127.0.0.1:27017/beacon?authSource=admin" --file $metadataDir/genomicVariations*.json --collection genomicVariations

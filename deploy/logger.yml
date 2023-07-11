@@ -16,6 +16,9 @@ loggers:
   aiohttp:
     level: INFO
     handlers: [ console ]
+  permissions:
+    level: DEBUG
+    handlers: [ console ]
 
 handlers:
   noHandler:

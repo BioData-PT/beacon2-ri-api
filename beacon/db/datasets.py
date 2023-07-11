@@ -151,8 +151,14 @@ def get_individuals_of_dataset(entry_id: Optional[str], qparams: RequestParams):
     return schema, count, docs
 
 
+def get_public_datasets():
+    query = {"dataUseConditions.duoDataUse.id": "DUO:0000004"}
+    return client.beacon.datasets \
+        .find(query)
+
 def filter_public_datasets(requested_datasets_ids):
-    query = {"dataUseConditions.duoDataUse.modifiers.id": "DUO:0000004"}
+    query = {"dataUseConditions.duoDataUse.id": "DUO:0000004"}
+    #query = {"dataUseConditions.duoDataUse.modifiers.id": "DUO:0000004"}
     return client.beacon.datasets \
         .find(query)
 

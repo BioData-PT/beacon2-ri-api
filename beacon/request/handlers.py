@@ -1,10 +1,12 @@
 import json
 import asyncio
+import copy
 import logging
 from aiohttp import web
 from aiohttp.web_request import Request
 from bson import json_util
 from beacon import conf
+import yaml
 
 from beacon.request import ontologies
 from beacon.request.model import Granularity, RequestParams
@@ -17,7 +19,7 @@ from beacon.response.build_response import (
     build_beacon_resultset_response_by_dataset
 )
 from beacon.utils.stream import json_stream
-from beacon.db.datasets import get_datasets
+from beacon.db.datasets import get_datasets, get_public_datasets
 from beacon.utils.auth import resolve_token
 
 LOG = logging.getLogger(__name__)
@@ -29,11 +31,19 @@ def collection_handler(db_fn, request=None):
         json_body = await request.json() if request.method == "POST" and request.has_body and request.can_read_body else {}
         qparams = RequestParams(**json_body).from_request(request)
         entry_id = request.match_info["id"] if "id" in request.match_info else None
+        
+        # backup qparams before db_fn modifies it
+        qparams_backup = copy.deepcopy(qparams)
+        
         # Get response
         entity_schema, count, records = db_fn(entry_id, qparams)
         response_converted = (
             [r for r in records] if records else []
         )
+        
+        # restore qparams
+        qparams = qparams_backup
+        
         response = build_beacon_collection_response(
             response_converted, count, qparams, lambda x, y: x, entity_schema
         )
@@ -41,20 +51,75 @@ def collection_handler(db_fn, request=None):
 
     return wrapper
 
+# TODO
+# THIS IS THE OLD IMPLEMENTATION, THE NEW ONE IS BELOW.
+# The new one has responses by datasets, this one doesn't
+# Later we should replace this one with the new one
+def generic_handler_old(db_fn, request=None):
+    async def wrapper(request: Request):
+        # Get params
+        json_body = await request.json() if request.method == "POST" and request.has_body and request.can_read_body else {}
+        qparams = RequestParams(**json_body).from_request(request)
+        LOG.debug(f"Query Params = {qparams}")
+        entry_id = request.match_info.get('id', None)
+
+        # backup qparams before db_fn modifies it
+        qparams_backup = copy.deepcopy(qparams)
+
+        # Get response
+        entity_schema, count, records = db_fn(entry_id, qparams)
+        response_converted = records
+
+        LOG.debug(f"*** Difference between qparams ***"
+                  f"\nQparams changed: {qparams.dict()}"
+                  f"\nQparams backup: {qparams_backup.dict()}")
+        # restore qparams
+        qparams = qparams_backup
+        
+        response = None
+
+        if qparams.query.requested_granularity == Granularity.BOOLEAN:
+            response = build_beacon_boolean_response(response_converted, count, qparams, lambda x, y: x, entity_schema)
+        
+        elif qparams.query.requested_granularity == Granularity.COUNT:
+            if conf.max_beacon_granularity == Granularity.BOOLEAN:
+                response = build_beacon_boolean_response(response_converted, count, qparams, lambda x, y: x, entity_schema)
+            else:
+                response = build_beacon_count_response(response_converted, count, qparams, lambda x, y: x, entity_schema)
+        
+        # qparams.query.requested_granularity == Granularity.RECORD:
+        else:
+
+            if conf.max_beacon_granularity == Granularity.BOOLEAN:
+                response = build_beacon_boolean_response(response_converted, count, qparams, lambda x, y: x, entity_schema)
+            elif conf.max_beacon_granularity == Granularity.COUNT:
+                response = build_beacon_count_response(response_converted, count, qparams, lambda x, y: x, entity_schema)
+            else:
+                response = build_beacon_resultset_response(response_converted, count, qparams, lambda x, y: x, entity_schema)
+                
+        return await json_stream(request, response)
+
+    return wrapper
+
+
+# handler with authentication
 
 def generic_handler(db_fn, request=None):
     async def wrapper(request: Request):
         # Get params
         json_body = await request.json() if request.method == "POST" and request.has_body and request.can_read_body else {}
-        qparams = RequestParams(**json_body).from_request(request)
+        qparams:RequestParams = RequestParams(**json_body).from_request(request)
 
-        LOG.debug(qparams)
+        LOG.debug(f"Query Params = {qparams}")
         
         search_datasets = []
         authenticated=False
         access_token = request.headers.get('Authorization')
-        LOG.debug(access_token)
+        LOG.debug(f"Auth token = {access_token}")
         if access_token is not None:
+            with open("/beacon/beacon/request/public_datasets.yml", 'r') as stream:
+                public_datasets = yaml.safe_load(stream)
+            list_of_public_datasets= public_datasets['public_datasets']
             try:
                 specific_datasets = qparams.query.request_parameters['datasets']
             except Exception:
@@ -68,11 +133,14 @@ def generic_handler(db_fn, request=None):
             LOG.debug(authenticated)
             LOG.debug(specific_datasets)
 
+
             specific_datasets_unauthorized = []
             specific_datasets_unauthorized_and_found = []
             bio_list = []
             search_and_authorized_datasets = []
             specific_search_datasets = []
+            for public_dataset in list_of_public_datasets:
+                authorized_datasets.append(public_dataset)
             # Get response
             if specific_datasets != []:
                 for element in authorized_datasets:
@@ -118,6 +186,7 @@ def generic_handler(db_fn, request=None):
                 LOG.debug(specific_datasets_unauthorized)
                 LOG.debug(list_of_dataset_dicts)
 
+            # if specific_datasets = []
             else:
                 qparams.query.request_parameters = {}
                 qparams.query.request_parameters['datasets'] = '*******'
@@ -147,15 +216,44 @@ def generic_handler(db_fn, request=None):
                     dict_dataset['ids'] = ['Unauthorized dataset']
                     list_of_dataset_dicts.append(dict_dataset)
                 LOG.debug(list_of_dataset_dicts)
+            
+            # -- end of if Authorized acess --
+        
         else:
+            #write here code for public datasets
             list_of_dataset_dicts=[]
+            qparams.query.request_parameters = {}
+            qparams.query.request_parameters['datasets'] = '*******'
+            _, _, datasets = get_datasets(None, qparams)
+            beacon_datasets = [ r for r in datasets ]
+            with open("/beacon/beacon/request/public_datasets.yml", 'r') as stream:
+                public_datasets = yaml.safe_load(stream)
+            list_of_public_datasets= public_datasets['public_datasets']
+            LOG.debug(list_of_public_datasets)
+            for data_r in list_of_public_datasets:
+                dict_dataset = {}
+                dict_dataset['dataset']=data_r
+                dict_dataset['ids']=[ r['ids'] for r in beacon_datasets if r['id'] == data_r ]
+                list_of_dataset_dicts.append(dict_dataset)
+            LOG.debug(list_of_dataset_dicts)
+
+            
 
         qparams = RequestParams(**json_body).from_request(request)
         
 
         entry_id = request.match_info.get('id', None)
         entity_schema, count, records = db_fn(entry_id, qparams)
-        LOG.debug(entity_schema)
+        LOG.debug(f"schema = {entity_schema}")
+        
+        recordsDebug = list(records[0:10])
+        LOG.debug(f"records = {recordsDebug}")
+        
+        # if it had at least one record
+        if recordsDebug:
+            LOG.debug(f"first record = {recordsDebug[0:1]}")
+        else:
+            LOG.debug(f"no records found")
 
         response_converted = records
         
@@ -168,7 +266,7 @@ def generic_handler(db_fn, request=None):
             else:
                 response = build_beacon_count_response(response_converted, count, qparams, lambda x, y: x, entity_schema)
         
-        # qparams.query.requested_granularity == Granularity.RECORD:
+        # if requested_granularity == Granularity.RECORD:
         else:
 
             if conf.max_beacon_granularity == Granularity.BOOLEAN:

@@ -11,6 +11,8 @@ No JWT signature verification.
 """
 
 import logging
+from decouple import config
+import os
 
 from aiohttp import ClientSession, BasicAuth, FormData
 from aiohttp import web
@@ -21,16 +23,22 @@ LOG = logging.getLogger(__name__)
 
 
 
-idp_client_id     = 'permissions'
-idp_client_secret = 'c0285717-1bfb-4b32-b01d-d663470ce7c4'
+idp_client_id     = config('CLIENT_ID')
+idp_client_secret = config('CLIENT_SECRET')
 #idp_user_info = 'http://localhost:8080/oidc/userinfo'
-idp_user_info = 'http://ls-aai-mock:8080/oidc/userinfo'
+idp_authorize = config('OIDC_AUTHORIZE_URL')
+idp_callback_url = config('OIDC_CALLBACK_URL')
+idp_issuer = config('OIDC_ISSUER')
+idp_user_info = 'https://login.elixir-czech.org/oidc/userinfo'
 #idp_user_info  = 'http://idp:8080/auth/realms/Beacon/protocol/openid-connect/userinfo'
-idp_introspection = 'http://ls-aai-mock:8080/oidc/introspect'
+idp_introspection = 'https://login.elixir-czech.org/oidc/introspect'
 #idp_introspection = 'http://idp:8000/auth/realms/Beacon/protocol/openid-connect/token/introspect'
 #idp_user_info     = 'http://idp:8080/auth/realms/Beacon/protocol/openid-connect/userinfo'
 #idp_introspection = 'http://idp:8080/auth/realms/Beacon/protocol/openid-connect/token/introspect'
+idp_token_url = 'https://login.elixir-czech.org/oidc/token'
 
+ALLOWED_LOCATIONS = ["beacon.biodata.pt:443", "beacon.gdi.biodata.pt:443"]
+SCOPES = ["openid", "email", "profile", "country"]
 
 
 
@@ -71,12 +79,12 @@ async def get_user_info(access_token):
     raise web.HTTPUnauthorized()
 
 
-
+# Returns Unauthorized if the access token is invalid.
 def bearer_required(func):
 
     async def decorated(request):
-        
         auth = request.headers.get('Authorization')
+        
         if not auth or not auth.lower().startswith('bearer '):
             raise web.HTTPUnauthorized()
 
@@ -85,6 +93,7 @@ def bearer_required(func):
         # We make a round-trip to the userinfo. We might not have a JWT token.
         user = await get_user_info(access_token)
         LOG.info('The user is: %r', user)
+        LOG.debug(f"CLIENT_ID: {idp_client_id}")
         if user is None:
             raise web.HTTPUnauthorized()
         username = user.get('preferred_username')

@@ -5,7 +5,7 @@ genomicDataDir=$natureData/april2023
 #genomicDataDir=data/mydata/cineca
 
 DB_PASSWD="example"
-source secret.py # import db passwd
+source .env # import db passwd
 
 mongoimport --uri "mongodb://root:$DB_PASSWD@127.0.0.1:27017/beacon?authSource=admin" --file $metadataDir/analyses*.json --collection analyses
 mongoimport --uri "mongodb://root:$DB_PASSWD@127.0.0.1:27017/beacon?authSource=admin" --file $metadataDir/biosamples*.json --collection biosamples

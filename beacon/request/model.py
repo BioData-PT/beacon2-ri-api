@@ -73,7 +73,7 @@ class RequestMeta(CamelModel):
 
 
 class RequestQuery(CamelModel):
-    filters: List[dict] = []
+    filters: List[dict | str] = []
     include_resultset_responses: IncludeResultsetResponses = IncludeResultsetResponses.HIT
     pagination: Pagination = Pagination()
     request_parameters: dict = {}
@@ -101,10 +101,21 @@ class RequestParams(CamelModel):
         return self
 
     def summary(self):
+        
+        if self.query.filters:
+            filters = self.query.filters
+        else:
+            filters = []
+            filters_req = self.query.request_parameters.get("filters", [])
+            if isinstance(filters_req, str):
+                filters = list(filters_req.split(","))
+            else:
+                filters = filters_req
+        
         return {
             "apiVersion": self.meta.api_version,
             "requestedSchemas": self.meta.requested_schemas,
-            "filters": self.query.filters,
+            "filters": filters,
             "requestParameters": self.query.request_parameters,
             "includeResultsetResponses": self.query.include_resultset_responses,
             "pagination": self.query.pagination.dict(),

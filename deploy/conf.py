@@ -1,5 +1,6 @@
 """Beacon Configuration."""
-
+import os
+import logging
 #
 # Beacon general info
 #
@@ -23,8 +24,8 @@ max_beacon_granularity = "record"
 org_id = 'BioData.pt'  # Id of the organization
 org_name = 'BioData.pt'  # Full name
 org_description = ('BioData.pt is the Portuguese distributed e-infrastructure for biological data and the Portuguese node of ELIXIR. It supports the national scientific system through best practices in data management and state of the art data analysis.')
-org_adress = ('Associação BIP4DAB'
-              'Rua da Quinta Grande, 6.'
+org_adress = ('Associação BIP4DAB, '
+              'Rua da Quinta Grande, 6., '
               '2780-156 Oeiras, Portugal')
 org_welcome_url = 'https://biodata.pt'
 org_contact_url = 'mailto:info@biodata.pt'
@@ -34,9 +35,9 @@ org_info = ''
 #
 # Project info
 #
-description = (r"This <a href='https://beacon-project.io/'>Beacon</a> "
-               r"is based on the GA4GH Beacon "
-               r"<a href='https://github.com/ga4gh-beacon/specification-v2/blob/master/beacon.yaml'>v2.0</a>")
+description = (r"Portuguese Beacon hosted at BioData.pt containing data from a Portuguese "
+               r"cohort of stage II and III colorectal cancer patients "
+               r"study available at: https://www.nature.com/articles/s41525-021-00177-w")
 version = 'v2.0'
 welcome_url = 'https://beacon.biodata.pt/'
 alternative_url = 'https://beacon.biodata.pt/api/'
@@ -74,7 +75,6 @@ beacon_handovers = [
 #
 # Database connection
 #
-
 
 database_password = os.getenv('DB_PASSWD')
 

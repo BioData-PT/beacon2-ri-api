@@ -1,0 +1,32 @@
+[
+  {
+     "cohortSize" : 2504,
+     "cohortType" : "user-defined",
+     "id" : "Disney_Characters",
+     "ids" : {
+        "biosampleIds" : [
+           "MICKEY_MOUSE_EAR",
+           "MINNIE_MOUSE_NOSE",
+           "DONALD_DUCK_BEAK"
+        ]
+     },
+     "inclusionCriteria" : {
+        "genders" : [
+           {
+              "id" : "NCIT:C16576",
+              "label" : "female"
+           },
+           {
+              "id" : "NCIT:C20197",
+              "label" : "male"
+           }
+        ],
+        "locations" : [
+           {
+              "label" : "Mickey magic house"
+           }
+        ]
+     },
+     "name" : "Disney characters synthetic cohort"
+  }
+]

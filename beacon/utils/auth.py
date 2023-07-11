@@ -15,6 +15,7 @@ async def resolve_token(token, requested_datasets_ids):
     if token is None:
         public_datasets = [ d["name"] for d in filter_public_datasets(requested_datasets_ids) ]
         return public_datasets, False
+    
     new_requested_datasets_ids=[]
     for dataset in requested_datasets_ids:
         dataset=str(dataset)

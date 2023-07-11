@@ -1,0 +1,40 @@
+[
+  {
+     "ethnicity" : {
+        "label" : "city-mouse"
+     },
+     "id" : "MICKEY_MOUSE",
+     "info" : {
+     },
+     
+     "sex" : {
+        "id" : "NCIT:C20197",
+        "label" : "male"
+     }
+  },
+  {
+     "ethnicity" : {
+        "label" : "city-mouse"
+     },
+     "id" : "MINNIE_MOUSE",
+     "info" : {
+     },
+     
+     "sex" : {
+        "id" : "NCIT:C16576",
+        "label" : "female"
+     }
+  },
+  {
+     "ethnicity" : {
+        "label" : "city-duck"
+     },
+     "id" : "DONALD_DUCK",
+     "info" : {
+     },
+     "sex" : {
+        "id" : "NCIT:C20197",
+        "label" : "male"
+     }
+  }
+]

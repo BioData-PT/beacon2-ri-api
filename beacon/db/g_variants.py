@@ -12,9 +12,6 @@ from aiohttp import web
 
 LOG = logging.getLogger(__name__)
 
-POSITION_FIELD = "_position"
-#POSITION_FIELD = "position" # some people use this
-
 VARIANTS_PROPERTY_MAP = {
     "assemblyId": "_position.assemblyId",
     "Chromosome": "_position.refseqId",
