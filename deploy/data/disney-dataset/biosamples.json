@@ -19,7 +19,8 @@
      "sampleOriginType" : {
         "id" : "UBERON:0000479",
         "label" : "tissue portion"
-     }
+     },
+     "datasetId" : "Disney_Characters"
   },
   
   {
@@ -42,7 +43,8 @@
      "sampleOriginType" : {
         "id" : "UBERON:0000479",
         "label" : "tissue portion"
-     }
+     },
+     "datasetId" : "Disney_Characters"
   },
   {
      "biosampleStatus" : {
@@ -64,6 +66,7 @@
      "sampleOriginType" : {
         "id" : "UBERON:0002481",
         "label" : "bone tissue"
-     }
+     },
+     "datasetId" : "Disney_Characters"
   }
 ]
