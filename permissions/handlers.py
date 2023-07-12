@@ -6,7 +6,7 @@ from typing import Optional
 from aiohttp import web
 from aiohttp.web import FileField
 from aiohttp.web_request import Request
-from aiohttp.web import CIMultiDict
+from multidict import CIMultiDict
 import requests
 
 from permissions.auth import SCOPES, bearer_required
