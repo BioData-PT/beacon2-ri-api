@@ -116,8 +116,13 @@ services:
     ports:
       - "5051:5051"
     environment:
+      # DB credentials
+      DB_PASSWD: ${DB_PASSWD}
+
+      # LS AAI configs
       CLIENT_ID: ${CLIENT_ID}
       CLIENT_SECRET: ${CLIENT_SECRET}
+
       # REMS configs
       REMS_URL: ${REMS_URL}
       REMS_API_USER: ${REMS_API_USER}

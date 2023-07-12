@@ -5,12 +5,15 @@ from aiohttp import web
 from permissions.auth import SCOPES
 from permissions.auth import idp_client_id, idp_issuer
 
+import logging
+
+LOG = logging.getLogger(__name__)
 
 def verify_access_token(access_token):
     
     try:
         # check accessToken
-        payloadAccessToken = jwt.decode(access_token, verify=True)
+        payloadAccessToken = jwt.decode(access_token, options={"verify_signature": False})
         
         if payloadAccessToken['iss'] != idp_issuer:
             raise web.HTTPUnauthorized(text="Access token is not from the right issuer")
@@ -18,16 +21,19 @@ def verify_access_token(access_token):
         if payloadAccessToken['aud'] != idp_client_id:
             raise web.HTTPUnauthorized(text="Access token is not for the right client")
         
-        if payloadAccessToken['scope'] != SCOPES:
-            raise web.HTTPUnauthorized(text=\
-                f"Access token doesn't have the right scope.\n" \
-                f"Expected: {SCOPES}, got: {payloadAccessToken['scope']}"\
-            )
+        token_scopes = set(payloadAccessToken['scope'].split(" "))
+        if token_scopes != SCOPES:
+            LOG.error(f"Token scopes = {token_scopes}")
+            LOG.error(f"Correct scopes = {SCOPES}")
+            raise web.HTTPUnauthorized(text="Access token doesn't have the correct scopes")
         
         if payloadAccessToken['exp'] < time.time():
             raise web.HTTPUnauthorized(text="Access token is expired")
         
     except Exception as e:
-        raise web.HTTPUnauthorized(text=f"Error while getting access token.\n{e}")
+        LOG.error(f"Error while verifying access token.\n{str(e)}")
+        LOG.debug(f"Access token:\n\n{access_token}\n")
+        raise web.HTTPUnauthorized(text=f"Error while verifying access token.")
     
+    LOG.debug("Token verification OK")
     return True, payloadAccessToken['exp']
