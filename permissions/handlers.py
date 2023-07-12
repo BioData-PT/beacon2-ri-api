@@ -97,7 +97,7 @@ async def login_callback(request: Request, username: Optional[str]):
     
     if urlParser.netloc not in ALLOWED_LOCATIONS:
         logging.error("Redirect URI is not allowed, allowed locations are: %s", ALLOWED_LOCATIONS)
-        raise web.HTTPUnauthorized(text=f"Redirect URI is not allowed, allowed_locations={ALLOWED_LOCATIONS}"))        
+        raise web.HTTPUnauthorized(text=f"Redirect URI is not allowed, allowed_locations={ALLOWED_LOCATIONS}")       
     
     # url is trusted
     redirect_uri = stateDecoded
