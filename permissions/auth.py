@@ -37,12 +37,13 @@ idp_introspection = 'https://login.elixir-czech.org/oidc/introspect'
 #idp_introspection = 'http://idp:8080/auth/realms/Beacon/protocol/openid-connect/token/introspect'
 idp_token_url = 'https://login.elixir-czech.org/oidc/token'
 
-ALLOWED_LOCATIONS = ["beacon.biodata.pt", "beacon.gdi.biodata.pt"]
+ALLOWED_LOCATIONS = ["beacon.gdi.biodata.pt", "beacon.biodata.pt"]
 SCOPES = set(["openid", "email", "profile", "country"])
 
-
-
-
+# REMS
+REMS_URL = config('REMS_URL')
+REMS_API_USER = config('REMS_API_USER')
+REMS_API_KEY = config('REMS_API_KEY')
 
 
 async def get_user_info(access_token):
@@ -101,3 +102,4 @@ def bearer_required(func):
 
         return await func(request, username)
     return decorated
+

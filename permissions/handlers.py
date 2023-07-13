@@ -24,6 +24,9 @@ from permissions.tokens import verify_access_token
 
 LOG = logging.getLogger(__name__)
 
+# state chosen if the user does not provide one
+STATE_DEFAULT = b64encode( ("https://"+ALLOWED_LOCATIONS[0]).encode("ascii") ).decode("ascii")
+
 @bearer_required
 async def permission(request: Request, username: Optional[str]):
 
@@ -62,7 +65,12 @@ async def login_redirect(request: Request):
         raise web.HTTPInternalServerError(text="CLIENT_ID not set")
     
     state = request.query.get('state')
+    if state is None:
+        # state not set, will set default
+        state = STATE_DEFAULT
     stateDecoded = b64decode(state)
+    
+        
     redirect_uri = f"{idp_authorize}?response_type=code&client_id={client_id}&scope={' '.join(SCOPES)}&state={state}&redirect_uri={callback_url}"
     LOG.debug(f"Raw State is {state}")
     LOG.debug(f"Decoded state is {stateDecoded}")
@@ -85,7 +93,7 @@ async def login_callback(request: Request):
     if state is None:
         # if no state is provided will send it to the first allowed host
         LOG.warning("No state field provided on login, will send to first allowed host")
-        state = b64encode( ("https://"+ALLOWED_LOCATIONS[0]).encode("ascii") )
+        state = STATE_DEFAULT
     try:
         LOG.debug(f"State is {state}")
         stateDecoded = b64decode(state).decode("ascii")
@@ -156,4 +164,13 @@ async def login_callback(request: Request):
     
     LOG.debug(f"Redirect URL after login = {redirect_uri_after_login}")
     
-    raise web.HTTPSeeOther(location=redirect_uri_after_login, headers=headers)
+    cookie_auth = ({
+        "name": "Authorization",
+        "value": f"Bearer {access_token}",
+        "max_age": 1*60*60, # 1 hour
+        "secure": True,
+        "samesite": True
+    })
+    redirect_exception = web.HTTPSeeOther(location=redirect_uri_after_login, headers=headers)
+    redirect_exception.set_cookie(**cookie_auth)
+    raise redirect_exception

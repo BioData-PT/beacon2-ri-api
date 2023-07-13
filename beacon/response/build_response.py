@@ -104,13 +104,11 @@ def build_beacon_resultset_response_by_dataset(data,
     Transform data into the Beacon response format.
     """
     response_dict={}
-    LOG.debug(list_of_dataset_dicts)
+    #LOG.debug(list_of_dataset_dicts)
 
     for dataset_dict in list_of_dataset_dicts:
         dataset_id = dataset_dict['dataset']
         response_dict[dataset_id] = []
-        
-
     
     for dataset_dict in list_of_dataset_dicts:
         datas = dataset_dict['ids']

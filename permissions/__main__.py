@@ -18,7 +18,8 @@ from . import load_logger
 from .auth import bearer_required
 from .handlers import permission, login_redirect, login_callback
 # update that line to use your prefered permissions plugin
-from .plugins import DummyPermissions as PermissionsProxy
+#from .plugins import DummyPermissions as PermissionsProxy
+from .plugins import RemsPermissions as PermissionsProxy
 
 LOG = logging.getLogger(__name__)
 

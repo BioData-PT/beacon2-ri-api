@@ -35,6 +35,11 @@ def collection_handler(db_fn, request=None):
         # backup qparams before db_fn modifies it
         qparams_backup = copy.deepcopy(qparams)
         
+        # find permissions for user
+        
+        
+        # add qparam to filter datasets by permissions
+        
         # Get response
         entity_schema, count, records = db_fn(entry_id, qparams)
         response_converted = (
