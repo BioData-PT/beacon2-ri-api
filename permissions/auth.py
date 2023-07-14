@@ -61,6 +61,7 @@ async def get_user_info(access_token):
             LOG.debug('Response %s', resp)
             if resp.status == 200:
                 user = await resp.json()
+                LOG.debug("Userinfo: %s", user)
                 return user
             else:
                 content = await resp.text()

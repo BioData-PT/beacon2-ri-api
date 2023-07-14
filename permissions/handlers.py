@@ -171,6 +171,16 @@ async def login_callback(request: Request):
         "secure": True,
         "samesite": True
     })
+    
+    cookie_username = ({
+        "name": "username",
+        "value": user_info["name"],
+        "max_age": 1*60*60, # 1 hour
+        "secure": True,
+        "samesite": True
+    })
+    
     redirect_exception = web.HTTPSeeOther(location=redirect_uri_after_login, headers=headers)
     redirect_exception.set_cookie(**cookie_auth)
+    redirect_exception.set_cookie(**cookie_username)
     raise redirect_exception

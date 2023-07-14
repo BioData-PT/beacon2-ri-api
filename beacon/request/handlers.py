@@ -27,6 +27,7 @@ LOG = logging.getLogger(__name__)
 
 def collection_handler(db_fn, request=None):
     async def wrapper(request: Request):
+        LOG.info("-- Collection handler --")
         # Get params
         json_body = await request.json() if request.method == "POST" and request.has_body and request.can_read_body else {}
         qparams = RequestParams(**json_body).from_request(request)
@@ -110,7 +111,9 @@ def generic_handler_old(db_fn, request=None):
 # handler with authentication
 
 def generic_handler(db_fn, request=None):
+    
     async def wrapper(request: Request):
+        LOG.info("-- Generic handler --")
         # Get params
         json_body = await request.json() if request.method == "POST" and request.has_body and request.can_read_body else {}
         qparams:RequestParams = RequestParams(**json_body).from_request(request)
@@ -119,8 +122,19 @@ def generic_handler(db_fn, request=None):
         
         search_datasets = []
         authenticated=False
-        access_token = request.headers.get('Authorization')
-        LOG.debug(f"Auth token = {access_token}")
+        
+        access_token_header = request.headers.get('Authorization')
+        access_token_cookies = request.cookies.get("Authorization")
+        LOG.debug(f"Access token header = {access_token_header}")
+        LOG.debug(f"Access token cookies = {access_token_cookies}")
+        
+        # set access_token as the one we recieve in the header
+        # if not in header, get the one from cookies
+        if access_token_header:
+            access_token = access_token_header
+        else:
+            access_token = access_token_cookies
+        
         if access_token is not None:
             with open("/beacon/beacon/request/public_datasets.yml", 'r') as stream:
                 public_datasets = yaml.safe_load(stream)
@@ -178,7 +192,6 @@ def generic_handler(db_fn, request=None):
                         dict_dataset['dataset']=dataset_searched
                         dict_dataset['ids'] = ['Dataset not found']
                         LOG.debug(dict_dataset['dataset'])
-                        LOG.debug(dict_dataset['ids'])
                         list_of_dataset_dicts.append(dict_dataset)
                 
                 for data_s in specific_datasets_unauthorized_and_found:
@@ -189,7 +202,7 @@ def generic_handler(db_fn, request=None):
 
                 LOG.debug(specific_datasets_unauthorized_and_found)
                 LOG.debug(specific_datasets_unauthorized)
-                LOG.debug(list_of_dataset_dicts)
+                LOG.debug(f"list of datasets = {[e['dataset'] for e in list_of_dataset_dicts]}")
 
             # if specific_datasets = []
             else:
@@ -220,7 +233,7 @@ def generic_handler(db_fn, request=None):
                     dict_dataset['dataset']=data_s
                     dict_dataset['ids'] = ['Unauthorized dataset']
                     list_of_dataset_dicts.append(dict_dataset)
-                LOG.debug(list_of_dataset_dicts)
+                LOG.debug(f"list of datasets = {[e['dataset'] for e in list_of_dataset_dicts]}")
             
             # -- end of if Authorized acess --
         
@@ -234,13 +247,13 @@ def generic_handler(db_fn, request=None):
             with open("/beacon/beacon/request/public_datasets.yml", 'r') as stream:
                 public_datasets = yaml.safe_load(stream)
             list_of_public_datasets= public_datasets['public_datasets']
-            LOG.debug(list_of_public_datasets)
+            LOG.debug(f"Pub datasets = {list_of_public_datasets}")
             for data_r in list_of_public_datasets:
                 dict_dataset = {}
                 dict_dataset['dataset']=data_r
                 dict_dataset['ids']=[ r['ids'] for r in beacon_datasets if r['id'] == data_r ]
                 list_of_dataset_dicts.append(dict_dataset)
-            LOG.debug(list_of_dataset_dicts)
+            LOG.debug(f"list of datasets = {[e['dataset'] for e in list_of_dataset_dicts]}")
 
             
 
@@ -252,7 +265,8 @@ def generic_handler(db_fn, request=None):
         LOG.debug(f"schema = {entity_schema}")
         
         recordsDebug = list(records[0:10])
-        LOG.debug(f"records = {recordsDebug}")
+        records = recordsDebug
+        LOG.debug(f"records = {recordsDebug[0:3]}")
         
         # if it had at least one record
         if recordsDebug:
@@ -295,8 +309,7 @@ def filtering_terms_handler(db_fn, request=None):
         
         search_datasets = []
         authenticated=False
-        access_token = request.headers.get('Authorization')
-        LOG.debug(access_token)
+
         if access_token is not None:
             try:
                 specific_datasets = qparams.query.request_parameters['datasets']
