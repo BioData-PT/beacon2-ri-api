@@ -27,9 +27,10 @@ def get_db_handle(db_name, host, port, username, password):
 db_handle, _ = get_db_handle(DATABASE_NAME, DATABASE_HOST, DATABASE_PORT, USERNAME, PASSWORD)
 
 # Insert token into database
-def insert_acess_token(token, exp):
+def insert_acess_token(token, user_info, exp):
     newDoc = {
-        "access_token":token, 
+        "access_token": token,
+        "user_info": user_info,
         "exp": exp
     }
     foundDoc = db_handle.find_one(newDoc)
