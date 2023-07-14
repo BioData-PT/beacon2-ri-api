@@ -246,7 +246,8 @@ def generic_handler(db_fn, request=None):
         entity_schema, count, records = db_fn(entry_id, qparams)
         LOG.debug(f"schema = {entity_schema}")
         
-        recordsDebug = list(records[0:10])
+        recordsList = list(records[0:100])
+        recordsDebug = recordsList[0:10]
         LOG.debug(f"records = {recordsDebug}")
         
         # if it had at least one record
