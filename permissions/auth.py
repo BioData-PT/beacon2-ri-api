@@ -44,7 +44,8 @@ SCOPES = set(["openid", "email", "profile", "country"])
 REMS_URL = config('REMS_URL')
 REMS_API_USER = config('REMS_API_USER')
 REMS_API_KEY = config('REMS_API_KEY')
-
+REMS_BEACON_RESOURCE_PREFIX = config('REMS_BEACON_RESOURCE_PREFIX')
+REMS_PUB_URL = config('REMS_PUB_URL')
 
 async def get_user_info(access_token):
     '''
@@ -80,8 +81,8 @@ async def get_user_info(access_token):
             LOG.debug('Content: %s', content)
     raise web.HTTPUnauthorized()
 
-
-# Returns Unauthorized if the access token is invalid.
+# returns userId
+# Throws Unauthorized if the access token is invalid.
 def bearer_required(func):
 
     async def decorated(request):
@@ -99,8 +100,10 @@ def bearer_required(func):
         if user is None:
             raise web.HTTPUnauthorized()
         username = user.get('preferred_username')
+        user_id = user.get('sub')
         LOG.debug('username: %s', username)
+        LOG.debug("ELIXIR_ID: %s", user_id)
 
-        return await func(request, username)
+        return await func(request, user_id)
     return decorated
 

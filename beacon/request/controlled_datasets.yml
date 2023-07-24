@@ -1,1 +1,2 @@
-- nature_colorectal_cancer_test
+controlled_datasets:
+  - nature_colorectal_cancer_test

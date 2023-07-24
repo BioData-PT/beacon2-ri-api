@@ -2,7 +2,7 @@ import jwt
 import time
 from aiohttp import web
 
-from permissions.auth import SCOPES
+from permissions.auth import REMS_PUB_URL, SCOPES
 from permissions.auth import idp_client_id, idp_issuer
 
 import logging
@@ -40,10 +40,10 @@ def verify_access_token(access_token):
 
 # returns decoded visa if everything ok
 # raises Exception if error occurs
-def verify_visa(visa, user_id):
+def parse_visa(visa, user_id):
     
     try:
-        payload = jwt.decode(access_token, options={"verify_signature": False})
+        payload = jwt.decode(visa, options={"verify_signature": False})
         
         if payload['exp'] < time.time():
             raise web.HTTPUnauthorized(text="Visa is expired")
@@ -55,6 +55,12 @@ def verify_visa(visa, user_id):
         if not payload["ga4gh_visa_v1"]["value"].strip():
             raise web.HTTPUnauthorized(text="Visa value is empty")
         
+        if payload["ga4gh_visa_v1"]["source"] != REMS_PUB_URL:
+            LOG.error(f"Visa source doesn't match")
+            LOG.erorr(f"Expected: {REMS_PUB_URL}")
+            LOG.error(f'Received: {payload["ga4gh_visa_v1"]["source"]}')
+            raise web.HTTPUnauthorized(text="Visa source doesn't match.")
+        
     except Exception as e:
         LOG.error(f"Error while verifying visa.\n{str(e)}")
         LOG.debug(f"visa:\n\n{visa}\n")
@@ -63,4 +69,4 @@ def verify_visa(visa, user_id):
     return payload
 
 def decode_jwt(jwt_token):
-    jwt.decode(access_token, options={"verify_signature": False})
+    jwt.decode(jwt_token, options={"verify_signature": False})

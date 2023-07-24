@@ -1,6 +1,6 @@
 [
   {
-     "cohortSize" : 2504,
+     "cohortSize" : 3,
      "cohortType" : "user-defined",
      "id" : "Disney_Characters",
      "ids" : {
@@ -10,7 +10,40 @@
            "DONALD_DUCK_BEAK"
         ]
      },
+
+     "collectionEvents" : [ {
+         "eventGenders" : {
+            "availability" : true,
+            "availabilityCount" : 3,
+            "distribution" : {
+               "genders" : {
+                  "female" : 1,
+                  "male" : 2
+               }
+            }
+         },
+         "eventLocations" : {
+            "availability" : true,
+            "availabilityCount" : 3,
+            "distribution" : {
+               "locations" : {
+                  "Mickey magic house" : 2,
+                  "Duckburg" : 1
+               }
+            }
+      }
+     }],
+
      "inclusionCriteria" : {
+         "ageRange" : {
+            "end" : {
+               "iso8601duration" : "P89Y"
+            },
+            "start" : {
+               "iso8601duration" : "P95Y"
+            }
+         },
+
         "genders" : [
            {
               "id" : "NCIT:C16576",
@@ -23,7 +56,12 @@
         ],
         "locations" : [
            {
+              "id" : "FICTIONPLACE_1",
               "label" : "Mickey magic house"
+           },
+           {
+              "id" : "FICTIONPLACE_2",
+              "label" : "Duckburg"
            }
         ]
      },

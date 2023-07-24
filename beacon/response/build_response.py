@@ -1,4 +1,4 @@
-from typing import Optional
+from typing import Optional, Tuple, List, Dict
 
 from beacon import conf
 from beacon.db.schemas import DefaultSchemas
@@ -35,6 +35,45 @@ def build_response_summary(exists, num_total_results):
             'exists': exists,
             'numTotalResults': num_total_results
         }
+
+# receives results(count & records) of each queried dataset, authorized datasets, and granularity of results
+def build_generic_response(
+    results_by_dataset:Dict[str,Tuple[int,list]], accessible_datasets:List[str], granularity:Granularity,
+    qparams, entity_schema):
+    
+    # iterate over all results to get:
+    # total count
+    # response by dataset
+    num_total_results = 0
+    response_list:List[Dict] = []
+    for dataset_id in results_by_dataset:
+        num_dataset_results = results_by_dataset[dataset_id][0]
+        dataset_results = results_by_dataset[dataset_id][1]
+        num_total_results += num_dataset_results
+        
+        dataset_response = {
+            "id": dataset_id,
+            "exists": num_dataset_results > 0,
+            "setType": "dataset",
+            "results": dataset_results,
+            "resultsCount": num_dataset_results
+        }
+        
+        # if dataset is not authorized, erase the records part
+        if dataset_id not in accessible_datasets:
+            dataset_response["results"] = []
+            
+        response_list.append(dataset_response)
+    
+    beacon_response = {
+        'meta': build_meta(qparams, entity_schema, granularity),
+        'responseSummary': build_response_summary(num_total_results > 0, num_total_results),
+        'beaconHandovers': conf.beacon_handovers,
+        'response': {
+            'resultSets': response_list
+        }
+    }
+    return beacon_response
 
 
 def build_response_by_dataset(data, response_dict, num_total_results, qparams, func):

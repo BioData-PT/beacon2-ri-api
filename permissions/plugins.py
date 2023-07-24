@@ -9,10 +9,10 @@ from multidict import CIMultiDict
 
 from beacon.utils.json import json_decoder, json_encoder
 
-from permissions.auth import REMS_URL, REMS_API_USER, REMS_API_KEY
+from permissions.auth import REMS_BEACON_RESOURCE_PREFIX, REMS_URL, REMS_API_USER, REMS_API_KEY
 from permissions.auth import get_user_info
 from permissions.db import db_handle, check_token
-from permissions.tokens import verify_visa #decode_jwt
+from permissions.tokens import parse_visa #decode_jwt
 
 LOG = logging.getLogger(__name__)
 
@@ -131,6 +131,7 @@ class RemsPermissions(Permissions):
         LOG.info("Initializing REMS permissions")
         pass
 
+    # TODO filter by requested datasets 
     async def get(self, username, requested_datasets=None):
         LOG.debug(f"ELIXIR ID: {username}")
         request_uri = f"{REMS_URL}/api/permissions/{username}?expired=false"
@@ -167,7 +168,7 @@ class RemsPermissions(Permissions):
             return []
         
         # remove duplicates
-        return set(result_datasets)
+        return list(set(result_datasets))
 
     async def close(self):
         pass

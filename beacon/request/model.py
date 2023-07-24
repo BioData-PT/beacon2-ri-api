@@ -42,6 +42,25 @@ class Granularity(StrEnum):
     BOOLEAN = "boolean",
     COUNT = "count",
     RECORD = "record"
+    
+    # returns the lower granularity between 2 granularities
+    def get_lower(g1, g2):
+        
+        if not isinstance(g1, Granularity):
+            LOG.error(f"First value is not granularity: {g1.__repr__}")
+            raise ValueError("One of the values is not a granularity object")
+        if not isinstance(g2, Granularity):
+            LOG.error(f"Second value is not granularity: {g2.__repr__}")
+            raise ValueError("One of the values is not a granularity object")
+        
+        this_value = g1.value
+        other_value = g2.value
+        
+        # iterate over the possible values of granularity from lower to higher
+        # when it matches one of the args, returns
+        for granularity_level in (Granularity.BOOLEAN, Granularity.COUNT, Granularity.RECORD):
+            if granularity_level.value in (g1.value, g2.value):
+                return granularity_level
 
 class OntologyFilter(CamelModel):
     id: str

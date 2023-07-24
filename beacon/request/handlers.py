@@ -2,6 +2,7 @@ import json
 import asyncio
 import copy
 import logging
+from typing import Dict, List, Tuple
 from aiohttp import web
 from aiohttp.web_request import Request
 from bson import json_util
@@ -9,18 +10,19 @@ from beacon import conf
 import yaml
 
 from beacon.request import ontologies
-from beacon.request.model import Granularity, RequestParams
+from beacon.request.model import AlphanumericFilter, Granularity, RequestParams
 from beacon.response.build_response import (
     build_beacon_resultset_response,
     build_beacon_collection_response,
     build_beacon_boolean_response,
     build_beacon_count_response,
     build_filtering_terms_response,
-    build_beacon_resultset_response_by_dataset
+    build_beacon_resultset_response_by_dataset,
+    build_generic_response
 )
 from beacon.utils.stream import json_stream
 from beacon.db.datasets import get_datasets, get_public_datasets
-from beacon.utils.auth import resolve_token
+from beacon.utils.auth import get_accessible_datasets, resolve_token
 
 LOG = logging.getLogger(__name__)
 
@@ -107,10 +109,96 @@ def generic_handler_old(db_fn, request=None):
 
     return wrapper
 
-
-# handler with authentication
-
+# handler with authentication & REMS
+# mostly from BioData.pt
 def generic_handler(db_fn, request=None):
+    
+    async def wrapper(request:Request):
+        LOG.info("-- Generic handler --")
+        
+        # Get params
+        entry_id = request.match_info.get('id', None)
+        json_body = await request.json() if request.method == "POST" and request.has_body and request.can_read_body else {}
+        qparams:RequestParams = RequestParams(**json_body).from_request(request)
+        
+        LOG.debug(f"Query Params = {qparams}")
+        
+        authenticated=False
+        
+        access_token_header = request.headers.get('Authorization')
+        access_token_cookies = request.cookies.get("Authorization")
+        LOG.debug(f"Access token header = {access_token_header}")
+        LOG.debug(f"Access token cookies = {access_token_cookies}")
+        
+        # set access_token as the one we recieve in the header
+        # if not in header, get the one from cookies
+        if access_token_header:
+            access_token = access_token_header
+        else:
+            access_token = access_token_cookies
+        
+        # TODO: get requested datasets from qparams
+        requested_datasets = None # will search all datasets
+        
+        # Start async task to request datasets from permissions server
+        task_permissions = asyncio.create_task(get_accessible_datasets(access_token, requested_datasets))
+
+        # get list of datasets
+        _, _, all_datasets_docs = get_datasets(None, RequestParams())
+        all_dataset_ids = [ doc["id"] for doc in all_datasets_docs]
+        
+        # query all datasets in parallel
+        tasks_dataset_queries = []
+        # { dataset_id:(count, records) }
+        datasets_query_results:Dict[str, Tuple[int,List[dict]]] = {}
+        
+        # TODO do this asynchronously
+        for dataset_id in all_dataset_ids:
+            qparams_dataset = copy.deepcopy(qparams)
+            
+            # TODO change field for genomicVariations
+            filter_dataset_id = {
+                "id": "datasetId", 
+                "value": dataset_id
+            }
+            qparams_dataset.query.filters.append(filter_dataset_id)
+            LOG.debug(f"Dataset Qparams = {qparams_dataset}")
+            entity_schema, count, records = db_fn(entry_id, qparams_dataset)
+            dataset_result = (count, list(records))
+            datasets_query_results[dataset_id] = (dataset_result)
+        
+        LOG.debug(f"schema = {entity_schema}")
+        
+        # get response of permissions server
+        accessible_datasets:List[str] = [] # array of dataset ids
+        accessible_datasets, authenticated = await task_permissions
+
+        # get the max authorized granularity
+        requested_granularity = qparams.query.requested_granularity
+        max_granularity = Granularity(conf.max_beacon_granularity)
+        response_granularity = Granularity.get_lower(requested_granularity, max_granularity)
+        
+        # build response
+        
+        response = build_generic_response(
+            results_by_dataset=datasets_query_results,
+            accessible_datasets=accessible_datasets,
+            granularity=response_granularity,
+            qparams=qparams,
+            entity_schema=entity_schema
+        )
+        
+        return await json_stream(request, response)
+        
+        
+    return wrapper
+    
+    
+    
+# handler with authentication
+# mostly from CRG
+
+def generic_handler_crg(db_fn, request=None):
     
     async def wrapper(request: Request):
         LOG.info("-- Generic handler --")
