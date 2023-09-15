@@ -59,55 +59,6 @@ def collection_handler(db_fn, request=None):
 
     return wrapper
 
-# TODO
-# THIS IS THE OLD IMPLEMENTATION, THE NEW ONE IS BELOW.
-# The new one has responses by datasets, this one doesn't
-# Later we should replace this one with the new one
-def generic_handler_old(db_fn, request=None):
-    async def wrapper(request: Request):
-        # Get params
-        json_body = await request.json() if request.method == "POST" and request.has_body and request.can_read_body else {}
-        qparams = RequestParams(**json_body).from_request(request)
-        LOG.debug(f"Query Params = {qparams}")
-        entry_id = request.match_info.get('id', None)
-
-        # backup qparams before db_fn modifies it
-        qparams_backup = copy.deepcopy(qparams)
-
-        # Get response
-        entity_schema, count, records = db_fn(entry_id, qparams)
-        response_converted = records
-
-        LOG.debug(f"*** Difference between qparams ***"
-                  f"\nQparams changed: {qparams.dict()}"
-                  f"\nQparams backup: {qparams_backup.dict()}")
-        # restore qparams
-        qparams = qparams_backup
-        
-        response = None
-
-        if qparams.query.requested_granularity == Granularity.BOOLEAN:
-            response = build_beacon_boolean_response(response_converted, count, qparams, lambda x, y: x, entity_schema)
-        
-        elif qparams.query.requested_granularity == Granularity.COUNT:
-            if conf.max_beacon_granularity == Granularity.BOOLEAN:
-                response = build_beacon_boolean_response(response_converted, count, qparams, lambda x, y: x, entity_schema)
-            else:
-                response = build_beacon_count_response(response_converted, count, qparams, lambda x, y: x, entity_schema)
-        
-        # qparams.query.requested_granularity == Granularity.RECORD:
-        else:
-
-            if conf.max_beacon_granularity == Granularity.BOOLEAN:
-                response = build_beacon_boolean_response(response_converted, count, qparams, lambda x, y: x, entity_schema)
-            elif conf.max_beacon_granularity == Granularity.COUNT:
-                response = build_beacon_count_response(response_converted, count, qparams, lambda x, y: x, entity_schema)
-            else:
-                response = build_beacon_resultset_response(response_converted, count, qparams, lambda x, y: x, entity_schema)
-                
-        return await json_stream(request, response)
-
-    return wrapper
 
 # handler with authentication & REMS
 # mostly from BioData.pt
@@ -152,15 +103,28 @@ def generic_handler(db_fn, request=None):
         # { dataset_id:(count, records) }
         datasets_query_results:Dict[str, Tuple[int,List[dict]]] = {}
         
+        db_fn_submodule = str(db_fn.__module__).split(".")[-1]
+        LOG.debug(f"db_fn submodule = {db_fn_submodule}")
+        
         # TODO do this asynchronously
         for dataset_id in all_dataset_ids:
             qparams_dataset = copy.deepcopy(qparams)
-            
-            # TODO change field for genomicVariations
-            filter_dataset_id = {
-                "id": "datasetId", 
-                "value": dataset_id
-            }
+            LOG.debug("")
+            LOG.debug(f"=========================")
+            LOG.debug(f"dataset_id = {dataset_id}")
+            LOG.debug(f"=========================")
+            # change field for genomicVariations
+            if db_fn_submodule == "g_variants":
+                filter_dataset_id = {
+                    "id": "_info.datasetId",
+                    "value": dataset_id 
+                }
+            else:
+                filter_dataset_id = {
+                    "id": "datasetId", 
+                    "value": dataset_id
+                }
+                
             qparams_dataset.query.filters.append(filter_dataset_id)
             LOG.debug(f"Dataset Qparams = {qparams_dataset}")
             entity_schema, count, records = db_fn(entry_id, qparams_dataset)

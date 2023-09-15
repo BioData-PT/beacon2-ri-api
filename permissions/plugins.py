@@ -11,7 +11,6 @@ from beacon.utils.json import json_decoder, json_encoder
 
 from permissions.auth import REMS_BEACON_RESOURCE_PREFIX, REMS_URL, REMS_API_USER, REMS_API_KEY
 from permissions.auth import get_user_info
-from permissions.db import db_handle, check_token
 from permissions.tokens import parse_visa #decode_jwt
 
 LOG = logging.getLogger(__name__)

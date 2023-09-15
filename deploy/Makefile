@@ -10,13 +10,13 @@ load:
 		exit 1;\
 	fi
 	uri="mongodb://root:${DB_PASSWD}@127.0.0.1:27017/beacon?authSource=admin"
-	mongoimport --jsonArray --uri "mongodb://root:${DB_PASSWD}@127.0.0.1:27017/beacon?authSource=admin" --file data/analyses*.json --collection analyses
-	mongoimport --jsonArray --uri "mongodb://root:${DB_PASSWD}@127.0.0.1:27017/beacon?authSource=admin" --file data/biosamples*.json --collection biosamples
-	mongoimport --jsonArray --uri "mongodb://root:${DB_PASSWD}@127.0.0.1:27017/beacon?authSource=admin" --file data/cohorts*.json --collection cohorts
-	mongoimport --jsonArray --uri "mongodb://root:${DB_PASSWD}@127.0.0.1:27017/beacon?authSource=admin" --file data/datasets*.json --collection datasets
-	mongoimport --jsonArray --uri "mongodb://root:${DB_PASSWD}@127.0.0.1:27017/beacon?authSource=admin" --file data/individuals*.json --collection individuals
-	mongoimport --jsonArray --uri "mongodb://root:${DB_PASSWD}@127.0.0.1:27017/beacon?authSource=admin" --file data/runs*.json --collection runs
-	mongoimport --jsonArray --uri "mongodb://root:${DB_PASSWD}@127.0.0.1:27017/beacon?authSource=admin" --file data/genomicVariations*.json --collection genomicVariations
+	mongoimport --jsonArray --uri "mongodb://root:${DB_PASSWD}@127.0.0.1:27017/beacon?authSource=admin" --file data/cineca_with_datasetid/analyses*.json --collection analyses
+	mongoimport --jsonArray --uri "mongodb://root:${DB_PASSWD}@127.0.0.1:27017/beacon?authSource=admin" --file data/cineca_with_datasetid/biosamples*.json --collection biosamples
+	mongoimport --jsonArray --uri "mongodb://root:${DB_PASSWD}@127.0.0.1:27017/beacon?authSource=admin" --file data/cineca_with_datasetid/cohorts*.json --collection cohorts
+	mongoimport --jsonArray --uri "mongodb://root:${DB_PASSWD}@127.0.0.1:27017/beacon?authSource=admin" --file data/cineca_with_datasetid/datasets*.json --collection datasets
+	mongoimport --jsonArray --uri "mongodb://root:${DB_PASSWD}@127.0.0.1:27017/beacon?authSource=admin" --file data/cineca_with_datasetid/individuals*.json --collection individuals
+	mongoimport --jsonArray --uri "mongodb://root:${DB_PASSWD}@127.0.0.1:27017/beacon?authSource=admin" --file data/cineca_with_datasetid/runs*.json --collection runs
+	mongoimport --jsonArray --uri "mongodb://root:${DB_PASSWD}@127.0.0.1:27017/beacon?authSource=admin" --file data/cineca_with_datasetid/genomicVariations*.json --collection genomicVariations
 
 load-disney:
 	if [ -z ${DB_PASSWD} ] ; then\

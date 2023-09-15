@@ -1,15 +1,21 @@
 import jwt
 import time
 from aiohttp import web
+from os import getenv
 
 from permissions.auth import REMS_PUB_URL, SCOPES
 from permissions.auth import idp_client_id, idp_issuer
+
+MAX_TOKEN_AGE = int(getenv("MAX_TOKEN_AGE", None))
 
 import logging
 
 LOG = logging.getLogger(__name__)
 
-def verify_access_token(access_token):
+# returns (isOk, exp_date, max_age)
+def verify_access_token(access_token) -> tuple[bool, int, int]:
+    
+    now = int(time.time())
     
     try:
         # check accessToken
@@ -17,6 +23,9 @@ def verify_access_token(access_token):
         
         if payload_access_token['iss'] != idp_issuer:
             raise web.HTTPUnauthorized(text="Access token is not from the right issuer")
+        
+        if payload_access_token['iat'] > now:
+            raise web.HTTPUnauthorized(text="Access token was issued in the future")
         
         if payload_access_token['aud'] != idp_client_id:
             raise web.HTTPUnauthorized(text="Access token is not for the right client")
@@ -27,7 +36,7 @@ def verify_access_token(access_token):
             LOG.error(f"Correct scopes = {SCOPES}")
             raise web.HTTPUnauthorized(text="Access token doesn't have the correct scopes")
         
-        if payload_access_token['exp'] < time.time():
+        if payload_access_token['exp'] < now:
             raise web.HTTPUnauthorized(text="Access token is expired")
         
     except Exception as e:
@@ -36,7 +45,16 @@ def verify_access_token(access_token):
         raise web.HTTPUnauthorized(text=f"Error while verifying access token.")
     
     LOG.debug("Token verification OK")
-    return True, payload_access_token['exp']
+    # force Beacon to just accept this token for a max configurable amount
+    # instead of as much as user wants
+    exp_max = payload_access_token["iat"] + MAX_TOKEN_AGE
+    exp_token = payload_access_token["exp"]
+    exp = min(exp_max, exp_token)
+    max_age = exp - now
+    if max_age < 0:
+        LOG.error(f"Negative max_age: {max_age}")
+        return False, 0, 0
+    return True, exp, max_age
 
 # returns decoded visa if everything ok
 # raises Exception if error occurs

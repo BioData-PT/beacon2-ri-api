@@ -7,15 +7,18 @@
      "collectionDate" : "2023-06-07",
      "id" : "MICKEY_MOUSE_EAR",
      "individualId" : "MICKEY_MOUSE",
-     "characteristics" : [
+     "info": {
+      "characteristics" : [
          {
             "organism" : [
                {
-                  "text" : "Talking mouse"
+                  "text" : "Mus musculus (mouse)"
                }
             ]
          }
-     ],
+       ],
+       "taxId" : 10090
+     },
      "sampleOriginType" : {
         "id" : "UBERON:0000479",
         "label" : "tissue portion"
@@ -31,15 +34,18 @@
      "collectionDate" : "2023-06-07",
      "id" : "MINNIE_MOUSE_EAR",
      "individualId" : "MINNIE_MOUSE",
-        "characteristics" : [
-           {
-              "organism" : [
-                 {
-                    "text" : "Talking mouse"
-                 }
-              ]
-           }
-         ],
+     "info": {
+      "characteristics" : [
+         {
+            "organism" : [
+               {
+                  "text" : "Mus musculus (mouse)"
+               }
+            ]
+         }
+       ],
+       "taxId" : 10090
+     },
      "sampleOriginType" : {
         "id" : "UBERON:0000479",
         "label" : "tissue portion"
@@ -54,15 +60,18 @@
      "collectionDate" : "2023-06-07",
      "id" : "DONALD_DUCK_BEAK",
      "individualId" : "DONALD_DUCK",
+     "info": {
         "characteristics" : [
            {
               "organism" : [
                  {
-                    "text" : "Talking duck"
+                    "text" : "Anas platyrhynchos (duck)"
                  }
               ]
            }
          ],
+         "taxId" : 8839
+     },
      "sampleOriginType" : {
         "id" : "UBERON:0002481",
         "label" : "bone tissue"

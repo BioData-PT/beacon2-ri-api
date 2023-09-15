@@ -40,16 +40,17 @@ def insert_acess_token(token, user_info, exp):
     
     LOG.debug("Token already in database")
 
-# returns True if token is valid
-def check_token(token)->bool:
+# returns Token document if it is valid, None otherwise
+def search_token(token)->bool:
     doc = db_handle.find_one({"access_token":token})
     if doc is None:
         LOG.debug("Token not found")
-        return False
+        return None
     if doc["exp"] < time.time():
         LOG.debug("Token expired")
-        return False
-    return True
+        return None
+    
+    return doc
 
 def prune_expired_tokens():
     # Prune expired tokens

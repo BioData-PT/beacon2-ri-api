@@ -1,5 +1,6 @@
 import logging
 import time
+from os import getenv
 
 from typing import Optional
 
@@ -13,7 +14,7 @@ from permissions.auth import SCOPES, bearer_required
 from permissions.auth import idp_authorize, idp_client_id, idp_client_secret, idp_callback_url, idp_token_url, idp_issuer
 from permissions.auth import ALLOWED_LOCATIONS
 from permissions.auth import get_user_info
-from permissions.db import insert_acess_token, check_token
+from permissions.db import insert_acess_token
 
 from urllib.parse import urlparse
 from base64 import b64decode, b64encode
@@ -21,13 +22,14 @@ import jwt
 
 from permissions.tokens import verify_access_token
 
-
 LOG = logging.getLogger(__name__)
 
 # state chosen if the user does not provide one
-STATE_DEFAULT = b64encode( ("https://"+ALLOWED_LOCATIONS[0]).encode("ascii") ).decode("ascii")
+STATE_DEFAULT = b64encode( ("https://"+ALLOWED_LOCATIONS[0]+"/api/").encode("ascii") ).decode("ascii")
 
 @bearer_required
+# token is already verified against the username with bearer_required
+# this function gets the datasets specifically authorized for this user
 async def permission(request: Request, username: Optional[str]):
 
     if request.headers.get('Content-Type') == 'application/json':
@@ -77,7 +79,7 @@ async def login_redirect(request: Request):
     LOG.info(f"Redirecting to {redirect_uri}")
     raise web.HTTPSeeOther(location=redirect_uri)
 
-# TODO
+
 # Callback from the login URI, at the end redirects user to the original request
 async def login_callback(request: Request):
     
@@ -146,7 +148,7 @@ async def login_callback(request: Request):
         LOG.error(f"Error while getting access token {e}")
         raise web.HTTPUnauthorized(text=f"Error while getting access token {e}")
     
-    verification_result, exp = verify_access_token(access_token)
+    verification_result, exp, max_age = verify_access_token(access_token)
     
     if not verification_result:
         LOG.error("Error while verifying access token")
@@ -163,11 +165,11 @@ async def login_callback(request: Request):
     headers.add('Authorization', f"Bearer {access_token}")
     
     LOG.debug(f"Redirect URL after login = {redirect_uri_after_login}")
-    
+    LOG.debug(f"max_age = {max_age}")
     cookie_auth = ({
         "name": "Authorization",
         "value": f"Bearer {access_token}",
-        "max_age": 1*60*60, # 1 hour
+        "max_age": max_age,
         "secure": True,
         "samesite": "Strict"
     })
@@ -175,7 +177,7 @@ async def login_callback(request: Request):
     cookie_username = ({
         "name": "username",
         "value": user_info["name"],
-        "max_age": 1*60*60, # 1 hour
+        "max_age": max_age,
         "secure": True,
         "samesite": "Lax"
     })

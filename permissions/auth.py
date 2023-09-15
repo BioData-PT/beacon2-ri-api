@@ -17,11 +17,9 @@ import os
 from aiohttp import ClientSession, BasicAuth, FormData
 from aiohttp import web
 
-
+from permissions.db import search_token
 
 LOG = logging.getLogger(__name__)
-
-
 
 idp_client_id     = config('CLIENT_ID')
 idp_client_secret = config('CLIENT_SECRET')
@@ -93,6 +91,7 @@ def bearer_required(func):
 
         access_token = auth[7:].strip() # 7 = len('Bearer ')
 
+        """ SOLUTION BY ASKING LS AAI FOR USERINFO
         # We make a round-trip to the userinfo. We might not have a JWT token.
         user = await get_user_info(access_token)
         LOG.info('The user is: %r', user)
@@ -101,6 +100,18 @@ def bearer_required(func):
             raise web.HTTPUnauthorized()
         username = user.get('preferred_username')
         user_id = user.get('sub')
+        """
+        
+        # SOLUTION BY CHECKING IF THE TOKEN IS IN OUR DB
+        token_doc = search_token(access_token)
+        if token_doc is None:
+            LOG.error("Token verification failed")
+            raise web.HTTPUnauthorized()
+        
+        user_info = token_doc["user_info"]
+        username = user_info.get("preferred_username")
+        user_id = user_info.get('sub')
+        
         LOG.debug('username: %s', username)
         LOG.debug("ELIXIR_ID: %s", user_id)
 

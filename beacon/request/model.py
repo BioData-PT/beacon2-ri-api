@@ -1,5 +1,6 @@
 import logging
 from typing_extensions import Self
+
 from pydantic import BaseModel
 from strenum import StrEnum
 from typing import List, Optional, Union
@@ -121,15 +122,28 @@ class RequestParams(CamelModel):
 
     def summary(self):
         
-        if self.query.filters:
-            filters = self.query.filters
-        else:
+        # convert filters to list of strings
+        if self.query.filters: # filters in POST (json)
+            LOG.debug(f"query Filters = {self.query.filters}")
+            
+            filters_dict = self.query.filters
+            filters = []
+            for filter in filters_dict:
+                LOG.debug(f"Filter type = {type(filter)}")
+                
+                filter_str = filter_to_str(filter)
+                filters.append(filter_str)
+                
+        else: # filters in URL (e.g. ?filters=NCIT:C20197,NCIT:C16576)
             filters = []
             filters_req = self.query.request_parameters.get("filters", [])
+            LOG.debug(f"req Filters = {filters_req}")
             if isinstance(filters_req, str):
                 filters = list(filters_req.split(","))
             else:
                 filters = filters_req
+        
+        LOG.debug(f"Filter summary = {filters}")
         
         return {
             "apiVersion": self.meta.api_version,
@@ -141,3 +155,17 @@ class RequestParams(CamelModel):
             "requestedGranularity": self.query.requested_granularity,
             "testMode": self.query.test_mode
         }
+        
+def filter_to_str(filter_dict):
+    if "id" not in filter_dict:
+        raise ValueError(f"Unrecognized filter: {filter_dict}")
+    
+    if "value" not in filter_dict:
+        # just id
+        return f"{filter_dict['id']}"
+    
+    if "operator" not in filter_dict:
+        # add default operator (=)
+        return f"{filter_dict['id']}={filter_dict['value']}"
+    
+    return f"{filter_dict['id']}{filter_dict['operator']}{filter_dict['value']}"

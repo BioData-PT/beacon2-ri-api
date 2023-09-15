@@ -113,11 +113,11 @@ async def get_accessible_datasets(token, requested_datasets=None) -> Tuple[List[
         public_datasets.append(None) # records without datasetId are public
         accessible_datasets += public_datasets
     
-    # get controlled datasets
-    controlled_datasets = []
-    with open("/beacon/beacon/request/controlled_datasets.yml", 'r') as stream:
-        controlled_datasets = yaml.safe_load(stream)['controlled_datasets']
-        LOG.debug(f"controlled datasets = {controlled_datasets}")
+    # get registered datasets
+    registered_datasets = []
+    with open("/beacon/beacon/request/registered_datasets.yml", 'r') as stream:
+        registered_datasets = yaml.safe_load(stream)['registered_datasets']
+        LOG.debug(f"registered datasets = {registered_datasets}")
         
     # get the result from task
     specific_datasets, authenticated = await task_permissions
@@ -125,10 +125,10 @@ async def get_accessible_datasets(token, requested_datasets=None) -> Tuple[List[
     LOG.info(f"User specific datasets = {specific_datasets}")
     # Not authenticated, just give access to public datasets
     if not authenticated:
-        return accessible_datasets
+        return accessible_datasets, False
 
-    # authenticated, give access to controlled and user-specific datasets
-    accessible_datasets += controlled_datasets + specific_datasets
+    # authenticated, give access to registered and user-specific datasets
+    accessible_datasets += registered_datasets + specific_datasets
     
     return accessible_datasets, True 
     

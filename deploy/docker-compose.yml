@@ -134,6 +134,8 @@ services:
       OIDC_CALLBACK_URL: ${OIDC_CALLBACK_URL}
       OIDC_ISSUER: ${OIDC_ISSUER}
       OIDC_AUTHORIZE_URL: ${OIDC_AUTHORIZE_URL}
+      MAX_TOKEN_AGE: ${MAX_TOKEN_AGE}
+      
     networks:
       - beacon-priv
       - pub
