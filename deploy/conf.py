@@ -36,8 +36,8 @@ org_info = ''
 # Project info
 #
 description = (r"Portuguese Beacon hosted at BioData.pt containing data from a Portuguese "
-               r"cohort of stage II and III colorectal cancer patients "
-               r"study available at: https://www.nature.com/articles/s41525-021-00177-w")
+               r"cohort of stage II and III colorectal cancer patients. \n"
+               r"Study available at: https://www.nature.com/articles/s41525-021-00177-w")
 version = 'v2.0'
 welcome_url = 'https://beacon.biodata.pt/'
 alternative_url = 'https://beacon.biodata.pt/api/'
@@ -53,7 +53,7 @@ service_url = 'https://beacon.biodata.pt/api/service-info'
 entry_point = False
 is_open = True
 documentation_url = 'https://github.com/BioData-PT/beacon2-ri-api'  # Documentation of the service
-environment = 'development'  # Environment (production, development or testing/staging deployments)
+environment = 'dev'  # Environment (prod, dev, test or staging deployments)
 
 # GA4GH
 ga4gh_service_type_group = 'org.ga4gh'
@@ -64,7 +64,7 @@ ga4gh_service_type_version = '1.0'
 beacon_handovers = [
     {
         'handoverType': {
-            'id': 'CUSTOM',
+            'id': 'CUSTOM:000001',
             'label': 'Project description'
         },
         'note': 'Project description',

@@ -27,9 +27,10 @@ services:
   ui:
     image: pt-beacon/training_ui:v0.1
     build: ../training-ui-files
-    hostname: beacon_training_ui    
+    hostname: beacon-training-ui
+    container_name: beacon-training-ui    
     ports:
-      - 8080:8080
+      - 9500:8080
     environment:
       USERNAME: root
       PASSWORD: ${DB_PASSWD}
@@ -43,8 +44,9 @@ services:
   db:
     image: mongo:5
     hostname: mongo
+    container_name: beacon-db
     ports:
-      - 27017:27017
+      - 127.0.0.1:27017:27017
     environment:
       MONGO_INITDB_ROOT_USERNAME: root
       MONGO_INITDB_ROOT_PASSWORD: ${DB_PASSWD}
@@ -57,13 +59,16 @@ services:
 
   mongo-express:
     image: mongo-express
+    container_name: beacon-mongo-express
     restart: always
     ports:
-      - 8081:8081
+      - 127.0.0.1:2081:8081
     environment:
       ME_CONFIG_MONGODB_ADMINUSERNAME: root
       ME_CONFIG_MONGODB_ADMINPASSWORD: ${DB_PASSWD}
       ME_CONFIG_MONGODB_URL: mongodb://root:${DB_PASSWD}@mongo:27017/
+      ME_CONFIG_BASICAUTH_USERNAME: ${MONGO_EXPRESS_USERNAME}
+      ME_CONFIG_BASICAUTH_PASSWORD: ${MONGO_EXPRESS_PASSWD}
     networks:
       - beacon-priv
 
@@ -98,11 +103,11 @@ services:
     # entrypoint: ['/bin/sleep','100000000']
 
   ###########################################
-  # Dummy Permissions server
+  # Permissions server
   ###########################################
   
   permissions:
-    image: egarchive/beacon:2.0
+    image: pt/beacon:2.0
     hostname: beacon-permissions
     container_name: beacon-permissions
     volumes:
@@ -110,6 +115,28 @@ services:
       - ./logger.yml:/beacon/logger.yml
     ports:
       - "5051:5051"
+    environment:
+      # DB credentials
+      DB_PASSWD: ${DB_PASSWD}
+
+      # LS AAI configs
+      CLIENT_ID: ${CLIENT_ID}
+      CLIENT_SECRET: ${CLIENT_SECRET}
+
+      # REMS configs
+      REMS_URL: ${REMS_URL}
+      REMS_API_USER: ${REMS_API_USER}
+      REMS_API_KEY: ${REMS_API_KEY}
+      REMS_PUB_URL: ${REMS_PUB_URL}
+      REMS_BEACON_RESOURCE_PREFIX: ${REMS_BEACON_RESOURCE_PREFIX}
+
+      # Permissions configs
+      REMS_PERMS_ENABLED: ${REMS_PERMS_ENABLED}
+      OIDC_CALLBACK_URL: ${OIDC_CALLBACK_URL}
+      OIDC_ISSUER: ${OIDC_ISSUER}
+      OIDC_AUTHORIZE_URL: ${OIDC_AUTHORIZE_URL}
+      MAX_TOKEN_AGE: ${MAX_TOKEN_AGE}
+      
     networks:
       - beacon-priv
       - pub
@@ -147,7 +174,7 @@ services:
     volumes:
       - ./beacon-realm.json:/tmp/beacon-realm.json
     ports:
-      - "8000:8000"
+      - "8083:8000"
       - "9991:8443"
     networks:
       - pub

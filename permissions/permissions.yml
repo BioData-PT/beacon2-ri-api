@@ -1,4 +1,5 @@
 app-user3: []
+costero-e: []
 jane:
 - GiaB
 - CINECA_synthetic_cohort_EUROPE_UK1
@@ -11,3 +12,6 @@ john:
 new_user:
 - GiaB
 - CINECA_synthetic_cohort_EUROPE_UK1
+MiguelSantos:
+- CINECA_synthetic_cohort_EUROPE_UK1
+- PRJNA689313

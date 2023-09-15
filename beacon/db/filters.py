@@ -18,9 +18,16 @@ LOG = logging.getLogger(__name__)
 CURIE_REGEX = r'^([a-zA-Z0-9]*):\/?[a-zA-Z0-9]*$'
 
 def apply_filters(query: dict, filters: List[dict], collection: str) -> dict:
+    LOG.debug("")
+    LOG.debug(f"QUERY AT THE START OF APPLY FILTERS")
+    LOG.debug(f"query = {query}")
+    LOG.debug("")
+    
     LOG.debug("Filters len = {}".format(len(filters)))
-    if len(filters) >= 1:
-        query["$and"] = []
+    if len(filters):
+        if "$and" not in query:
+            query["$and"] = []
+            
         for filter in filters:
             partial_query = {}
             if "value" in filter:
@@ -51,7 +58,10 @@ def apply_filters(query: dict, filters: List[dict], collection: str) -> dict:
             if query["$and"] == [{'$or': []}]:
                 query = {}
 
-
+    LOG.debug("")
+    LOG.debug(f"QUERY AT THE END OF APPLY FILTERS")
+    LOG.debug(f"query = {query}")
+    LOG.debug("")
     return query
 
 
@@ -315,6 +325,7 @@ def apply_alphanumeric_filter(query: dict, filter: AlphanumericFilter, collectio
             formatted_value = format_value(filter.value)
         formatted_operator = format_operator(filter.operator)
         query[filter.id] = { formatted_operator: formatted_value }
+        
     elif isinstance(formatted_value,str):
         
         if formatted_operator == "$eq":
@@ -335,18 +346,13 @@ def apply_alphanumeric_filter(query: dict, filter: AlphanumericFilter, collectio
                 query['$or'].append(query_id)
 
             else:
-                try: 
-                    if query['$or']:
-                        pass
-                    else:
-                        query['$or']=[]
-                except Exception:
+                if "$or" not in query:
                     query['$or']=[]
                 
                 query['$or'].append({ filter.id : formatted_value })
                 # if field does not end on "id" or "label" try to search for them too
                 last_id_field = filter.id.split(".")[-1]
-                if last_id_field not in ("id", "label"):
+                if last_id_field not in ("id", "label") and not last_id_field.endswith("Id"):
                     query['$or'].append({ filter.id + ".id" : formatted_value })
                     query['$or'].append({ filter.id + ".label" : formatted_value })
                     
@@ -432,3 +438,4 @@ def apply_custom_filter(query: dict, filter: CustomFilter, collection:str) -> di
 
     LOG.debug("QUERY: %s", query)
     return query
+

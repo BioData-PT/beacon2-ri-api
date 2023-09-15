@@ -30,7 +30,8 @@ import yaml
 
 def load_logger():
     # Configure the logging
-    log_file =  Path(__file__).parent / "logger.yml"
+    log_file =  Path(__file__).parent.parent / "logger.yml"
+    
     if log_file.exists():
         with open(log_file, 'r') as stream:
             dictConfig(yaml.safe_load(stream))

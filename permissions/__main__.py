@@ -6,6 +6,7 @@ We hard-code the dataset permissions.
 """
 import logging
 from typing import Optional
+import os
 
 from aiohttp import web
 from aiohttp.web import FileField
@@ -16,39 +17,25 @@ from aiohttp_middlewares.cors import DEFAULT_ALLOW_HEADERS
 
 from . import load_logger
 from .auth import bearer_required
+from .handlers import permission, login_redirect, login_callback
 # update that line to use your prefered permissions plugin
-from .plugins import DummyPermissions as PermissionsProxy
+from .plugins import DummyPermissions
+from .plugins import RemsPermissions
 
 LOG = logging.getLogger(__name__)
 
-@bearer_required
-async def permission(request: Request, username: Optional[str]):
 
-    if request.headers.get('Content-Type') == 'application/json':
-        post_data = await request.json()
-    else:
-        post_data = await request.post()
-    LOG.debug('POST DATA: %s', post_data)
-
-    v = post_data.get('datasets')
-    if v is None:
-        requested_datasets = []
-    elif isinstance(v, list):
-        requested_datasets = v
-    elif isinstance(v, FileField):
-        requested_datasets = []
-    else:
-        requested_datasets = v.split(sep=',')  # type: ignore
-        
-    LOG.debug('requested datasets: %s', requested_datasets)
-    datasets = await request.app['permissions'].get(username, requested_datasets=requested_datasets)
-    LOG.debug('selected datasets: %s', datasets)
-
-    return web.json_response(list(datasets or [])) # cuz python-json doesn't like sets
 
 async def initialize(app):
     """Initialize server."""
-    app['permissions'] = PermissionsProxy()
+    
+    if os.getenv("REMS_PERMS_ENABLED", "False") == "True":
+        permission_plugin = RemsPermissions()
+    else:
+        LOG.warning("REMS_PERMS_ENABLE env var set to False or not set, using Dummy permissions!")
+        permission_plugin = DummyPermissions()
+        
+    app['permissions'] = permission_plugin
     await app['permissions'].initialize()
     LOG.info("Initialization done.")
 
@@ -70,6 +57,10 @@ def main(path=None):
     
     # Configure the endpoints
     server.add_routes([web.post('/', permission)]) # type: ignore
+    
+    # login endpoints
+    server.add_routes([web.get('/login', login_redirect)])
+    server.add_routes([web.get('/oidc-callback', login_callback)]) 
 
     cors = aiohttp_cors.setup(server, defaults={
     "http://localhost:3000": aiohttp_cors.ResourceOptions(
