@@ -103,7 +103,7 @@ services:
     # entrypoint: ['/bin/sleep','100000000']
 
   ###########################################
-  # Dummy Permissions server
+  # Permissions server
   ###########################################
   
   permissions:
@@ -131,6 +131,7 @@ services:
       REMS_BEACON_RESOURCE_PREFIX: ${REMS_BEACON_RESOURCE_PREFIX}
 
       # Permissions configs
+      REMS_PERMS_ENABLED: ${REMS_PERMS_ENABLED}
       OIDC_CALLBACK_URL: ${OIDC_CALLBACK_URL}
       OIDC_ISSUER: ${OIDC_ISSUER}
       OIDC_AUTHORIZE_URL: ${OIDC_AUTHORIZE_URL}
