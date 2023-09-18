@@ -73,6 +73,10 @@ mongosh:
 
 debug:
 	docker-compose restart beacon && docker compose logs -f beacon
+
+extract:
+	# extract filtering terms
+	nohup docker exec beacon python beacon/db/extract_filtering_terms.py &> /tmp/output_extract_filtering_terms.txt &
 	
 # only works with justfile (https://github.com/casey/just#recipe-parameters)
 test COLLECTION REQUEST:
