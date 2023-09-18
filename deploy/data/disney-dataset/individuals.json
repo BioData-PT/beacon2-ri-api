@@ -1,0 +1,74 @@
+[
+  {
+      "diseases" : [
+        {
+            "diseaseCode" : {
+               "id" : "FICTIONDIS_1",
+               "label" : "talking mouse syndrome"
+            }
+        }
+     ],
+     "id" : "MICKEY_MOUSE",
+     "info" : {
+     },
+     
+      "geographicOrigin" : {
+         "id" : "FICTIONPLACE_1",
+         "label" : "Mickey magic house"
+      },
+
+     "sex" : {
+         "id" : "NCIT:C20197",
+         "label" : "male"
+     },
+     "datasetId" : "Disney_Characters"
+  },
+  {
+     "diseases" : [
+         {
+            "diseaseCode" : {
+               "id" : "FICTIONDIS_1",
+               "label" : "talking mouse syndrome"
+            }
+         }
+      ],
+      "id" : "MINNIE_MOUSE",
+      "info" : {
+      },
+     
+      "geographicOrigin" : {
+         "id" : "FICTIONPLACE_1",
+         "label" : "Mickey magic house"
+      },
+
+      "sex" : {
+         "id" : "NCIT:C16576",
+         "label" : "female"
+      },
+      "datasetId" : "Disney_Characters"
+  },
+  {
+      "diseases" : [
+         {
+            "diseaseCode" : {
+               "id": "FICTIONDIS_2",
+               "label" : "talking duck syndrome"
+            }
+         }
+      ], 
+      "id" : "DONALD_DUCK",
+      "info" : {
+      },
+
+      "geographicOrigin" : {
+         "id" : "FICTIONPLACE_1",
+         "label" : "Mickey magic house"
+      },
+
+      "sex" : {
+         "id" : "NCIT:C20197",
+         "label" : "male"
+      },
+      "datasetId" : "Disney_Characters"
+  }
+]

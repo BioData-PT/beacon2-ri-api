@@ -3,8 +3,15 @@ import asyncpg
 from asyncpg import Pool
 from typing import Dict, Optional
 import yaml
+import requests
+from multidict import CIMultiDict
+#import jwt
 
 from beacon.utils.json import json_decoder, json_encoder
+
+from permissions.auth import REMS_BEACON_RESOURCE_PREFIX, REMS_URL, REMS_API_USER, REMS_API_KEY
+from permissions.auth import get_user_info
+from permissions.tokens import parse_visa #decode_jwt
 
 LOG = logging.getLogger(__name__)
 
@@ -104,3 +111,63 @@ class PostgresPermissions(Permissions):
         if self.db:
             self.db.terminate()
         self.db = None
+
+
+class RemsPermissions(Permissions):
+    """
+    REMS permissions plugin
+    
+    We get the permissions from the REMS instance
+    """
+
+    # TODO CACHE REMS RESPONSE
+    db: Dict = {}
+
+    def __init__(self, *args, **kwargs):
+        pass
+
+    async def initialize(self):
+        LOG.info("Initializing REMS permissions")
+        pass
+
+    # TODO filter by requested datasets 
+    async def get(self, username, requested_datasets=None):
+        LOG.debug(f"ELIXIR ID: {username}")
+        request_uri = f"{REMS_URL}/api/permissions/{username}?expired=false"
+        headers = CIMultiDict()
+        headers.add('content-type', "application/json")
+        headers.add('x-rems-api-key', REMS_API_KEY)
+        headers.add('x-rems-user-id', REMS_API_USER)
+        
+        try:
+            response = requests.get(url=request_uri, headers=headers).json()
+        except Exception as e:
+            LOG.error(f"Error while getting permissions from REMS:\n{str(e)}")
+            return []
+        
+        LOG.debug(f"Response from REMS:\n\n{response}\n")
+        
+        result_datasets = []
+        
+        # get info from passport
+        try:
+            visas = response["ga4gh_passport_v1"]
+            for visa in visas:
+                visa_decoded = parse_visa(visa, username)
+                resource_id = visa_decoded["ga4gh_visa_v1"]["value"]
+                
+                # check if it is a beacon dataset
+                if resource_id.startswith(REMS_BEACON_RESOURCE_PREFIX):
+                    dataset_id = resource_id.split(REMS_BEACON_RESOURCE_PREFIX)[1]
+                    result_datasets.append(dataset_id)
+                
+            
+        except Exception as e:
+            LOG.error(f"Error while parsing passport from REMS:{str(e)}\n")
+            return []
+        
+        # remove duplicates
+        return list(set(result_datasets))
+
+    async def close(self):
+        pass

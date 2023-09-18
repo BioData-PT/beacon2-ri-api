@@ -1,4 +1,5 @@
 from pymongo.mongo_client import MongoClient
+from pymongo import ASCENDING
 import conf
 import os
 
@@ -22,4 +23,15 @@ client.beacon.datasets.create_index([("$**", "text")])
 client.beacon.genomicVariations.create_index([("$**", "text")])
 client.beacon.individuals.create_index([("$**", "text")])
 client.beacon.runs.create_index([("$**", "text")])
+
+# custom indexes
+client.beacon.genomicVariations.create_index([
+        ("_info.datasetId", ASCENDING),
+        ("_position.refseqId", ASCENDING),
+        ("variation.referenceBases", ASCENDING),
+        ("variation.alternateBases", ASCENDING),
+        ("_position.start", ASCENDING)
+    ],
+    name="genomic variation & region query"
+)
 print("*** Reindex completed OK! ***")
