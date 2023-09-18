@@ -107,6 +107,8 @@ def generic_handler(db_fn, request=None):
         db_fn_submodule = str(db_fn.__module__).split(".")[-1]
         LOG.debug(f"db_fn submodule = {db_fn_submodule}")
         
+        entity_schema = db_fn_submodule # in case no records are found
+        
         # TODO do this asynchronously
         for dataset_id in all_dataset_ids:
             qparams_dataset = copy.deepcopy(qparams)
