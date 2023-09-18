@@ -367,7 +367,7 @@ def filtering_terms_handler(db_fn, request=None):
         #resources = ontologies.get_resources()
         #response = build_filtering_terms_response(records, resources, qparams)
         entity_schema, count, records = db_fn(entry_id, qparams)
-        response = build_beacon_count_response(records, count, qparams, lambda x, y: x, entity_schema)
+        response = build_filtering_terms_response(records, count, qparams, lambda x, y: x, entity_schema)
         return await json_stream(request, response)
 
     return wrapper
