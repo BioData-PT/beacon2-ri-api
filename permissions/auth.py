@@ -35,7 +35,7 @@ idp_introspection = 'https://login.elixir-czech.org/oidc/introspect'
 #idp_introspection = 'http://idp:8080/auth/realms/Beacon/protocol/openid-connect/token/introspect'
 idp_token_url = 'https://login.elixir-czech.org/oidc/token'
 
-ALLOWED_LOCATIONS = ["beacon.gdi.biodata.pt", "beacon.biodata.pt"]
+ALLOWED_LOCATIONS = config('BEACON_DOMAINS', cast=lambda v: [s.strip() for s in v.split(',')])
 SCOPES = set(["openid", "email", "profile", "country"])
 
 # REMS
