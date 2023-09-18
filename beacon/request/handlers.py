@@ -353,7 +353,27 @@ def generic_handler_crg(db_fn, request=None):
     return wrapper
 
 
+
+
 def filtering_terms_handler(db_fn, request=None):
+    async def wrapper(request: Request):
+        # Get params
+        json_body = await request.json() if request.method == "POST" and request.has_body and request.can_read_body else {}
+        qparams = RequestParams(**json_body).from_request(request)
+        entry_id = request.match_info.get('id', None)
+
+        # Get response
+        _, _, records = db_fn(entry_id, qparams)
+        resources = ontologies.get_resources()
+        response = build_filtering_terms_response(records, resources, qparams)
+        return await json_stream(request, response)
+
+    return wrapper
+
+
+# I don't know why this function was changed to look like this
+# So I replaced it with an older version of it, the one above this
+def filtering_terms_handler_auth(db_fn, request=None):
     async def wrapper(request: Request):
         # Get params
         json_body = await request.json() if request.method == "POST" and request.has_body and request.can_read_body else {}
@@ -489,3 +509,4 @@ def filtering_terms_handler(db_fn, request=None):
         return await json_stream(request, response)
 
     return wrapper
+
