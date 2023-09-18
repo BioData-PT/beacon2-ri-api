@@ -107,7 +107,6 @@ def generic_handler(db_fn, request=None):
         db_fn_submodule = str(db_fn.__module__).split(".")[-1]
         LOG.debug(f"db_fn submodule = {db_fn_submodule}")
         
-        entity_schema = db_fn_submodule # in case no records are found
         
         # TODO do this asynchronously
         for dataset_id in all_dataset_ids:
@@ -127,12 +126,20 @@ def generic_handler(db_fn, request=None):
                     "id": "datasetId", 
                     "value": dataset_id
                 }
-                
+                                
             qparams_dataset.query.filters.append(filter_dataset_id)
             LOG.debug(f"Dataset Qparams = {qparams_dataset}")
             entity_schema, count, records = db_fn(entry_id, qparams_dataset)
             dataset_result = (count, list(records))
             datasets_query_results[dataset_id] = (dataset_result)
+        
+                    
+        # build empty response if DB has no datasets
+        if len(all_dataset_ids) == 0:
+            LOG.warning("No datasets found in DB, will return empty response")
+            entity_schema, _, _ = db_fn(entry_id, qparams)
+            count, records = 0, []
+
         
         LOG.debug(f"schema = {entity_schema}")
         
