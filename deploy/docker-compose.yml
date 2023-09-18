@@ -116,6 +116,8 @@ services:
     ports:
       - "5051:5051"
     environment:
+      BEACON_DOMAINS: ${BEACON_DOMAINS}
+
       # DB credentials
       DB_PASSWD: ${DB_PASSWD}
 
