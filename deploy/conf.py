@@ -36,7 +36,7 @@ org_info = ''
 # Project info
 #
 description = (r"Portuguese Beacon hosted at BioData.pt containing data from a Portuguese "
-               r"cohort of stage II and III colorectal cancer patients. \n"
+               r"cohort of stage II and III colorectal cancer patients. "
                r"Study available at: https://www.nature.com/articles/s41525-021-00177-w")
 version = 'v2.0'
 welcome_url = 'https://beacon.biodata.pt/'
