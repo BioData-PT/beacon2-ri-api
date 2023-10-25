@@ -12,3 +12,5 @@ COPY generateRandomSecretKey.py /usr/share/training-ui/beacon-2.x-training-ui/ap
 
 #CMD git pull && python3 app/manage.py runserver 0.0.0.0:8080
 CMD git pull origin dev && git checkout dev &&  python3 app/manage.py runserver 0.0.0.0:8080
+
+
