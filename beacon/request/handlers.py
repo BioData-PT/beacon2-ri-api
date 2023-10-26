@@ -77,6 +77,8 @@ def generic_handler(db_fn, request=None):
         
         authenticated=False
         
+        LOG.debug(f"Headers = {request.headers}")
+        
         access_token_header = request.headers.get('Authorization')
         access_token_cookies = request.cookies.get("Authorization")
         LOG.debug(f"Access token header = {access_token_header}")
