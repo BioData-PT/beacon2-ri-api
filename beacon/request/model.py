@@ -124,12 +124,12 @@ class RequestParams(CamelModel):
         
         # convert filters to list of strings
         if self.query.filters: # filters in POST (json)
-            LOG.debug(f"query Filters = {self.query.filters}")
+            #LOG.debug(f"query Filters = {self.query.filters}")
             
             filters_dict = self.query.filters
             filters = []
             for filter in filters_dict:
-                LOG.debug(f"Filter type = {type(filter)}")
+                #LOG.debug(f"Filter type = {type(filter)}")
                 
                 filter_str = filter_to_str(filter)
                 filters.append(filter_str)
@@ -137,13 +137,13 @@ class RequestParams(CamelModel):
         else: # filters in URL (e.g. ?filters=NCIT:C20197,NCIT:C16576)
             filters = []
             filters_req = self.query.request_parameters.get("filters", [])
-            LOG.debug(f"req Filters = {filters_req}")
+            #LOG.debug(f"req Filters = {filters_req}")
             if isinstance(filters_req, str):
                 filters = list(filters_req.split(","))
             else:
                 filters = filters_req
         
-        LOG.debug(f"Filter summary = {filters}")
+        #LOG.debug(f"Filter summary = {filters}")
         
         return {
             "apiVersion": self.meta.api_version,
