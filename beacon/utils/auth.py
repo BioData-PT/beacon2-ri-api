@@ -13,6 +13,7 @@ from ..conf import permissions_url
 LOG = logging.getLogger(__name__)
 
 async def resolve_token(token, requested_datasets_ids):
+    raise KeyError("This function should not be used anymore")
     # If the user is not authenticated (ie no token)
     # we pass (requested_datasets, False) to the database function: it will filter out the datasets list, with the public ones
     if token is None:
@@ -55,11 +56,12 @@ async def resolve_token(token, requested_datasets_ids):
 
 # async job to request permissions server for
 # specifically authorized datasets from user and handle authentication
-async def request_permissions(token) -> Tuple[List[str], bool]:
+# returns [accessible_datasets, is_authenticated, is_registered]
+async def request_permissions(token) -> Tuple[List[str], bool, bool]:
     
     if token is None:
         LOG.debug("Token is none")
-        return [], False
+        return [], False, False
     
     LOG.debug("About to ask permissions server...")
     # The permissions server will:
@@ -77,9 +79,10 @@ async def request_permissions(token) -> Tuple[List[str], bool]:
                 LOG.error('Permissions server error %d', resp.status)
                 error = await resp.text()
                 LOG.error('Error: %s', error)
-                return [], False
+                return [], False, False
                 #raise web.HTTPUnauthorized(body=error)
             
+            """
             content = await resp.content.read()
             authorized_datasets = content.decode('utf-8')
             LOG.debug(f"authorized_datasets decoded = {authorized_datasets}")
@@ -90,15 +93,23 @@ async def request_permissions(token) -> Tuple[List[str], bool]:
                     if '[' not in auth_dataset:
                         if ']' not in auth_dataset:
                             auth_datasets.append(auth_dataset)
-                            
+            """
+            
+            try:
+                content = await resp.json()
+                auth_datasets = content["datasets"]
+                is_registered = content["is_registered"]
+            except Exception as e:
+                LOG.error(f"Error while getting results from permission server: {e}")
+                return [], False, False
+            
             LOG.debug(auth_datasets)
-            return auth_datasets, True
+            return auth_datasets, True, is_registered
 
-# returns (datasets, authenticated)
 # returns datasets that are accessible by user
 # TODO if requested_datasets is given, filters them by perms
 # otherwise returns all accessible
-async def get_accessible_datasets(token, requested_datasets=None) -> Tuple[List[str], bool]:
+async def get_accessible_datasets(token, requested_datasets=None) -> List[str]:
     
     accessible_datasets:List[str] = []
     
@@ -120,16 +131,20 @@ async def get_accessible_datasets(token, requested_datasets=None) -> Tuple[List[
         LOG.debug(f"registered datasets = {registered_datasets}")
         
     # get the result from task
-    specific_datasets, authenticated = await task_permissions
+    specific_datasets, is_authenticated, is_registered = await task_permissions
     
     LOG.info(f"User specific datasets = {specific_datasets}")
     # Not authenticated, just give access to public datasets
-    if not authenticated:
-        return accessible_datasets, False
+    if not is_authenticated:
+        return accessible_datasets
+    
+    # authenticated but not researcher status, give access to public and specific
+    if not is_registered:
+        return accessible_datasets + specific_datasets
 
-    # authenticated, give access to registered and user-specific datasets
+    # authenticated and registered, give access to everything (add registered and user-specific datasets)
     accessible_datasets += registered_datasets + specific_datasets
     
-    return accessible_datasets, True 
+    return accessible_datasets 
     
     

@@ -63,9 +63,9 @@ class DummyPermissions(Permissions):
             datasets = set(self.db.get(username))
             
         if requested_datasets:
-            return set(requested_datasets).intersection(datasets)
+            return set(requested_datasets).intersection(datasets), True
         else:
-            return datasets
+            return datasets, True
 
     async def close(self):
         pass
@@ -152,14 +152,16 @@ class RemsPermissions(Permissions):
         # get info from passport
         try:
             visas = response["ga4gh_passport_v1"]
+            
             for visa in visas:
                 visa_decoded = parse_visa(visa, username)
                 resource_id = visa_decoded["ga4gh_visa_v1"]["value"]
                 
-                # check if it is a beacon dataset
+                # check if it is a beacon dataset, if so add dataset to result
                 if resource_id.startswith(REMS_BEACON_RESOURCE_PREFIX):
                     dataset_id = resource_id.split(REMS_BEACON_RESOURCE_PREFIX)[1]
                     result_datasets.append(dataset_id)
+                
                 
             
         except Exception as e:

@@ -1,5 +1,6 @@
 import jwt
 import time
+from typing import *
 from aiohttp import web
 from os import getenv
 
@@ -13,7 +14,7 @@ import logging
 LOG = logging.getLogger(__name__)
 
 # returns (isOk, exp_date, max_age)
-def verify_access_token(access_token) -> tuple[bool, int, int]:
+def verify_access_token(access_token) -> Tuple[bool, int, int]:
     
     now = int(time.time())
     
@@ -61,7 +62,7 @@ def verify_access_token(access_token) -> tuple[bool, int, int]:
 def parse_visa(visa, user_id):
     
     try:
-        payload = jwt.decode(visa, options={"verify_signature": False})
+        payload = jwt.decode_jwt(visa)
         
         if payload['exp'] < time.time():
             raise web.HTTPUnauthorized(text="Visa is expired")
@@ -73,11 +74,16 @@ def parse_visa(visa, user_id):
         if not payload["ga4gh_visa_v1"]["value"].strip():
             raise web.HTTPUnauthorized(text="Visa value is empty")
         
+        """
+        # TODO THIS WILL NEED TO BE REPLACED BY A SERIOUS LIST OF
+        # TRUSTED ISSUERS AND THEIR JWT ENDPOINT
         if payload["ga4gh_visa_v1"]["source"] != REMS_PUB_URL:
             LOG.error(f"Visa source doesn't match")
             LOG.erorr(f"Expected: {REMS_PUB_URL}")
             LOG.error(f'Received: {payload["ga4gh_visa_v1"]["source"]}')
             raise web.HTTPUnauthorized(text="Visa source doesn't match.")
+        """    
+        
         
     except Exception as e:
         LOG.error(f"Error while verifying visa.\n{str(e)}")
@@ -87,4 +93,26 @@ def parse_visa(visa, user_id):
     return payload
 
 def decode_jwt(jwt_token):
-    jwt.decode(jwt_token, options={"verify_signature": False})
+    return jwt.decode(jwt_token, options={"verify_signature": False})
+
+# receives passport in list format (decoded)
+# returns True if passports grant registered access, False otherwise
+def verify_registered(passport:List[str], user_id) -> bool:
+    found_researcher_status = False
+    found_accepted_terms = False
+    
+    for encoded_visa in passport:
+        try:
+            decoded_visa = parse_visa(encoded_visa, user_id)["ga4gh_visa_v1"]
+            if decoded_visa["type"] == "ResearcherStatus":
+                found_researcher_status = True
+            elif decoded_visa["type"] == "AcceptedTermsAndPolicies":
+                found_accepted_terms = True
+                
+        except Exception as e:
+            LOG.error(f"Error verifying visa: {e}")
+            
+        if found_researcher_status and found_accepted_terms:
+            return True
+        
+    return False

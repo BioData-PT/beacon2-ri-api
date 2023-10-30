@@ -18,6 +18,7 @@ from aiohttp import ClientSession, BasicAuth, FormData
 from aiohttp import web
 
 from permissions.db import search_token
+from permissions.tokens import verify_registered
 
 LOG = logging.getLogger(__name__)
 
@@ -36,7 +37,7 @@ idp_introspection = 'https://login.elixir-czech.org/oidc/introspect'
 idp_token_url = 'https://login.elixir-czech.org/oidc/token'
 
 ALLOWED_LOCATIONS = config('BEACON_DOMAINS', cast=lambda v: [s.strip() for s in v.split(',')])
-SCOPES = set(["openid", "email", "profile", "country"])
+SCOPES = set(["openid", "email", "profile", "country", "ga4gh_passport_v1"])
 
 # REMS
 REMS_URL = config('REMS_URL')
@@ -111,10 +112,12 @@ def bearer_required(func):
         user_info = token_doc["user_info"]
         username = user_info.get("preferred_username")
         user_id = user_info.get('sub')
+        passport = user_info.get('ga4gh_passport_v1', [])
+        is_registered = verify_registered(passport, user_id)
         
         LOG.debug('username: %s', username)
         LOG.debug("ELIXIR_ID: %s", user_id)
 
-        return await func(request, user_id)
+        return await func(request, user_id, is_registered)
     return decorated
 

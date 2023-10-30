@@ -75,7 +75,7 @@ def generic_handler(db_fn, request=None):
         
         LOG.debug(f"Query Params = {qparams}")
         
-        authenticated=False
+        LOG.debug(f"Headers = {request.headers}")
         
         access_token_header = request.headers.get('Authorization')
         access_token_cookies = request.cookies.get("Authorization")
@@ -145,7 +145,7 @@ def generic_handler(db_fn, request=None):
         
         # get response of permissions server
         accessible_datasets:List[str] = [] # array of dataset ids
-        accessible_datasets, authenticated = await task_permissions
+        accessible_datasets = await task_permissions
 
         # get the max authorized granularity
         requested_granularity = qparams.query.requested_granularity
