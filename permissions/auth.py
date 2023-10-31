@@ -17,9 +17,6 @@ import os
 from aiohttp import ClientSession, BasicAuth, FormData
 from aiohttp import web
 
-from permissions.db import search_token
-from permissions.tokens import verify_registered
-
 LOG = logging.getLogger(__name__)
 
 idp_client_id     = config('CLIENT_ID')
@@ -45,6 +42,9 @@ REMS_API_USER = config('REMS_API_USER')
 REMS_API_KEY = config('REMS_API_KEY')
 REMS_BEACON_RESOURCE_PREFIX = config('REMS_BEACON_RESOURCE_PREFIX')
 REMS_PUB_URL = config('REMS_PUB_URL')
+
+from permissions.db import search_token
+from permissions.tokens import verify_registered
 
 async def get_user_info(access_token):
     '''

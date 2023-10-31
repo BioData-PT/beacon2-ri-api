@@ -165,7 +165,7 @@ class RemsPermissions(Permissions):
                 
             
         except Exception as e:
-            LOG.error(f"Error while parsing passport from REMS:{str(e)}\n")
+            LOG.error(f"Error while parsing passport from REMS: {str(e)}\n")
             return []
         
         # remove duplicates

@@ -61,14 +61,23 @@ def verify_access_token(access_token) -> Tuple[bool, int, int]:
 # raises Exception if error occurs
 def parse_visa(visa, user_id):
     
+    visa_type = "Unknown"
+    
     try:
-        payload = jwt.decode_jwt(visa)
+        payload = decode_jwt(visa)
+        
+        visa_type = payload.get("ga4gh_visa_v1",{}).get("type", "Unknown")
         
         if payload['exp'] < time.time():
             raise web.HTTPUnauthorized(text="Visa is expired")
         
-        if payload["sub"] != user_id:
-            raise web.HTTPUnauthorized(text="Visa is not for the right user")
+        # unify @lifescience and @elixir-europe user ids
+        jwt_sub = payload["sub"].replace("@lifescience-ri.eu","@elixir-europe.org")
+        
+        if jwt_sub != user_id:
+            raise web.HTTPUnauthorized(text=f"Visa is not for the right user.\n"
+                f"Visa is for user {payload['sub']}\n"
+                f"Expected user {user_id}\n")
         
         # verify that it has the expected value and that it is not empty
         if not payload["ga4gh_visa_v1"]["value"].strip():
@@ -86,8 +95,10 @@ def parse_visa(visa, user_id):
         
         
     except Exception as e:
-        LOG.error(f"Error while verifying visa.\n{str(e)}")
-        LOG.debug(f"visa:\n\n{visa}\n")
+        LOG.error(f"Error while verifying visa:")
+        LOG.error(f"Type of Visa: {visa_type}")
+        LOG.error(f"{e} - {e.text}")
+        LOG.debug(f"visa: {visa}\n")
         raise web.HTTPUnauthorized(text=f"Error while verifying visa.")
     
     return payload
@@ -104,6 +115,7 @@ def verify_registered(passport:List[str], user_id) -> bool:
     for encoded_visa in passport:
         try:
             decoded_visa = parse_visa(encoded_visa, user_id)["ga4gh_visa_v1"]
+            LOG.debug(f"Visa type = {decoded_visa['type']}")
             if decoded_visa["type"] == "ResearcherStatus":
                 found_researcher_status = True
             elif decoded_visa["type"] == "AcceptedTermsAndPolicies":
@@ -111,8 +123,13 @@ def verify_registered(passport:List[str], user_id) -> bool:
                 
         except Exception as e:
             LOG.error(f"Error verifying visa: {e}")
+            continue
+        
+        LOG.debug(f"Visa ok!")
             
         if found_researcher_status and found_accepted_terms:
+            LOG.debug(f"Bonadide OK!")
             return True
-        
+    
+    LOG.debug(f"No Bonafide")
     return False
