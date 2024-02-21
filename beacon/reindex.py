@@ -28,9 +28,10 @@ client.beacon.runs.create_index([("$**", "text")])
 client.beacon.genomicVariations.create_index([
         ("_info.datasetId", ASCENDING),
         ("_position.refseqId", ASCENDING),
+        ("_position.start", ASCENDING),
         ("variation.referenceBases", ASCENDING),
-        ("variation.alternateBases", ASCENDING),
-        ("_position.start", ASCENDING)
+        ("variation.alternateBases", ASCENDING)#,
+        #("_position.start", ASCENDING)
     ],
     name="genomic variation & region query"
 )
