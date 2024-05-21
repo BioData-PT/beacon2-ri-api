@@ -21,7 +21,7 @@ import numpy as np
 from utils import get_filtering_documents
 
 
-ONTOLOGY_REGEX = re.compile(r"([_A-Za-z0-9]+):([_A-Za-z0-9^\-]+)")
+ONTOLOGY_REGEX = re.compile(r"([_A-Za-z0-9]+):([_A-Za-z0-9\.^\-]+)")
 
 database_password = os.getenv('DB_PASSWD')
 
@@ -190,12 +190,16 @@ def insert_all_ontology_terms_used():
     
     # put genomicVariations at the end
     collections = [c for c in collections if c != 'genomicVariations']
+    collections = [c for c in collections if c != 'access_tokens']
+    # REMOVED variations because the script is not optimized to handle this size of files
+    # TODO optimize the script to get ontologies from genomic variations too
     collections.append('genomicVariations')
     
     print("Collections:", collections)
     for c_name in collections:
         terms_ids = find_ontology_terms_used(c_name)
         terms = get_filtering_object(terms_ids, c_name)
+        print(f"Concluded get_filtering_object() on {c_name}")
         if len(terms) > 0:
             client.beacon.filtering_terms.insert_many(terms)
         print(f"Finished {c_name}")
@@ -204,21 +208,29 @@ def find_ontology_terms_used(collection_name: str) -> List[Dict]:
     print(collection_name)
     terms_ids = []
     count = client.beacon.get_collection(collection_name).estimated_document_count()
-    if count < 10000:
+    
+    #MAX_LIMIT = 100000
+    MAX_LIMIT = 5000
+    #STEP = 10000
+    STEP = 100
+    
+    if count < MAX_LIMIT:
         num_total=count
     else:
-        num_total=10000
+        num_total=MAX_LIMIT
+    
     i=0
-    if count > 10000:
-        while i < 100001:
-            xs = client.beacon.get_collection(collection_name).find().skip(i).limit(10000)
+    
+    if count > MAX_LIMIT:
+        while i < MAX_LIMIT:
+            xs = client.beacon.get_collection(collection_name).find().skip(i).limit(STEP)
             for r in tqdm(xs, total=num_total):
                 matches = ONTOLOGY_REGEX.findall(str(r))
                 for ontology_id, term_id in matches:
                     term = ':'.join([ontology_id, term_id])
                     if term not in terms_ids:
                         terms_ids.append(term)
-            i += 10000
+            i += STEP
             print(i)
     else:
         xs = client.beacon.get_collection(collection_name).find().skip(0).limit(10000)
@@ -229,6 +241,7 @@ def find_ontology_terms_used(collection_name: str) -> List[Dict]:
                 if term not in terms_ids:
                     terms_ids.append(term) 
 
+    print("Concluded find_ontology_terms_used")
     return terms_ids
 
 
