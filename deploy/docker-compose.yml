@@ -31,9 +31,6 @@ services:
     container_name: beacon-training-ui    
     ports:
       - 9500:8080
-    environment:
-      USERNAME: root
-      PASSWORD: ${DB_PASSWD}
     networks:
       - beacon-priv
 
