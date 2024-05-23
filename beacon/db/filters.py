@@ -15,7 +15,7 @@ import logging
 
 LOG = logging.getLogger(__name__)
 
-CURIE_REGEX = r'^([a-zA-Z0-9]*):\/?[a-zA-Z0-9]*$'
+CURIE_REGEX = r'^([a-zA-Z0-9]*):\/?[a-zA-Z0-9\.]*$'
 
 def apply_filters(query: dict, filters: List[dict], collection: str) -> dict:
     LOG.debug("")

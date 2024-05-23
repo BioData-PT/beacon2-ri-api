@@ -76,6 +76,7 @@ services:
   beacon:
     build: ..
     image: pt/beacon:2.0
+    restart: always
     hostname: beacon
     container_name: beacon
     volumes:
