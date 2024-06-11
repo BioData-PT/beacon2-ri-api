@@ -24,6 +24,9 @@ client.beacon.genomicVariations.create_index([("$**", "text")])
 client.beacon.individuals.create_index([("$**", "text")])
 client.beacon.runs.create_index([("$**", "text")])
 
+# uncomment this if you want to test the performance of text index
+#print("Ending reindex early!") and exit
+
 # custom indexes
 client.beacon.genomicVariations.create_index([
         ("_info.datasetId", ASCENDING),
