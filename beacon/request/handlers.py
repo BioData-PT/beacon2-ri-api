@@ -89,17 +89,25 @@ def generic_handler(db_fn, request=None):
         else:
             access_token = access_token_cookies
         
-        # TODO: get requested datasets from qparams
-        requested_datasets = None # will search all datasets
+        # get specified datasets
+        requested_datasets = qparams.query.request_parameters.get("datasets", None) 
+        LOG.debug(f"requested_datasets = {requested_datasets}")
         
         # Start async task to request datasets from permissions server
         task_permissions = asyncio.create_task(get_accessible_datasets(access_token, requested_datasets))
 
-        # get list of datasets
-        _, _, all_datasets_docs = get_datasets(None, RequestParams())
-        all_dataset_ids = [ doc["id"] for doc in all_datasets_docs]
+        # if no datasets were specified, use all in DB
+        if requested_datasets is None:
         
-        # query all datasets in parallel
+            # get list of all datasets in DB
+            _, _, all_dataset_docs = get_datasets(None, RequestParams())
+            all_dataset_ids = [ doc["id"] for doc in all_dataset_docs]
+            target_datasets = all_dataset_ids
+        # else, query only the ones specified
+        else:
+            target_datasets = requested_datasets
+        
+        # TODO query all datasets in parallel
         tasks_dataset_queries = []
         # { dataset_id:(count, records) }
         datasets_query_results:Dict[str, Tuple[int,List[dict]]] = {}
@@ -109,7 +117,7 @@ def generic_handler(db_fn, request=None):
         
         
         # TODO do this asynchronously
-        for dataset_id in all_dataset_ids:
+        for dataset_id in target_datasets:
             qparams_dataset = copy.deepcopy(qparams)
             LOG.debug("")
             LOG.debug(f"=========================")
@@ -133,13 +141,6 @@ def generic_handler(db_fn, request=None):
             dataset_result = (count, list(records))
             datasets_query_results[dataset_id] = (dataset_result)
         
-                    
-        # build empty response if DB has no datasets
-        if len(all_dataset_ids) == 0:
-            LOG.warning("No datasets found in DB, will return empty response")
-            entity_schema, _, _ = db_fn(entry_id, qparams)
-            count, records = 0, []
-
         
         LOG.debug(f"schema = {entity_schema}")
         
