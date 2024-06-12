@@ -318,7 +318,7 @@ def build_beacon_service_info_response():
 # Filtering terms Response
 ########################################
 
-def build_filtering_terms_response(data,
+def build_filtering_terms_response(data:List[Dict],
                                     num_total_results,
                                     qparams: RequestParams,
                                     func_response_type,
@@ -326,6 +326,22 @@ def build_filtering_terms_response(data,
     """"
     Transform data into the Beacon response format.
     """
+    
+    # TODO: Fix db values instead
+    LOG.warning("WARNING: USING WRONG FILTERING TERMS SCHEMA, NEED TO REFACTOR THE CODE AND CREATE NEW VALUES IN DB")
+    
+    # argument is actually an iterable, need this to change the values
+    data = list(data) 
+    
+    # Changing the format of the filtering terms response to respect BN
+    # "scope" -> "scopes" 
+    # str -> list
+    # "individuals","cohorts","biosamples" -> "individual","cohort","biosample"
+    for d in data:
+        if "scope" in d:
+            scope_original = d.pop("scope")
+            d["scopes"] = [scope_original.removesuffix("s")]
+        
 
     beacon_response = {
         'meta': build_meta(qparams, entity_schema, Granularity.RECORD),
