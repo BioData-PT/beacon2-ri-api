@@ -2,7 +2,11 @@
 ## Build env
 ##########################
 
-FROM python:3.10-buster AS BUILD
+FROM python:3.10-bookworm
+
+ENV VIRTUAL_ENV=/opt/venv
+RUN python3 -m venv $VIRTUAL_ENV
+ENV PATH="$VIRTUAL_ENV/bin:$PATH"
 
 ENV DEBIAN_FRONTEND noninteractive
 
@@ -17,19 +21,9 @@ RUN pip install --upgrade pip
 COPY requirements.txt /tmp/requirements.txt
 RUN pip install -r /tmp/requirements.txt
 
-
-##########################
-## Final image
-##########################
-FROM python:3.10-buster
-
 LABEL maintainer "CRG System Developers"
 LABEL org.label-schema.schema-version="2.0"
 LABEL org.label-schema.vcs-url="https://github.com/EGA-archive/beacon-2.x/"
-
-# Too much ?
-COPY --from=BUILD /usr/local/bin      /usr/local/bin
-COPY --from=BUILD /usr/local/lib      /usr/local/lib
 
 RUN apt-get update && \
 #    apt-get upgrade -y && \
