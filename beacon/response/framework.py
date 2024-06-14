@@ -204,10 +204,13 @@ async def beacon_map(request):
                 "rootUrl": conf.uri + "analyses",
                 "singleEntryUrl": conf.uri + "analyses/{id}",
                 "endpoints": {
-                    "genomicVariant": {
-                        "returnedEntryType": "genomicVariant",
-                        "url": conf.uri + "analyses/{id}/g_variants"
-                    },
+                    # TODO FIX THESE ENDPOINTS
+                    
+                    # "genomicVariant": {
+                    #     "returnedEntryType": "genomicVariant",
+                    #     "url": conf.uri + "analyses/{id}/g_variants"
+                    # },
+                    
                 }
             },
             "biosample": {
@@ -220,10 +223,13 @@ async def beacon_map(request):
                         "returnedEntryType": "analysis",
                         "url": conf.uri + "biosamples/{id}/analyses"
                     },
-                    "genomicVariant": {
-                        "returnedEntryType": "genomicVariant",
-                        "url": conf.uri + "biosamples/{id}/g_variants"
-                    },
+                    # TODO FIX THESE ENDPOINTS
+                    
+                    # "genomicVariant": {
+                    #     "returnedEntryType": "genomicVariant",
+                    #     "url": conf.uri + "biosamples/{id}/g_variants"
+                    # },
+                    
                     "run": {
                         "returnedEntryType": "run",
                         "url": conf.uri + "biosamples/{id}/runs"
@@ -237,18 +243,21 @@ async def beacon_map(request):
                 "singleEntryUrl": conf.uri + "cohorts/{id}",
                 "filteringTermsUrl": conf.uri + "cohorts/filtering_terms",
                 "endpoints": {
-                    "analysis": {
-                        "returnedEntryType": "analysis",
-                        "url": conf.uri + "cohorts/{id}/analyses"
-                    },
-                    "individual": {
-                        "returnedEntryType": "individual",
-                        "url": conf.uri + "cohorts/{id}/individuals"
-                    },
-                    "run": {
-                        "returnedEntryType": "run",
-                        "url": conf.uri + "cohorts/{id}/runs"
-                    }
+                    # TODO FIX THESE ENDPOINTS
+                    
+                    # "analysis": {
+                    #     "returnedEntryType": "analysis",
+                    #     "url": conf.uri + "cohorts/{id}/analyses"
+                    # },
+                    # "individual": {
+                    #     "returnedEntryType": "individual",
+                    #     "url": conf.uri + "cohorts/{id}/individuals"
+                    # },
+                    # "run": {
+                    #     "returnedEntryType": "run",
+                    #     "url": conf.uri + "cohorts/{id}/runs"
+                    # }
+                    
                 }
             },
             "dataset": {
@@ -258,26 +267,29 @@ async def beacon_map(request):
                 "singleEntryUrl": conf.uri + "datasets/{id}",
                 "filteringTermsUrl": conf.uri + "datasets/filtering_terms",
                 "endpoints": {
-                    "analysis": {
-                        "returnedEntryType": "analysis",
-                        "url": conf.uri + "datasets/{id}/analyses"
-                    },
-                    "biosample": {
-                        "returnedEntryType": "biosample",
-                        "url": conf.uri + "datasets/{id}/biosamples"
-                    },
-                    "genomicVariant": {
-                        "returnedEntryType": "genomicVariant",
-                        "url": conf.uri + "datasets/{id}/g_variants"
-                    },
-                    "individual": {
-                        "returnedEntryType": "individual",
-                        "url": conf.uri + "datasets/{id}/individuals"
-                    },
-                    "run": {
-                        "returnedEntryType": "run",
-                        "url": conf.uri + "datasets/{id}/runs"
-                    }
+                    # TODO FIX THESE ENDPOINTS
+                    
+                    #"analysis": {
+                    #    "returnedEntryType": "analysis",
+                    #    "url": conf.uri + "datasets/{id}/analyses"
+                    # },
+                    # "biosample": {
+                    #     "returnedEntryType": "biosample",
+                    #     "url": conf.uri + "datasets/{id}/biosamples"
+                    # },
+                    # "genomicVariant": {
+                    #     "returnedEntryType": "genomicVariant",
+                    #     "url": conf.uri + "datasets/{id}/g_variants"
+                    # },
+                    # "individual": {
+                    #     "returnedEntryType": "individual",
+                    #     "url": conf.uri + "datasets/{id}/individuals"
+                    # },
+                    # "run": {
+                    #     "returnedEntryType": "run",
+                    #     "url": conf.uri + "datasets/{id}/runs"
+                    # }
+                    
                 }
             },
             "genomicVariant": {
@@ -286,22 +298,25 @@ async def beacon_map(request):
                 "rootUrl": conf.uri + "g_variants",
                 "singleEntryUrl": conf.uri + "g_variants/{id}",
                 "endpoints": {
-                    "analysis": {
-                        "returnedEntryType": "analysis",
-                        "url": conf.uri + "g_variants/{id}/analyses"
-                    },
-                    "biosample": {
-                        "returnedEntryType": "biosample",
-                        "url": conf.uri + "g_variants/{id}/biosamples"
-                    },
-                    "individual": {
-                        "returnedEntryType": "individual",
-                        "url": conf.uri + "g_variants/{id}/individuals"
-                    },
-                    "run": {
-                        "returnedEntryType": "run",
-                        "url": conf.uri + "g_variants/{id}/runs"
-                    }
+                    # TODO FIX THESE ENDPOINTS
+                    
+                    # "analysis": {
+                    #     "returnedEntryType": "analysis",
+                    #     "url": conf.uri + "g_variants/{id}/analyses"
+                    # },
+                    # "biosample": {
+                    #     "returnedEntryType": "biosample",
+                    #     "url": conf.uri + "g_variants/{id}/biosamples"
+                    # },
+                    # "individual": {
+                    #     "returnedEntryType": "individual",
+                    #     "url": conf.uri + "g_variants/{id}/individuals"
+                    # },
+                    # "run": {
+                    #     "returnedEntryType": "run",
+                    #     "url": conf.uri + "g_variants/{id}/runs"
+                    # }
+                    
                 }
             },
             "individual": {
@@ -319,10 +334,13 @@ async def beacon_map(request):
                         "returnedEntryType": "biosample",
                         "url": conf.uri + "individuals/{id}/biosamples"
                     },
-                    "genomicVariant": {
-                        "returnedEntryType": "genomicVariant",
-                        "url": conf.uri + "individuals/{id}/g_variants"
-                    },
+                    # TODO FIX THESE ENDPOINTS
+                    
+                    # "genomicVariant": {
+                    #     "returnedEntryType": "genomicVariant",
+                    #     "url": conf.uri + "individuals/{id}/g_variants"
+                    # },
+                    
                     "run": {
                         "returnedEntryType": "run",
                         "url": conf.uri + "individuals/{id}/runs"
@@ -335,14 +353,18 @@ async def beacon_map(request):
                 "rootUrl": conf.uri + "runs",
                 "singleEntryUrl": conf.uri + "runs/{id}",
                 "endpoints": {
+                    # TODO FIX THESE ENDPOINTS
+                    
+                    # "genomicVariant": {
+                    #     "returnedEntryType": "genomicVariant",
+                    #     "url": conf.uri + "runs/{id}/g_variants"
+                    # },
+                    
                     "analysis": {
                         "returnedEntryType": "analysis",
                         "url": conf.uri + "runs/{id}/analyses"
-                    },
-                    "genomicVariant": {
-                        "returnedEntryType": "genomicVariant",
-                        "url": conf.uri + "runs/{id}/g_variants"
-                    },
+                    }
+
                 }
             },
         }
@@ -354,3 +376,4 @@ async def beacon_map(request):
     }
 
     return await json_stream(request, beacon_map_json)
+

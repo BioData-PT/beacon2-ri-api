@@ -147,7 +147,7 @@ class RemsPermissions(Permissions):
         
         LOG.debug(f"Response from REMS:\n\n{response}\n")
         
-        result_datasets = []
+        accessible_datasets = []
         
         # get info from passport
         try:
@@ -160,7 +160,7 @@ class RemsPermissions(Permissions):
                 # check if it is a beacon dataset, if so add dataset to result
                 if resource_id.startswith(REMS_BEACON_RESOURCE_PREFIX):
                     dataset_id = resource_id.split(REMS_BEACON_RESOURCE_PREFIX)[1]
-                    result_datasets.append(dataset_id)
+                    accessible_datasets.append(dataset_id)
                 
                 
             
@@ -168,8 +168,14 @@ class RemsPermissions(Permissions):
             LOG.error(f"Error while parsing passport from REMS: {str(e)}\n")
             return []
         
-        # remove duplicates
-        return list(set(result_datasets))
+        # filter by requested datasets (if needed)
+        if requested_datasets:
+            returned_datasets = set(accessible_datasets).intersection(set(requested_datasets))
+        else: # if datasets not specified, return all
+            returned_datasets = set(accessible_datasets)
+        
+        # convert to list
+        return list(returned_datasets)
 
     async def close(self):
         pass
