@@ -49,6 +49,8 @@ services:
       MONGO_INITDB_DATABASE: beacon
     volumes:
       - ./mongo-init/:/docker-entrypoint-initdb.d/:ro
+      - ./data:/input_data
+      - ./mongo-scripts:/mongo-scripts
     networks:
       - beacon-priv
       - my-app-network
@@ -97,7 +99,7 @@ services:
       - my-app-network
     working_dir: '/beacon'
     entrypoint: ['python','-m','beacon']
-    # entrypoint: ['/bin/sleep','100000000']
+    #entrypoint: ['/bin/sleep','100000000']
 
   ###########################################
   # Permissions server
