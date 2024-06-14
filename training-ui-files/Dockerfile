@@ -7,8 +7,9 @@ WORKDIR /usr/share/training-ui/
 RUN git clone https://github.com/BioData-PT/beacon-2.x-training-ui
 WORKDIR /usr/share/training-ui/beacon-2.x-training-ui
 RUN pip3 install -r requirements.txt
-COPY secret.py /usr/share/training-ui/beacon-2.x-training-ui/app/app/secret.py
-COPY generateRandomSecretKey.py /usr/share/training-ui/beacon-2.x-training-ui/app/app/generateRandomSecretKey.py
+# not used anymore:
+#COPY secret.py /usr/share/training-ui/beacon-2.x-training-ui/app/app/secret.py
+#COPY generateRandomSecretKey.py /usr/share/training-ui/beacon-2.x-training-ui/app/app/generateRandomSecretKey.py
 
 #CMD git pull && python3 app/manage.py runserver 0.0.0.0:8080
 
