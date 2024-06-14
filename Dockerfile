@@ -53,6 +53,11 @@ RUN groupadd beacon                              && \
     chown -R beacon:beacon /var/log/supervisord  && \
     chmod +x /usr/local/bin/entrypoint.sh
 
+RUN chown -R beacon:beacon $VIRTUAL_ENV
+# enable cache
+RUN mkdir -p /home/beacon/.cache
+RUN chown -R beacon:beacon /home/beacon
+
 WORKDIR /beacon
 USER beacon
 ENTRYPOINT ["/usr/local/bin/entrypoint.sh"]
