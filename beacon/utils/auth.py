@@ -122,7 +122,6 @@ async def get_accessible_datasets(token, requested_datasets=None) -> List[str]:
         public_datasets = yaml.safe_load(stream)['public_datasets']
         LOG.debug(f"pub datasets = {public_datasets}")
         public_datasets.append(None) # records without datasetId are public
-        accessible_datasets += public_datasets
     
     # get registered datasets
     registered_datasets = []
@@ -131,20 +130,24 @@ async def get_accessible_datasets(token, requested_datasets=None) -> List[str]:
         LOG.debug(f"registered datasets = {registered_datasets}")
         
     # get the result from task
-    specific_datasets, is_authenticated, is_registered = await task_permissions
+    controlled_datasets, is_authenticated, is_registered = await task_permissions
     
-    LOG.info(f"User specific datasets = {specific_datasets}")
+    LOG.info(f"User controlled datasets = {controlled_datasets}")
     # Not authenticated, just give access to public datasets
     if not is_authenticated:
-        return accessible_datasets
+        accessible_datasets = public_datasets
+    # authenticated but not researcher status, give access to public and controlled
+    elif not is_registered:
+        accessible_datasets = public_datasets + controlled_datasets
+    # authenticated and registered, give access to everything
+    else:
+        accessible_datasets += public_datasets + registered_datasets + controlled_datasets
     
-    # authenticated but not researcher status, give access to public and specific
-    if not is_registered:
-        return accessible_datasets + specific_datasets
-
-    # authenticated and registered, give access to everything (add registered and user-specific datasets)
-    accessible_datasets += registered_datasets + specific_datasets
+    # filter by requested datasets (if applicable)
+    if requested_datasets:
+        accessible_datasets = list(set(accessible_datasets).intersection(set(requested_datasets)))
     
-    return accessible_datasets 
+    # remove duplicates and return result
+    return list(set(accessible_datasets))
     
     
