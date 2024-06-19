@@ -120,8 +120,7 @@ async def get_accessible_datasets(token, requested_datasets=None) -> List[str]:
     public_datasets = []
     with open("/beacon/beacon/request/public_datasets.yml", 'r') as stream:
         public_datasets = yaml.safe_load(stream)['public_datasets']
-        LOG.debug(f"pub datasets = {public_datasets}")
-        public_datasets.append(None) # records without datasetId are public
+        LOG.debug(f"pub datasets = {public_datasets}")    
     
     # get registered datasets
     registered_datasets = []
