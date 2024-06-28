@@ -7,6 +7,7 @@ from aiohttp import web
 from aiohttp.web_request import Request
 from bson import json_util
 from beacon import conf
+from beacon.db import client
 import yaml
 
 from beacon.request import ontologies
@@ -60,6 +61,71 @@ def collection_handler(db_fn, request=None):
 
     return wrapper
 
+# support functions for the budget strategy
+def get_user_budget(userId, individualId):
+    user_budget = client.db['budget'].find_one({"userId": userId, "individualId": individualId})
+    return user_budget.get("budget", 0) if user_budget else 0
+
+def deduct_user_budget(userId, amount):
+    client.db['budget'].update_one({"userId": userId}, {"$inc": {"budget": -amount}})
+
+def budget_strategy(access_token, db_fn_submodule, records):
+
+    records_to_remove = []
+    
+    for record in records:
+
+        individual_ids = set()
+
+        # for genomicVariants, fetch individualId from the biosample collection
+        if db_fn_submodule == "g_variants":
+            case_level_data = record.get('caseLevelData', [])
+            for case in case_level_data:
+                biosample_id = case.get('biosampleId')
+                if biosample_id:
+                    # look up the individualId using the biosampleId
+                    biosample = client.db['biosamples'].find_one({"id": biosample_id})
+                    if biosample:
+                        individualId = biosample.get('individualId')
+                        if individualId:
+                            individual_ids.add(individualId)
+        
+        # for other collections the individualId is in the record
+        else:
+            individualId = record.get('individualId')
+            if individualId:
+                individual_ids.add(individualId)
+        
+        for individualId in individual_ids:
+            search_criteria = {
+                "userId": access_token,
+                "individualId": individualId
+            }
+            
+            # check if the budget document exists and if not create it
+            budget_info = client.db['budget'].find_one(search_criteria)
+            if not budget_info:
+                # define a default budget amount
+                default_budget = 100  # DEFINE THIS VALUE !!!!!!!!!!!!!!!!
+                budget_info = {
+                    "userId": access_token,
+                    "individualId": individualId,
+                    "budget": default_budget
+                }
+                client.db['budget'].insert_one(budget_info)
+            
+            # re-fetch the budget_info to ensure we have the latest data
+            budget_info = client.db['budget'].find_one(search_criteria)
+            
+            if budget_info and budget_info['budget'] <= 0:
+                # mark the records for removal if budget is not enough
+                records_to_remove.append(record)
+    
+    # remove marked records outside the loop to avoid modifying the list while iterating
+    for record in records_to_remove:
+        count -= 1
+        records.remove(record)
+
 
 # handler with authentication & REMS
 # mostly from BioData.pt
@@ -72,6 +138,7 @@ def generic_handler(db_fn, request=None):
         entry_id = request.match_info.get('id', None)
         json_body = await request.json() if request.method == "POST" and request.has_body and request.can_read_body else {}
         qparams:RequestParams = RequestParams(**json_body).from_request(request)
+
         
         LOG.debug(f"Query Params = {qparams}")
         
@@ -81,6 +148,9 @@ def generic_handler(db_fn, request=None):
         access_token_cookies = request.cookies.get("Authorization")
         LOG.debug(f"Access token header = {access_token_header}")
         LOG.debug(f"Access token cookies = {access_token_cookies}")
+
+        registered = False
+        public = False
         
         # set access_token as the one we recieve in the header
         # if not in header, get the one from cookies
@@ -115,6 +185,9 @@ def generic_handler(db_fn, request=None):
         db_fn_submodule = str(db_fn.__module__).split(".")[-1]
         LOG.debug(f"db_fn submodule = {db_fn_submodule}")
         
+        # get response of permissions server
+        accessible_datasets:List[str] = [] # array of dataset ids
+        accessible_datasets, registered, public = await task_permissions
         
         # TODO do this asynchronously
         for dataset_id in target_datasets:
@@ -138,30 +211,59 @@ def generic_handler(db_fn, request=None):
             qparams_dataset.query.filters.append(filter_dataset_id)
             LOG.debug(f"Dataset Qparams = {qparams_dataset}")
             entity_schema, count, records = db_fn(entry_id, qparams_dataset)
+
+
             dataset_result = (count, list(records))
             datasets_query_results[dataset_id] = (dataset_result)
+
+            ######################## BUDGET ######################## 
+
+            if not registered and not public:
+                budget_strategy(access_token, db_fn_submodule, records)
         
         
         LOG.debug(f"schema = {entity_schema}")
-        
-        # get response of permissions server
-        accessible_datasets:List[str] = [] # array of dataset ids
-        accessible_datasets = await task_permissions
 
         # get the max authorized granularity
         requested_granularity = qparams.query.requested_granularity
         max_granularity = Granularity(conf.max_beacon_granularity)
         response_granularity = Granularity.get_lower(requested_granularity, max_granularity)
+
+        # see if authenticated but not registered user already made that query in the past
+        if not registered and not public:
+
+            search_criteria = {
+            "userId": access_token,
+            "query": qparams_dataset.query
+            }
+
+            response_history = client.db['history'].find_one(search_criteria)["response"]
+
+            if response_history:
+                return await json_stream(request, response_history)
+
         
         # build response
         
-        response = build_generic_response(
+        response, store = build_generic_response(
             results_by_dataset=datasets_query_results,
             accessible_datasets=accessible_datasets,
             granularity=response_granularity,
             qparams=qparams,
-            entity_schema=entity_schema
+            entity_schema=entity_schema,
+            registered=registered,
+            public=public
         )
+
+        document = {
+        "userId": access_token,
+        "query": qparams_dataset.query,
+        "response": response
+        }
+
+        if store:
+            client.beacon.get_collection(client.db['history']).insert_one(document=document)
+
         
         return await json_stream(request, response)
         
