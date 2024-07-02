@@ -66,11 +66,12 @@ def get_user_budget(userId, individualId):
     user_budget = client.db['budget'].find_one({"userId": userId, "individualId": individualId})
     return user_budget.get("budget", 0) if user_budget else 0
 
-def deduct_user_budget(userId, amount):
-    client.db['budget'].update_one({"userId": userId}, {"$inc": {"budget": -amount}})
+def deduct_user_budget(userId, individualId, amount):
+    client.db['budget'].update_one({"userId": userId, "individualId": individualId}, {"$inc": {"budget": -amount}})
 
 def budget_strategy(access_token, db_fn_submodule, records):
 
+    remove_from_count = 0
     records_to_remove = []
     
     for record in records:
@@ -106,7 +107,7 @@ def budget_strategy(access_token, db_fn_submodule, records):
             budget_info = client.db['budget'].find_one(search_criteria)
             if not budget_info:
                 # define a default budget amount
-                default_budget = 100  # DEFINE THIS VALUE !!!!!!!!!!!!!!!!
+                default_budget = 100  # DEFINE THIS VALUE !!!!!!!!!!!!!
                 budget_info = {
                     "userId": access_token,
                     "individualId": individualId,
@@ -120,11 +121,18 @@ def budget_strategy(access_token, db_fn_submodule, records):
             if budget_info and budget_info['budget'] <= 0:
                 # mark the records for removal if budget is not enough
                 records_to_remove.append(record)
+            else:
+                if get_user_budget(access_token, individualId) > 0: # USE P-VALUE RATHER THEN BUDGET !!!!!!!!!!!!!
+                    amount = 2 # DEFINE VALUE !!!!!!!!!!!!!
+                    deduct_user_budget(access_token, individualId, amount)
+
     
     # remove marked records outside the loop to avoid modifying the list while iterating
     for record in records_to_remove:
-        count -= 1
+        remove_from_count += 1
         records.remove(record)
+        
+    return remove_from_count, records
 
 
 # handler with authentication & REMS
@@ -213,13 +221,14 @@ def generic_handler(db_fn, request=None):
             entity_schema, count, records = db_fn(entry_id, qparams_dataset)
 
 
-            dataset_result = (count, list(records))
-            datasets_query_results[dataset_id] = (dataset_result)
-
             ######################## BUDGET ######################## 
 
             if not registered and not public:
-                budget_strategy(access_token, db_fn_submodule, records)
+                remove_from_count, records = budget_strategy(access_token, db_fn_submodule, records)
+                count -= remove_from_count
+                
+            dataset_result = (count, list(records))
+            datasets_query_results[dataset_id] = (dataset_result)
         
         
         LOG.debug(f"schema = {entity_schema}")
