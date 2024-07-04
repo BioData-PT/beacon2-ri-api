@@ -32,7 +32,7 @@ print(f"{collection}")
 
 
 # iterate over all variants, format them, query gnomAD, and update the database
-for variant in docs:
+for variant in collection:
     formatted_variant = format_variant_for_search(variant)
     print(formatted_variant)
     #allele_frequency = query_gnomad(formatted_variant)
