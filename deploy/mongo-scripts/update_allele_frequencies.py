@@ -39,6 +39,9 @@ db = client['beacon']
 collection = db['genomicVariations']
 print(f"collection = {collection}")
 
+variations = collection.find()
+print(f"{variations}")
+
 # iterate over all variants, format them, query gnomAD, and update the database
 for variant in collection.find():
     formatted_variant = format_variant_for_search(variant)
