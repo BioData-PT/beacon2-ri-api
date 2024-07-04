@@ -30,9 +30,9 @@ collection = client.beacon.get_collection('genomicVariantions')
 print(f"{collection}")
 
 # iterate over all variants, format them, query gnomAD, and update the database
-for variant in collection.find():
-    formatted_variant = format_variant_for_search(variant)
-    print(formatted_variant)
+#for variant in collection.find():
+ #   formatted_variant = format_variant_for_search(variant)
+  #  print(formatted_variant)
     #allele_frequency = query_gnomad(formatted_variant)
     #if allele_frequency is not None:
      #   collection.update_one(
