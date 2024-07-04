@@ -36,7 +36,7 @@ client = MongoClient(
 
 )
 db = client['beacon']
-collection = db['genomicVariations']
+collection = db['g_variants']
 print(f"collection = {collection}")
 
 print(f"{collection.find_one()}")
