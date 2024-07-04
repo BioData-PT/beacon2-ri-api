@@ -1,7 +1,7 @@
 import requests
 from pymongo import MongoClient
 import os
-from db.g_variants import get_variants
+from g_variants import get_variants
 
 # function to format a single variant
 def format_variant_for_search(variant):
