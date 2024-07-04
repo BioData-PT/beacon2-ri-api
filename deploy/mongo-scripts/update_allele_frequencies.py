@@ -1,8 +1,6 @@
 import requests
 from pymongo import MongoClient
 import os
-from beacon.request.model import RequestParams, Pagination
-from beacon.db.utils import get_documents
 
 # function to format a single variant
 def format_variant_for_search(variant):
