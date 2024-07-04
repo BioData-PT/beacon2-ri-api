@@ -6,4 +6,4 @@
 	done
 
 # python script to update allele frequencies in genomicVariantions collection
-python3 update_allele_frequencies.py
+update_allele_frequencies.py
