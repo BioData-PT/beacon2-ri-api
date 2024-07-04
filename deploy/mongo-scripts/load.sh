@@ -5,5 +5,8 @@
 		--file input_data/cineca_with_datasetid/${collection}.json --collection ${collection} ;
 	done
 
+
+pip3 install python3
+
 # Run the Python script to update allele frequencies
 python3 update_allele_frequencies.py
