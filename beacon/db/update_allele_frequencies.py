@@ -1,6 +1,7 @@
 import requests
 from pymongo import MongoClient
 import os
+from db.g_variants import get_variants
 
 # function to format a single variant
 def format_variant_for_search(variant):
@@ -22,17 +23,11 @@ def query_gnomad(formatted_variant):
         return allele_frequency
     return None
 
-# connect to MongoDB
-database_password = os.getenv('DB_PASSWD')
-      
-client = MongoClient(f"mongodb://root:{database_password}@mongo:27017/beacon?authSource=admin")
-db = client['beacon']
-collection = db['genomicVariations']
-print(f"{collection}")
+
 
 
 # iterate over all variants, format them, query gnomAD, and update the database
-for variant in collection.find().limit(10):
+for variant in get_variants:
     formatted_variant = format_variant_for_search(variant)
     print(formatted_variant)
     #allele_frequency = query_gnomad(formatted_variant)
