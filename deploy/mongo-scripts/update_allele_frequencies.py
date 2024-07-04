@@ -40,6 +40,7 @@ collection = db['genomicVariations']
 
 # iterate over all variants, format them, query gnomAD, and update the database
 for variant in collection.find():
+    print(variant)
     formatted_variant = format_variant_for_search(variant)
     print(formatted_variant)
     #allele_frequency = query_gnomad(formatted_variant)
