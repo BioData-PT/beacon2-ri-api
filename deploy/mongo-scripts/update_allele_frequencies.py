@@ -1,6 +1,8 @@
 import requests
 from pymongo import MongoClient
 import os
+from beacon.request.model import RequestParams, QueryParams, Pagination
+from beacon.db.g_variants import get_variants
 
 # function to format a single variant
 def format_variant_for_search(variant):
@@ -35,14 +37,21 @@ client = MongoClient(
     f"mongodb://{database_user}:{database_password}@{database_host}:{database_port}/{database_name}?authSource={database_auth_source}"
 
 )
-db = client['beacon']
-collection = db['g_variants']
-print(f"collection = {collection}")
 
-print(f"{collection.find_one()}")
+
+qparams = RequestParams(
+        query=QueryParams(
+            request_parameters={},  # no filters applied
+            pagination=Pagination(skip=0, limit=100)  # adjust limit as needed
+        )
+    )
+
+    # Call the get_variants function
+schema, count, docs = get_variants(None, qparams)
+
 
 # iterate over all variants, format them, query gnomAD, and update the database
-for variant in collection.find():
+for variant in docs:
     formatted_variant = format_variant_for_search(variant)
     print(formatted_variant)
     #allele_frequency = query_gnomad(formatted_variant)
