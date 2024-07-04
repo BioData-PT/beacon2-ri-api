@@ -28,6 +28,8 @@ client = MongoClient('mongodb://root:{database_password}@127.0.0.1:27017/beacon?
 db = client['beacon']
 collection = client.beacon.get_collection('genomicVariantions')
 print(f"{collection}")
+one = collection.find_one()
+print(f"{one}")
 
 # iterate over all variants, format them, query gnomAD, and update the database
 #for variant in collection.find():
