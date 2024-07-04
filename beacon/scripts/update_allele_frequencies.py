@@ -34,7 +34,7 @@ client = MongoClient(
         "admin"
     )
 )
-collection = client.beacon.get_collection('genomicVariantions')
+collection = client.beacon.get_collection('genomicVariations')
 print(f"{collection}")
 one = collection.find_one()
 print(f"{one}")
