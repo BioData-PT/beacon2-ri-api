@@ -22,7 +22,18 @@ def query_gnomad(formatted_variant):
     return None
 
 # connect to MongoDB
-client = MongoClient("mongodb://root:example@mongo:27017/beacon?authSource=admin")
+database_password = os.getenv('DB_PASSWD')
+
+database_host = 'mongo'
+database_port = 27017
+database_user = 'root'
+database_name = 'beacon'
+database_auth_source = 'admin'
+      
+client = MongoClient(
+    f"mongodb://{database_user}:{database_password}@{database_host}:{database_port}/{database_name}?authSource={database_auth_source}"
+
+)
 db = client['beacon']
 collection = db['genomicVariations']
 
