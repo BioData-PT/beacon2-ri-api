@@ -35,9 +35,6 @@ client = MongoClient(
     )
 )
 collection = client.beacon.get_collection('genomicVariations')
-print(f"{collection}")
-one = collection.find_one()
-print(f"{one}")
 
 # iterate over all variants, format them, query gnomAD, and update the database
 for variant in collection.find():
