@@ -5,4 +5,11 @@
 		--file input_data/cineca_with_datasetid/${collection}.json --collection ${collection} ;
 	done
 
+# Activate virtual environment
+source venv/bin/activate
+
+# Run the Python script to update allele frequencies
 python3 update_allele_frequencies.py
+
+# Deactivate virtual environment
+deactivate
