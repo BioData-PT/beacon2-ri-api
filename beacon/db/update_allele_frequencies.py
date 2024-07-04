@@ -2,7 +2,7 @@ import requests
 from pymongo import MongoClient
 import os
 
-from beacon.db.g_variants import get_variants
+from g_variants import get_variants
 from beacon.request.model import RequestParams, QueryParams, Pagination
 
 # function to format a single variant
