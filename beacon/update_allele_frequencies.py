@@ -32,17 +32,16 @@ one = collection.find_one()
 print(f"{one}")
 
 # iterate over all variants, format them, query gnomAD, and update the database
-#for variant in collection.find():
- #   formatted_variant = format_variant_for_search(variant)
-  #  print(formatted_variant)
-    #allele_frequency = query_gnomad(formatted_variant)
-    #if allele_frequency is not None:
-     #   collection.update_one(
-      #      {"variantInternalId": variant["variantInternalId"]},
-       #     {"$set": {"allele_frequency": allele_frequency}}
-        #)
-        #print(f"Updated variant {formatted_variant} with allele frequency {allele_frequency}")
-    #else:
-     #   print(f"Failed to retrieve allele frequency for {formatted_variant}")
+for variant in collection.find():
+    formatted_variant = format_variant_for_search(variant)
+    allele_frequency = query_gnomad(formatted_variant)
+    if allele_frequency is not None:
+        collection.update_one(
+            {"variantInternalId": variant["variantInternalId"]},
+            {"$set": {"allele_frequency": allele_frequency}}
+        )
+        print(f"Updated variant {formatted_variant} with allele frequency {allele_frequency}")
+    else:
+       print(f"Failed to retrieve allele frequency for {formatted_variant}")
 
 print("Finished updating allele frequencies.")
