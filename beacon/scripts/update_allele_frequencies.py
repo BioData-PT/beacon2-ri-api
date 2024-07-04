@@ -2,6 +2,8 @@ import requests
 from pymongo import MongoClient
 import os
 
+from beacon import conf
+
 # function to format a single variant
 def format_variant_for_search(variant):
     chromosome = variant["_position"]["refseqId"]
@@ -23,8 +25,16 @@ def query_gnomad(formatted_variant):
     return None
 
 # connect to MongoDB
-database_password = os.getenv('DB_PASSWD')
-client = MongoClient('mongodb://root:{database_password}@127.0.0.1:27017/beacon?authSource=admin')
+client = MongoClient(
+    "mongodb://{}:{}@{}:{}/{}?authSource={}".format(
+        conf.database_user,
+        DB_PASSWD,
+        conf.database_host,
+        conf.database_port,
+        conf.database_name,
+        conf.database_auth_source,
+    )
+)
 db = client['beacon']
 collection = client.beacon.get_collection('genomicVariantions')
 print(f"{collection}")
