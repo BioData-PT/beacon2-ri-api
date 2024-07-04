@@ -1,8 +1,8 @@
 import requests
 from pymongo import MongoClient
 import os
-from beacon.request.model import RequestParams, QueryParams, Pagination
-from beacon.db.g_variants import get_variants
+from beacon.request.model import RequestParams, Pagination
+from beacon.db.utils import get_documents
 
 # function to format a single variant
 def format_variant_for_search(variant):
@@ -33,21 +33,10 @@ database_user = 'root'
 database_name = 'beacon'
 database_auth_source = 'admin'
       
-client = MongoClient(
-    f"mongodb://{database_user}:{database_password}@{database_host}:{database_port}/{database_name}?authSource={database_auth_source}"
-
-)
-
-
-qparams = RequestParams(
-        query=QueryParams(
-            request_parameters={},  # no filters applied
-            pagination=Pagination(skip=0, limit=100)  # adjust limit as needed
-        )
-    )
-
-    # Call the get_variants function
-schema, count, docs = get_variants(None, qparams)
+client = MongoClient(f"mongodb://{database_user}:{database_password}@{database_host}:{database_port}/{database_name}?authSource={database_auth_source}")
+db = client['beacon']
+collection = db['genomicVariations']
+print(f"{collection}")
 
 
 # iterate over all variants, format them, query gnomAD, and update the database
