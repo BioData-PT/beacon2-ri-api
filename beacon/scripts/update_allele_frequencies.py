@@ -1,6 +1,7 @@
 import requests, sys
 from pymongo import MongoClient
 import os
+import time
 
 # Function to format a single variant
 def format_variant_for_search(variant):
@@ -84,6 +85,7 @@ for variant in collection.find():
     alt = parts[3]
 
     try:
+        time.sleep(1)
         # Query 1000 Genomes for allele frequency
         allele_frequency = query_1000_genomes(chrom, pos, ref, alt)
         print(allele_frequency)
