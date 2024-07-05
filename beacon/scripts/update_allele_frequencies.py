@@ -81,7 +81,7 @@ collection = client.beacon.get_collection('genomicVariations')
 # Iterate over all variants, format them, query 1000 Genomes, and update the database
 for variant in collection.find():
     hgvs_id = variant["identifiers"]["genomicHGVSId"]
-    start = variant['_position']['start']
+    start = variant['_position']['startInteger']
     alt = variant['variation']['alternateBases']
     ref = variant['variation']['referenceBases']
     chrom = variant['_position']['refseqId']
