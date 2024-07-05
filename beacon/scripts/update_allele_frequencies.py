@@ -11,13 +11,13 @@ def format_variant_for_search(variant):
     return formatted_variant
 
 # function to query for allele frequency
-def query_ensembl(chrom, pos, ref, alt):
-    query_url = f"http://grch37.rest.ensembl.org/variation/human/{chrom}_{pos}_{ref}_{alt}?content-type=application/json"
+def query_gnomad(chrom, pos, ref, alt):
+    query_url = f"https://gnomad.broadinstitute.org/api/variant/{chrom}-{pos}-{ref}-{alt}"
     response = requests.get(query_url)
     if response.status_code == 200:
         return response.json()
-    elif response.status_code == 400:
-        print(f"Bad request for variant {chrom}-{pos}-{ref}-{alt}: {response.text}")
+    elif response.status_code == 404:
+        print(f"Variant {chrom}-{pos}-{ref}-{alt} not found in gnomAD: {response.text}")
         return None
     else:
         raise Exception(f"Query failed to run with a {response.status_code}.")
@@ -44,7 +44,7 @@ for variant in collection.find():
     print("-----------")
     print(f"{formatted_variant}")
     chrom, pos, ref, alt = formatted_variant.split('-')
-    allele_frequency = query_ensembl(chrom, int(pos), ref, alt)
+    allele_frequency = query_gnomad(chrom, int(pos), ref, alt)
     print(allele_frequency)
     if allele_frequency is not None:
         collection.update_one(
