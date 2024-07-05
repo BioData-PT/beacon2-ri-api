@@ -45,7 +45,7 @@ def query_ncbi_variation(formatted_variant):
         chrom, pos, ref, alt = formatted_variant.split('-')
         alts = ','.join(map(str, alt))
         query_url = f'vcf/{chrom}/{pos}/{ref}/{alts}/contextuals'
-        spdis_for_alts = [Spdi(**spdi_dict) for spdi_dict in get(query_url, assembly='GCF_000001405.38')['data']['spdis']]
+        spdis_for_alts = [Spdi(**spdi_dict) for spdi_dict in get(query_url)['data']['spdis']]
         frequencies = {}
 
         for spdi in spdis_for_alts:
