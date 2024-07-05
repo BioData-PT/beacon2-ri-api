@@ -14,6 +14,7 @@ def format_variant_for_search(variant):
 def query_gnomad(chrom, pos, ref, alt):
     query_url = f"https://gnomad.broadinstitute.org/api/variant/{chrom}-{pos}-{ref}-{alt}"
     response = requests.get(query_url)
+    print('HDUFGWR:JGVWE')
     if response.status_code == 200:
         return response.json()
     elif response.status_code == 404:
