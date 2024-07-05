@@ -22,11 +22,11 @@ def format_variant_for_search(variant):
 # Function to query NCBI Variation Services for allele frequency
 VAR_API_URL = "https://api.ncbi.nlm.nih.gov/variation/v0/"
 
-def get(endpoint, **params):
+def get(endpoint):
     max_retries = 3
     for attempt in range(max_retries):
         try:
-            reply = requests.get(VAR_API_URL + endpoint, params=params)
+            reply = requests.get(VAR_API_URL + endpoint)
             reply.raise_for_status()
             return reply.json()
         except requests.exceptions.HTTPError as e:
