@@ -19,6 +19,7 @@ def query_1000_genomes(chrom, start, end, ref, alt):
     decoded = r.json()
     mappings = repr(decoded)['mappings']
     if mappings:
+        print("ENTROU")
         mapped_data = mappings[0]['mapped']
         mapped_start = mapped_data['start']
         mapped_end = mapped_data['end']
