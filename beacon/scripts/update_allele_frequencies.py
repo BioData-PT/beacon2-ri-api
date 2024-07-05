@@ -3,32 +3,42 @@ from pymongo import MongoClient
 import os
 import time
 
+# Function to convert GRCh37 to GRCh38 using Ensembl REST API
+def convert_to_grch38(hgvs_id):
+    # Construct Ensembl REST URL for mapping from GRCh37 to GRCh38
+    ensembl_rest_url = f"https://rest.ensembl.org/map/human/GRCh37/{hgvs_id}/GRCh38?"
+
+    # Make GET request to Ensembl REST API
+    response = requests.get(ensembl_rest_url, headers={"Content-Type": "application/json"})
+
+    # Check if request was successful
+    if response.ok:
+        # Parse JSON response
+        json_response = response.json()
+
+        # Extract mapped coordinates
+        mappings = json_response.get('mappings', [])
+        if mappings:
+            mapped_data = mappings[0].get('mapped', {})
+            start = mapped_data.get('start')
+            end = mapped_data.get('end')
+            return start, end
+        else:
+            print(f"No mappings found for {hgvs_id}")
+            return None, None
+    else:
+        print(f"Failed to fetch mapping for {hgvs_id}: {response.status_code}")
+        return None, None
+
 # Function to query 1000 Genomes for allele frequency
-def query_1000_genomes(chrom, start, end, ref, alt):
-    print("START " + f"{start}")
-    print("END " + f"{end}")
-    server = "https://rest.ensembl.org"
-    ext = f"/map/human/GRCh37/{chrom}:{start}..{end}:1/GRCh38?"
- 
-    r = requests.get(server + ext, headers={"Content-Type": "application/json"})
- 
-    if not r.ok:
-        r.raise_for_status()
-        sys.exit()
-    
-    decoded = r.json()
-    mappings = decoded['mappings']
-    print(mappings)
-    mapped_data = mappings[0]['mapped']
-    mapped_start = mapped_data['start']
-    mapped_end = mapped_data['end']
-    print(mapped_data)
+def query_1000_genomes(end_grch38, ref, alt, chrom):
     
     # Construct the HGVS notation
-    hgvs_notation = f"{chrom}:g.{mapped_end}{ref}>{alt}"
     
     # Construct the URL for Ensembl VEP
+    hgvs_notation = f"{chrom}:g.{end_grch38}{ref}>{alt}"
     url = f"https://rest.ensembl.org/vep/human/hgvs/{hgvs_notation}?"
+    print(url)
  
     # Make GET request to the API
     time.sleep(1)
@@ -36,17 +46,20 @@ def query_1000_genomes(chrom, start, end, ref, alt):
  
     # Check if request was successful
     if response.status_code == 200:
-        # Parse the JSON response
+        # Parse JSON response
         json_response = response.json()
- 
-        # Check if reference allele matches
-        if json_response and json_response[0]['allele_string'].startswith(ref):
-            return json_response
+        mappings = json_response.get('mappings', [])
+        if mappings:
+            mapped_data = mappings[0].get('mapped', {})
+            start = mapped_data.get('start')
+            end = mapped_data.get('end')
+            return start, end
         else:
-            raise ValueError(f"Reference allele mismatch for variant {chrom}-{start}-{ref}-{alt}. Ensembl returned {json_response[0]['allele_string']}")
+            print(f"No mappings found for {hgvs_id}")
+            return None, None
     else:
-        print(f"Bad request for variant {chrom}-{start}-{ref}-{alt}: {response.text}")
-        return None
+        print(f"Failed to fetch mapping for {hgvs_id}: {response.status_code}")
+        return None, None
 
 
 # Connect to MongoDB
@@ -66,19 +79,15 @@ collection = client.beacon.get_collection('genomicVariations')
 
 # Iterate over all variants, format them, query 1000 Genomes, and update the database
 for variant in collection.find():
-    chromosome = variant["_position"]["refseqId"]
-    start_position = variant["_position"]["startInteger"]
-    end_position = variant["_position"]["endInteger"]
-    reference_base = variant["variation"]["referenceBases"]
-    alternate_base = variant["variation"]["alternateBases"]
-    
-    formatted_variant = f"{chromosome}-{start_position}-{end_position}-{reference_base}-{alternate_base}"
-    print("-----------")
-    print(f"{formatted_variant}")
+    hgvs_id = variant["identifiers"]["genomicHGVSId"]
+    start_grch38, end_grch38 = convert_to_grch38(hgvs_id)
+    alt = variant['variation']['alternateBases']
+    ref = variant['variation']['referenceBases']
+    chrom = variant['_position']['refseqId']
 
     try:
         # Query 1000 Genomes for allele frequency
-        allele_frequency = query_1000_genomes(chromosome, start_position, end_position, reference_base, alternate_base)
+        allele_frequency = query_1000_genomes(end_grch38, ref, alt, chrom)
         print(allele_frequency)
 
         if allele_frequency is not None:
@@ -86,15 +95,15 @@ for variant in collection.find():
                 {"variantInternalId": variant["variantInternalId"]},
                 {"$set": {"allele_frequency": allele_frequency}}
             )
-            print(f"Updated variant {formatted_variant} with allele frequency {allele_frequency}")
+            print(f"Updated variant {hgvs_id} with allele frequency {allele_frequency}")
         else:
-           print(f"Failed to retrieve allele frequency for {formatted_variant}")
+           print(f"Failed to retrieve allele frequency for {hgvs_id}")
 
     except ValueError as e:
         print(str(e))
         continue
     except Exception as e:
-        print(f"Failed to process variant {formatted_variant}: {e}")
+        print(f"Failed to process variant {hgvs_id}: {e}")
         continue
 
 print("Finished updating allele frequencies.")
