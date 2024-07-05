@@ -46,7 +46,7 @@ def remap(spdi):
 
 def query_ncbi_variation(formatted_variant):
     try:
-        INPUT_VCF_ASSEMBLY = 'GCF_000001405.25'
+        INPUT_VCF_ASSEMBLY = 'GCF_000001405.38'
         chrom, pos, ref, alt = formatted_variant.split('-')
         alts = ','.join(map(str, alt))
         query_url = f'vcf/{chrom}/{pos}/{ref}/{alts}/contextuals'
