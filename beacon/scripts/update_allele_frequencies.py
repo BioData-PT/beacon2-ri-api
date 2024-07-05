@@ -47,10 +47,10 @@ def query_ncbi_variation(formatted_variant):
         query_url = f'vcf/{chrom}/{pos}/{ref}/{alts}/contextuals'
         spdis_for_alts = [Spdi(**spdi_dict) for spdi_dict in get(query_url)['data']['spdis']]
         frequencies = {}
-        print(spdis_for_alts)
 
         for spdi in spdis_for_alts:
             seq_id = spdi.seq_id
+            print(seq_id)
             min_pos = spdi.position
             max_pos = spdi.position + len(spdi.deleted_sequence)
             frequency_records = get(f'interval/{seq_id}:{min_pos}:{max_pos-min_pos}/overlapping_frequency_records')['results']
