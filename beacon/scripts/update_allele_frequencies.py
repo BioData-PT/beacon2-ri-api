@@ -13,27 +13,32 @@ def format_variant_for_search(variant):
 
 # Function to query 1000 Genomes for allele frequency
 def query_1000_genomes(chrom, pos, ref, alt):
-    # Construct the HGVS notation
-    hgvs_notation = f"{chrom}:g.{pos}{ref}>{alt}"
-    
-    # Construct the URL
-    url = f"https://rest.ensembl.org/vep/human/hgvs/{hgvs_notation}?"
+    try:
+        # Construct the HGVS notation
+        hgvs_notation = f"{chrom}:g.{pos}{ref}>{alt}"
+        
+        # Construct the URL
+        url = f"https://rest.ensembl.org/vep/human/hgvs/{hgvs_notation}?"
 
-    # Make GET request to the API
-    response = requests.get(url, headers={"Content-Type": "application/json"})
+        # Make GET request to the API
+        response = requests.get(url, headers={"Content-Type": "application/json"})
 
-    # Check if request was successful
-    if response.status_code == 200:
-        # Parse the JSON response
-        json_response = response.json()
+        # Check if request was successful
+        if response.status_code == 200:
+            # Parse the JSON response
+            json_response = response.json()
 
-        # Check if reference allele matches
-        if json_response[0]['allele_string'].startswith(ref):
-            return json_response
+            # Check if reference allele matches
+            if json_response[0]['allele_string'].startswith(ref):
+                return json_response
+            else:
+                raise ValueError(f"Reference allele mismatch for variant {chrom}-{pos}-{ref}-{alt}. Ensembl returned {json_response[0]['allele_string']}")
         else:
-            raise ValueError(f"Reference allele mismatch for variant {chrom}-{pos}-{ref}-{alt}. Ensembl returned {json_response[0]['allele_string']}")
-    else:
-        print(f"Bad request for variant {chrom}-{pos}-{ref}-{alt}: {response.text}")
+            print(f"Bad request for variant {chrom}-{pos}-{ref}-{alt}: {response.text}")
+            return None
+
+    except Exception as e:
+        print(f"Failed to retrieve allele frequency for {chrom}-{pos}-{ref}-{alt}: {str(e)}")
         return None
 
 # Connect to MongoDB
