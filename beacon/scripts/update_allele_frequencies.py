@@ -82,6 +82,7 @@ for variant in collection.find():
     hgvs_id = variant["identifiers"]["genomicHGVSId"]
     print("COMEÇA AQUI" + hgvs_id)
     start_grch38, end_grch38 = convert_to_grch38(hgvs_id)
+    print(start_grch38, end_grch38)
     alt = variant['variation']['alternateBases']
     ref = variant['variation']['referenceBases']
     chrom = variant['_position']['refseqId']
