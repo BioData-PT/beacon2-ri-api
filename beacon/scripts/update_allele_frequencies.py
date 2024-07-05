@@ -7,6 +7,7 @@ import time
 def convert_to_grch38(hgvs_id):
     # Construct Ensembl REST URL for mapping from GRCh37 to GRCh38
     ensembl_rest_url = f"https://rest.ensembl.org/map/human/GRCh37/{hgvs_id}/GRCh38?"
+    print("LINK" + ensembl_rest_url)
 
     # Make GET request to Ensembl REST API
     response = requests.get(ensembl_rest_url, headers={"Content-Type": "application/json"})
