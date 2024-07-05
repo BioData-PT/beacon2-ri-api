@@ -17,7 +17,7 @@ def format_variant_for_search(variant):
 # Function to query 1000 Genomes for allele frequency
 def query_1000_genomes(chrom, start, ref, alt, max_retries=5):
     server = "https://rest.ensembl.org"
-    ext = f"/map/human/GRCh37/{chrom}:{start}..{start}/GRCh38?"
+    ext = f"/map/human/GRCh37/{chrom}:{start}..{end}/GRCh38?"
     
     retries = 0
     while retries < max_retries:
@@ -116,12 +116,13 @@ for variant in collection.find():
     parts = formatted_variant.split('-')
     chrom = parts[0]
     start = int(parts[1])
+    end = int(parts[2])
     ref = parts[3]
     alt = parts[4]
 
     try:
         # Query 1000 Genomes for allele frequency
-        allele_frequency = query_1000_genomes(chrom, start, start, ref, alt)
+        allele_frequency = query_1000_genomes(chrom, start, end, ref, alt)
         print(allele_frequency)
 
         if allele_frequency is not None:
