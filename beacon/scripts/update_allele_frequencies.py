@@ -17,8 +17,8 @@ def query_1000_genomes(chrom, start, end, ref, alt):
         sys.exit()
     
     decoded = r.json()
+    mappings = repr(decoded)['mappings']
     if mappings:
-        mappings = repr(decoded)['mappings']
         mapped_data = mappings[0]['mapped']
         mapped_start = mapped_data['start']
         mapped_end = mapped_data['end']
