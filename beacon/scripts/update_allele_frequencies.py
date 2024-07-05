@@ -50,7 +50,7 @@ def query_ncbi_variation(formatted_variant):
 
         for spdi in spdis_for_alts:
             seq_id = spdi.seq_id
-            print(seq_id)
+            print("!!!!!!! {seq_id}")
             min_pos = spdi.position
             max_pos = spdi.position + len(spdi.deleted_sequence)
             frequency_records = get(f'interval/{seq_id}:{min_pos}:{max_pos-min_pos}/overlapping_frequency_records')['results']
