@@ -17,7 +17,7 @@ def query_gnomad(formatted_variant):
     query_url = f"https://gnomad.broadinstitute.org/api"
     query = """
     {
-      variant(chrom: "%s", pos: %d, ref: "%s", alt: "%s") {
+      variant(chrom: "%d", pos: %d, ref: "%s", alt: "%s") {
         genome {
           ac
           an
