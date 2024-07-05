@@ -53,12 +53,10 @@ def query_ncbi_variation(formatted_variant):
             max_pos = spdi.position + len(spdi.deleted_sequence)
             frequency_records = get(f'interval/{seq_id}:{min_pos}:{max_pos-min_pos}/overlapping_frequency_records')['results']
             for interval, interval_data in frequency_records.items():
-                length, position = map(int, interval.split('@'))
-                allele_counts = interval_data['counts']['PRJNA507278']['allele_counts']
-                aaa_frequencies = compute_frequencies(allele_counts['SAMN10492703'])
-                asn_frequencies = compute_frequencies(allele_counts['SAMN10492704'])
-                for allele in asn_frequencies.keys():
-                    frequencies[Spdi(seq_id, position, interval_data['ref'], allele)] = (aaa_frequencies[allele], asn_frequencies[allele])
+                allele_counts = interval_data['counts']
+                overall_frequencies = compute_frequencies(allele_counts)
+                for allele, frequency in overall_frequencies.items():
+                    frequencies[Spdi(seq_id, interval_data['interval']['start'], interval_data['ref'], allele)] = frequency
         return frequencies
     except Exception as e:
         print(f"Failed to query NCBI Variation Services for variant {formatted_variant}: {e}")
