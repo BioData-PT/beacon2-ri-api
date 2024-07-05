@@ -1,6 +1,14 @@
+from collections import namedtuple
 import requests
 from pymongo import MongoClient
 import os
+from ratelimit import limits, sleep_and_retry
+from tqdm import tqdm
+import itertools
+
+# function to flatten nested lists
+def flatten(iterable):
+    return list(itertools.chain.from_iterable(iterable))
 
 # function to format a single variant
 def format_variant_for_search(variant):
@@ -12,29 +20,44 @@ def format_variant_for_search(variant):
     formatted_variant = f"{chromosome}-{start_position}-{reference_base}-{alternate_base}"
     return formatted_variant
 
-# function to query gnomAD for allele frequency
-def query_gnomad(formatted_variant):
-    url = 'https://gnomad.broadinstitute.org/api'
-    query = '''
-        {
-        variant(variantId: "1-55051215-G-GA") {
-            alleleFrequency
-            populations {
-            id
-            ac
-            an
-            af
-            }
-        }
-        }
-        '''
-    response = requests.post(url, json={'query': query})
-    if response.status_code == 200:
-        data = response.json()
-        #allele_frequency = data.get("variant", {}).get("allele_freq", None)
-        #return allele_frequency
-        print(data)
-    return None
+# function to query NCBI Variation Services for allele frequency
+VAR_API_URL = "https://api.ncbi.nlm.nih.gov/variation/v0/"
+@sleep_and_retry
+@limits(calls=1, period=1)  # Limit request rate to 1 RPS
+def get(endpoint, **params):
+    reply = requests.get(VAR_API_URL + endpoint, params=params)
+    reply.raise_for_status()
+    return reply.json()
+
+Spdi = namedtuple('Spdi', 'seq_id position deleted_sequence inserted_sequence')
+
+def query_ncbi_variation(formatted_variant):
+    chrom, pos, ref, alt = formatted_variant.split('-')
+    query_url = f'vcf/{chrom}/{pos}/{ref}/{alt}/contextuals'
+    spdis_for_alts = [Spdi(**spdi_dict) for spdi_dict in get(query_url)['data']['spdis']]
+    frequencies = {}
+
+    for spdi in spdis_for_alts:
+        seq_id = spdi.seq_id
+        min_pos = spdi.position
+        max_pos = spdi.position + len(spdi.deleted_sequence)
+        frequency_records = get(f'interval/{seq_id}:{min_pos}:{max_pos-min_pos}/overlapping_frequency_records')['results']
+        for interval, interval_data in frequency_records.items():
+            length, position = map(int, interval.split('@'))
+            allele_counts = interval_data['counts']['PRJNA507278']['allele_counts']
+            aaa_frequencies = compute_frequencies(allele_counts['SAMN10492703'])
+            asn_frequencies = compute_frequencies(allele_counts['SAMN10492704'])
+            for allele in asn_frequencies.keys():
+                frequencies[Spdi(seq_id, position, interval_data['ref'], allele)] = (aaa_frequencies[allele], asn_frequencies[allele])
+    return frequencies
+
+def compute_frequencies(allele_counts):
+    total = float(sum(allele_counts.values()))
+    if total:
+        return {allele: count / total for allele, count in allele_counts.items()}
+    else:
+        return {allele: 0.0 for allele in allele_counts.keys()}
+
 
 # connect to MongoDB
 database_password = os.getenv('DB_PASSWD')
@@ -50,31 +73,19 @@ client = MongoClient(
 )
 collection = client.beacon.get_collection('genomicVariations')
 
-# iterate over all variants, format them, query gnomAD, and update the database
+# iterate over all variants, format them, query NCBI, and update the database
 for variant in collection.find():
     formatted_variant = format_variant_for_search(variant)
     print("-----------")
     print(f"{formatted_variant}")
-    #allele_frequency = query_gnomad(formatted_variant)
-    #if allele_frequency is not None:
-    #    collection.update_one(
-    #        {"variantInternalId": variant["variantInternalId"]},
-    #        {"$set": {"allele_frequency": allele_frequency}}
-    #    )
-    #    print(f"Updated variant {formatted_variant} with allele frequency {allele_frequency}")
-    #else:
-    #   print(f"Failed to retrieve allele frequency for {formatted_variant}")
-    
-    
-    base_url = "https://api.ncbi.nlm.nih.gov/variation/v0/refsnp/"
-    variant_id = "rs6265"
-    url = f"{base_url}{variant_id}"
-    response = requests.get(url)
-    
-    if response.status_code == 200:
-        data = response.json()
-        allele_frequencies = data.get('primary_snapshot_data', {}).get('allele_annotations', [])
-        print(f"{allele_frequencies}")
-
+    allele_frequencies = query_ncbi_variation(formatted_variant)
+    if allele_frequencies:
+        collection.update_one(
+            {"variantInternalId": variant["variantInternalId"]},
+            {"$set": {"allele_frequencies": allele_frequencies}}
+        )
+        print(f"Updated variant {formatted_variant} with allele frequencies {allele_frequencies}")
+    else:
+       print(f"Failed to retrieve allele frequencies for {formatted_variant}")
 
 print("Finished updating allele frequencies.")
