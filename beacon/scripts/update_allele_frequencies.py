@@ -1,7 +1,8 @@
 import requests
 from pymongo import MongoClient
 import os
-# function to format a single variant
+
+# Function to format a single variant
 def format_variant_for_search(variant):
     chromosome = variant["_position"]["refseqId"]
     start_position = variant["_position"]["startInteger"]
@@ -10,7 +11,7 @@ def format_variant_for_search(variant):
     formatted_variant = f"{chromosome}-{start_position}-{reference_base}-{alternate_base}"
     return formatted_variant
 
-# function to query for allele frequency
+# Function to query 1000 Genomes for allele frequency
 def query_1000_genomes(chrom, pos, ref, alt):
     # Construct the HGVS notation
     hgvs_notation = f"{chrom}:g.{pos}{ref}>{alt}"
@@ -28,8 +29,7 @@ def query_1000_genomes(chrom, pos, ref, alt):
         print(f"Bad request for variant {chrom}-{pos}-{ref}-{alt}: {response.text}")
         return None
 
-
-# connect to MongoDB
+# Connect to MongoDB
 database_password = os.getenv('DB_PASSWD')
 client = MongoClient(
     "mongodb://{}:{}@{}:{}/{}?authSource={}".format(
@@ -44,14 +44,23 @@ client = MongoClient(
 
 collection = client.beacon.get_collection('genomicVariations')
 
-# iterate over all variants, format them, query gnomAD, and update the database
+# Iterate over all variants, format them, query 1000 Genomes, and update the database
 for variant in collection.find():
     formatted_variant = format_variant_for_search(variant)
     print("-----------")
     print(f"{formatted_variant}")
-    chrom, pos, ref, alt = formatted_variant.split('-')
+
+    # Split formatted_variant to extract chrom, pos, ref, alt
+    parts = formatted_variant.split('-')
+    chrom = parts[0]
+    pos = parts[1]
+    ref = parts[2]
+    alt = parts[3]
+
+    # Query 1000 Genomes for allele frequency
     allele_frequency = query_1000_genomes(chrom, pos, ref, alt)
     print(allele_frequency)
+
     if allele_frequency is not None:
         collection.update_one(
             {"variantInternalId": variant["variantInternalId"]},
@@ -59,6 +68,6 @@ for variant in collection.find():
         )
         print(f"Updated variant {formatted_variant} with allele frequency {allele_frequency}")
     else:
-       print(f"Failed to retrieve allele frequency for {formatted_variant}")
+        print(f"Failed to retrieve allele frequency for {formatted_variant}")
 
 print("Finished updating allele frequencies.")
