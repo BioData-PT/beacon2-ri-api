@@ -55,14 +55,25 @@ for variant in collection.find():
     formatted_variant = format_variant_for_search(variant)
     print("-----------")
     print(f"{formatted_variant}")
-    allele_frequency = query_gnomad(formatted_variant)
-    if allele_frequency is not None:
-        collection.update_one(
-            {"variantInternalId": variant["variantInternalId"]},
-            {"$set": {"allele_frequency": allele_frequency}}
-        )
-        print(f"Updated variant {formatted_variant} with allele frequency {allele_frequency}")
-    else:
-       print(f"Failed to retrieve allele frequency for {formatted_variant}")
+    #allele_frequency = query_gnomad(formatted_variant)
+    #if allele_frequency is not None:
+    #    collection.update_one(
+    #        {"variantInternalId": variant["variantInternalId"]},
+    #        {"$set": {"allele_frequency": allele_frequency}}
+    #    )
+    #    print(f"Updated variant {formatted_variant} with allele frequency {allele_frequency}")
+    #else:
+    #   print(f"Failed to retrieve allele frequency for {formatted_variant}")
+    
+    
+    base_url = "https://api.ncbi.nlm.nih.gov/variation/v0/refsnp/"
+    url = f"{base_url}{"rs6265"}"
+    response = requests.get(url)
+    
+    if response.status_code == 200:
+        data = response.json()
+        allele_frequencies = data.get('primary_snapshot_data', {}).get('allele_annotations', [])
+        print(f"{allele_frequencies}")
+
 
 print("Finished updating allele frequencies.")
