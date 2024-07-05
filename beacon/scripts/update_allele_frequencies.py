@@ -61,13 +61,8 @@ def query_ncbi_variation(formatted_variant):
         chrom, pos, ref, alt = formatted_variant.split('-')
         print('ENTROUUUU')
         
-        actual_ref = fetch_reference_base(chrom, pos)
-        print(actual_ref + ref)
-        if actual_ref and actual_ref != ref:
-            print(f"Reference base mismatch for {formatted_variant}: expected {ref}, got {actual_ref}")
-        ref = actual_ref  # Adjust to the correct reference base
-        
         alts = ','.join(map(str, alt))
+        print(alts)
         query_url = f'vcf/{chrom}/{pos}/{ref}/{alts}/contextuals'
         spdis_for_alts = [Spdi(**spdi_dict) for spdi_dict in get(query_url, assembly=INPUT_VCF_ASSEMBLY)['data']['spdis']]
         
