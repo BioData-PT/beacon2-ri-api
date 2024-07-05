@@ -23,31 +23,46 @@ def format_variant_for_search(variant):
 VAR_API_URL = "https://api.ncbi.nlm.nih.gov/variation/v0/"
 
 def get(endpoint, **params):
-    reply = requests.get(VAR_API_URL + endpoint, params=params)
-    reply.raise_for_status()
-    return reply.json()
+    max_retries = 3
+    for attempt in range(max_retries):
+        try:
+            reply = requests.get(VAR_API_URL + endpoint, params=params)
+            reply.raise_for_status()
+            return reply.json()
+        except requests.exceptions.HTTPError as e:
+            if reply.status_code >= 500:
+                print(f"Server error: {e}. Retrying...")
+                time.sleep(2 ** attempt)  # Exponential backoff
+            else:
+                print(f"Client error: {e}.")
+                raise
+    raise Exception(f"Failed to get data from {endpoint} after {max_retries} attempts")
 
 Spdi = namedtuple('Spdi', 'seq_id position deleted_sequence inserted_sequence')
 
-def query_ncbi_variation(formatted_variant):
-    chrom, pos, ref, alt = formatted_variant.split('-')
-    query_url = f'vcf/{chrom}/{pos}/{ref}/{alt}/contextuals'
-    spdis_for_alts = [Spdi(**spdi_dict) for spdi_dict in get(query_url)['data']['spdis']]
-    frequencies = {}
+def query_ncbi_variation(formatted_variant, assembly='GCF_000001405.38'):
+    try:
+        chrom, pos, ref, alt = formatted_variant.split('-')
+        query_url = f'vcf/{chrom}/{pos}/{ref}/{alt}/contextuals'
+        spdis_for_alts = [Spdi(**spdi_dict) for spdi_dict in get(query_url, assembly=assembly)['data']['spdis']]
+        frequencies = {}
 
-    for spdi in spdis_for_alts:
-        seq_id = spdi.seq_id
-        min_pos = spdi.position
-        max_pos = spdi.position + len(spdi.deleted_sequence)
-        frequency_records = get(f'interval/{seq_id}:{min_pos}:{max_pos-min_pos}/overlapping_frequency_records')['results']
-        for interval, interval_data in frequency_records.items():
-            length, position = map(int, interval.split('@'))
-            allele_counts = interval_data['counts']['PRJNA507278']['allele_counts']
-            aaa_frequencies = compute_frequencies(allele_counts['SAMN10492703'])
-            asn_frequencies = compute_frequencies(allele_counts['SAMN10492704'])
-            for allele in asn_frequencies.keys():
-                frequencies[Spdi(seq_id, position, interval_data['ref'], allele)] = (aaa_frequencies[allele], asn_frequencies[allele])
-    return frequencies
+        for spdi in spdis_for_alts:
+            seq_id = spdi.seq_id
+            min_pos = spdi.position
+            max_pos = spdi.position + len(spdi.deleted_sequence)
+            frequency_records = get(f'interval/{seq_id}:{min_pos}:{max_pos-min_pos}/overlapping_frequency_records', assembly=assembly)['results']
+            for interval, interval_data in frequency_records.items():
+                length, position = map(int, interval.split('@'))
+                allele_counts = interval_data['counts']['PRJNA507278']['allele_counts']
+                aaa_frequencies = compute_frequencies(allele_counts['SAMN10492703'])
+                asn_frequencies = compute_frequencies(allele_counts['SAMN10492704'])
+                for allele in asn_frequencies.keys():
+                    frequencies[Spdi(seq_id, position, interval_data['ref'], allele)] = (aaa_frequencies[allele], asn_frequencies[allele])
+        return frequencies
+    except Exception as e:
+        print(f"Failed to query NCBI Variation Services for variant {formatted_variant}: {e}")
+        return None
 
 def compute_frequencies(allele_counts):
     total = float(sum(allele_counts.values()))
