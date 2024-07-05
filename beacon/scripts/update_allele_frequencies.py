@@ -5,10 +5,8 @@ import time
 
 # Function to query 1000 Genomes for allele frequency
 def query_1000_genomes(chrom, start, end, ref, alt):
-    print("START " + start)
-    print("END" + end)
     server = "https://rest.ensembl.org"
-    ext = f"/map/human/GRCh37/{chrom}:{start}..{end}/GRCh38?"
+    ext = f"/map/human/GRCh37/{chrom}:{start}..{end}:1/GRCh38?"
  
     r = requests.get(server + ext, headers={"Content-Type": "application/json"})
  
@@ -65,7 +63,6 @@ collection = client.beacon.get_collection('genomicVariations')
 
 # Iterate over all variants, format them, query 1000 Genomes, and update the database
 for variant in collection.find():
-    
     chromosome = variant["_position"]["refseqId"]
     start_position = variant["_position"]["startInteger"]
     end_position = variant["_position"]["endInteger"]
