@@ -11,13 +11,12 @@ def format_variant_for_search(variant):
     return formatted_variant
 
 # function to query gnomAD for allele frequency
-def query_gnomad(formatted_variant):
-    chrom, pos, ref, alt = formatted_variant.split('-')
+def query_gnomad(chrom, pos, ref, alt):
     print(chrom, pos, ref, alt)
     query_url = f"https://gnomad.broadinstitute.org/api"
     query = """
     {
-      variant(chrom: "{chrom}", pos: {pos}, ref: {ref}, alt: {alt}) {
+      variant(chrom: "%s", pos: %d, ref: "%s", alt: "%s") {
         genome {
           ac
           an
@@ -57,7 +56,8 @@ for variant in collection.find():
     formatted_variant = format_variant_for_search(variant)
     print("-----------")
     print(f"{formatted_variant}")
-    allele_frequency = query_gnomad(formatted_variant)
+    chrom, pos, ref, alt = formatted_variant.split('-')
+    allele_frequency = query_gnomad(chrom, pos, ref, alt)
     if allele_frequency is not None:
         collection.update_one(
             {"variantInternalId": variant["variantInternalId"]},
