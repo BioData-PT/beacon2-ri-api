@@ -43,7 +43,8 @@ Spdi = namedtuple('Spdi', 'seq_id position deleted_sequence inserted_sequence')
 def query_ncbi_variation(formatted_variant):
     try:
         chrom, pos, ref, alt = formatted_variant.split('-')
-        query_url = f'vcf/{chrom}/{pos}/{ref}/{alt}/contextuals'
+        alts = ','.join(map(str, alt))
+        query_url = f'vcf/{chrom}/{pos}/{ref}/{alts}/contextuals'
         spdis_for_alts = [Spdi(**spdi_dict) for spdi_dict in get(query_url)['data']['spdis']]
         frequencies = {}
 
