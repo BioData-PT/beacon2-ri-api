@@ -4,9 +4,9 @@ import os
 import time
 
 # Function to convert GRCh37 to GRCh38 using Ensembl REST API
-def convert_to_grch38(hgvs_id):
+def convert_to_grch38(start, alt, ref, chrom):
     # Construct Ensembl REST URL for mapping from GRCh37 to GRCh38
-    ensembl_rest_url = f"https://rest.ensembl.org/map/human/GRCh37/{hgvs_id}/GRCh38?"
+    ensembl_rest_url = f"https://rest.ensembl.org/map/human/GRCh37/{chrom}:{start}:{ref}:{alt}/GRCh38?"
     print("LINK" + ensembl_rest_url)
 
     # Make GET request to Ensembl REST API
@@ -81,12 +81,11 @@ collection = client.beacon.get_collection('genomicVariations')
 # Iterate over all variants, format them, query 1000 Genomes, and update the database
 for variant in collection.find():
     hgvs_id = variant["identifiers"]["genomicHGVSId"]
-    print("COMEÇA AQUI" + hgvs_id)
-    start_grch38, end_grch38 = convert_to_grch38(hgvs_id)
-    print(start_grch38, end_grch38)
+    start = variant['_position']['start']
     alt = variant['variation']['alternateBases']
     ref = variant['variation']['referenceBases']
     chrom = variant['_position']['refseqId']
+    tart_grch38, end_grch38 = convert_to_grch38(start, alt, ref, chrom)
 
     try:
         # Query 1000 Genomes for allele frequency
