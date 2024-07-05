@@ -59,6 +59,7 @@ def query_ncbi_variation(formatted_variant):
     try:
         # Fetch reference base from NCBI
         chrom, pos, ref, alt = formatted_variant.split('-')
+        print('ENTROUUUU')
         
         actual_ref = fetch_reference_base(chrom, pos)
         if actual_ref and actual_ref != ref:
