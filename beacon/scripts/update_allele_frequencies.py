@@ -17,7 +17,7 @@ def query_gnomad(formatted_variant):
     url = 'https://gnomad.broadinstitute.org/api'
     query = '''
         {
-        variant(variantId: "1-55516888-G-T") {
+        variant(variantId: "1-55051215-G-GA") {
             alleleFrequency
             populations {
             id
@@ -27,7 +27,7 @@ def query_gnomad(formatted_variant):
             }
         }
         }
-'''
+        '''
     response = requests.post(url, json={'query': query})
     if response.status_code == 200:
         data = response.json()
