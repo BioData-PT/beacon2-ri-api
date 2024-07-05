@@ -26,9 +26,7 @@ def get(endpoint, **params):
     max_retries = 3
     for attempt in range(max_retries):
         try:
-            api_url = "https://www.ncbi.nlm.nih.gov/variation/v0/" \
-            if endpoint.startswith('spdi') else VAR_API_URL
-            reply = requests.get(api_url + endpoint, params=params)
+            reply = requests.get(VAR_API_URL + endpoint, params=params)
             reply.raise_for_status()
             return reply.json()
         except requests.exceptions.HTTPError as e:
@@ -45,6 +43,7 @@ Spdi = namedtuple('Spdi', 'seq_id position deleted_sequence inserted_sequence')
 def query_ncbi_variation(formatted_variant):
     try:
         chrom, pos, ref, alt = formatted_variant.split('-')
+        print(chrom, pos, ref, alt)
         alts = ','.join(map(str, alt))
         query_url = f'vcf/{chrom}/{pos}/{ref}/{alts}/contextuals'
         spdis_for_alts = [Spdi(**spdi_dict) for spdi_dict in get(query_url)['data']['spdis']]
@@ -84,6 +83,7 @@ client = MongoClient(
         "admin"
     )
 )
+
 collection = client.beacon.get_collection('genomicVariations')
 
 # Iterate over all variants, format them, query NCBI, and update the database
