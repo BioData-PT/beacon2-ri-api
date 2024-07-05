@@ -14,42 +14,46 @@ def format_variant_for_search(variant):
 # Function to query 1000 Genomes for allele frequency
 def query_1000_genomes(chrom, pos, ref, alt):
     server = "https://rest.ensembl.org"
-    ext = "/map/human/GRCh37/X:1000000..1000100:1/GRCh38?"
+    ext = f"/map/human/GRCh37/{chrom}:{pos}..{pos}/GRCh38?"
  
-    r = requests.get(server+ext, headers={ "Content-Type" : "application/json"})
+    r = requests.get(server + ext, headers={"Content-Type": "application/json"})
  
     if not r.ok:
         r.raise_for_status()
         sys.exit()
     
     decoded = r.json()
-    print(repr(decoded))
     mappings = decoded['mappings']
+    
+    if not mappings:
+        raise ValueError(f"No mappings found for {chrom}:{pos} in GRCh38")
+    
     mapped_data = mappings[0]['mapped']
     mapped_start = mapped_data['start']
-    print(mapped_start, ref, alt)
+    
     # Construct the HGVS notation
     hgvs_notation = f"{chrom}:g.{mapped_start}{ref}>{alt}"
     
-    # Construct the URL
+    # Construct the URL for Ensembl VEP
     url = f"https://rest.ensembl.org/vep/human/hgvs/{hgvs_notation}?"
-
+ 
     # Make GET request to the API
     response = requests.get(url, headers={"Content-Type": "application/json"})
-
+ 
     # Check if request was successful
     if response.status_code == 200:
         # Parse the JSON response
         json_response = response.json()
-
+ 
         # Check if reference allele matches
-        if json_response[0]['allele_string'].startswith(ref):
+        if json_response and json_response[0]['allele_string'].startswith(ref):
             return json_response
         else:
             raise ValueError(f"Reference allele mismatch for variant {chrom}-{pos}-{ref}-{alt}. Ensembl returned {json_response[0]['allele_string']}")
     else:
         print(f"Bad request for variant {chrom}-{pos}-{ref}-{alt}: {response.text}")
         return None
+
 
 # Connect to MongoDB
 database_password = os.getenv('DB_PASSWD')
