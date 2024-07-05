@@ -12,27 +12,17 @@ def format_variant_for_search(variant):
     return formatted_variant
 
 # Function to query 1000 Genomes for allele frequency
-def query_1000_genomes(chrom, pos, ref, alt):
+def query_ncbi_variation(chrom, pos, ref, alt):
     try:
-        # Construct the HGVS notation
-        hgvs_notation = f"{chrom}:g.{pos}{ref}>{alt}"
-        
-        # Construct the URL
-        url = f"https://rest.ensembl.org/vep/human/hgvs/{hgvs_notation}?"
+        # Construct the query URL
+        query_url = f"https://api.ncbi.nlm.nih.gov/variation/v0/variant/{chrom}-{pos}-{ref}-{alt}/frequency"
 
         # Make GET request to the API
-        response = requests.get(url, headers={"Content-Type": "application/json"})
+        response = requests.get(query_url)
 
         # Check if request was successful
         if response.status_code == 200:
-            # Parse the JSON response
-            json_response = response.json()
-
-            # Check if reference allele matches
-            if json_response[0]['allele_string'].startswith(ref):
-                return json_response
-            else:
-                raise ValueError(f"Reference allele mismatch for variant {chrom}-{pos}-{ref}-{alt}. Ensembl returned {json_response[0]['allele_string']}")
+            return response.json()
         else:
             print(f"Bad request for variant {chrom}-{pos}-{ref}-{alt}: {response.text}")
             return None
@@ -71,7 +61,7 @@ for variant in collection.find():
 
     try:
         # Query 1000 Genomes for allele frequency
-        allele_frequency = query_1000_genomes(chrom, pos, ref, alt)
+        allele_frequency = query_ncbi_variation(chrom, pos, ref, alt)
         print(allele_frequency)
 
         if allele_frequency is not None:
