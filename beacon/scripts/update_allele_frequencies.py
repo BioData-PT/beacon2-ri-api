@@ -24,7 +24,14 @@ def query_1000_genomes(chrom, pos, ref, alt):
 
     # Check if request was successful
     if response.status_code == 200:
-        return response.json()
+        # Parse the JSON response
+        json_response = response.json()
+
+        # Check if reference allele matches
+        if json_response[0]['allele_string'].startswith(ref):
+            return json_response
+        else:
+            raise ValueError(f"Reference allele mismatch for variant {chrom}-{pos}-{ref}-{alt}. Ensembl returned {json_response[0]['allele_string']}")
     else:
         print(f"Bad request for variant {chrom}-{pos}-{ref}-{alt}: {response.text}")
         return None
@@ -57,17 +64,25 @@ for variant in collection.find():
     ref = parts[2]
     alt = parts[3]
 
-    # Query 1000 Genomes for allele frequency
-    allele_frequency = query_1000_genomes(chrom, pos, ref, alt)
-    print(allele_frequency)
+    try:
+        # Query 1000 Genomes for allele frequency
+        allele_frequency = query_1000_genomes(chrom, pos, ref, alt)
+        print(allele_frequency)
 
-    if allele_frequency is not None:
-        collection.update_one(
-            {"variantInternalId": variant["variantInternalId"]},
-            {"$set": {"allele_frequency": allele_frequency}}
-        )
-        print(f"Updated variant {formatted_variant} with allele frequency {allele_frequency}")
-    else:
-        print(f"Failed to retrieve allele frequency for {formatted_variant}")
+        if allele_frequency is not None:
+            collection.update_one(
+                {"variantInternalId": variant["variantInternalId"]},
+                {"$set": {"allele_frequency": allele_frequency}}
+            )
+            print(f"Updated variant {formatted_variant} with allele frequency {allele_frequency}")
+        else:
+           print(f"Failed to retrieve allele frequency for {formatted_variant}")
+
+    except ValueError as e:
+        print(str(e))
+        continue
+    except Exception as e:
+        print(f"Failed to process variant {formatted_variant}: {e}")
+        continue
 
 print("Finished updating allele frequencies.")
