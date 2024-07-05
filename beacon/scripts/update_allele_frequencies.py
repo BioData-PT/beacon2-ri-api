@@ -1,5 +1,4 @@
-import requests
-import sys
+import requests, sys
 from pymongo import MongoClient
 import os
 import time
@@ -15,81 +14,47 @@ def format_variant_for_search(variant):
     return formatted_variant
 
 # Function to query 1000 Genomes for allele frequency
-def query_1000_genomes(chrom, start, ref, alt, max_retries=5):
+def query_1000_genomes(chrom, start, end, ref, alt):
     server = "https://rest.ensembl.org"
     ext = f"/map/human/GRCh37/{chrom}:{start}..{end}/GRCh38?"
+ 
+    r = requests.get(server + ext, headers={"Content-Type": "application/json"})
+ 
+    if not r.ok:
+        r.raise_for_status()
+        sys.exit()
     
-    retries = 0
-    while retries < max_retries:
-        r = requests.get(server + ext, headers={"Content-Type": "application/json"})
-        
-        if r.status_code == 429:  # Too many requests
-            retries += 1
-            wait_time = 2 ** retries
-            print(f"Rate limit exceeded. Retrying in {wait_time} seconds...")
-            time.sleep(wait_time)  # Exponential backoff
-            continue
-        elif not r.ok:
-            print(f"Error: {r.status_code}. Exiting.")
-            r.raise_for_status()
-            sys.exit()
-        
-        decoded = r.json()
-        mappings = decoded['mappings']
-        
-        if not mappings:
-            raise ValueError(f"No mappings found for {chrom}:{start} in GRCh38")
-        
-        mapped_data = mappings[0]['mapped']
-        mapped_start = mapped_data['start']
-        mapped_end = mapped_data['end']
-
-        # Fetch the reference allele from the Ensembl database
-        ref_url = f"https://rest.ensembl.org/sequence/region/human/{chrom}:{mapped_start}..{mapped_end}:1?"
-        ref_response = requests.get(ref_url, headers={"Content-Type": "application/json"})
-        
-        if ref_response.status_code != 200:
-            print(f"Failed to fetch reference allele for {chrom}:{mapped_start}-{mapped_end}")
-            return None
-        
-        ref_allele = ref_response.json().get('seq')
-        
-        if ref_allele != ref:
-            raise ValueError(f"Reference allele mismatch for variant {chrom}:{start}{ref}>{alt}. Ensembl returned {ref_allele}")
-
-        # Construct the HGVS notation
-        hgvs_notation = f"{chrom}:g.{mapped_start}{ref}>{alt}"
-        
-        # Construct the URL for Ensembl VEP
-        url = f"https://rest.ensembl.org/vep/human/hgvs/{hgvs_notation}?"
-        
-        # Throttle requests to avoid exceeding rate limits
-        time.sleep(0.1)  # Sleep for 100 milliseconds (10 requests per second)
-        
-        # Make GET request to the API
-        response = requests.get(url, headers={"Content-Type": "application/json"})
-        
-        if response.status_code == 429:
-            retries += 1
-            wait_time = 2 ** retries
-            print(f"Rate limit exceeded. Retrying in {wait_time} seconds...")
-            time.sleep(wait_time)  # Exponential backoff
-            continue
-        elif response.status_code == 200:
-            # Parse the JSON response
-            json_response = response.json()
-            
-            # Check if reference allele matches
-            if json_response and json_response[0]['allele_string'].startswith(ref):
-                return json_response
-            else:
-                raise ValueError(f"Reference allele mismatch for variant {chrom}-{start}-{ref}-{alt}. Ensembl returned {json_response[0]['allele_string']}")
+    decoded = r.json()
+    mappings = decoded['mappings']
+    mapped_data = mappings[0]['mapped']
+    mapped_start = mapped_data['start']
+    mapped_end = mapped_data['end']
+    
+    # Construct the HGVS notation
+    hgvs_notation = f"{chrom}:g.{mapped_end}{ref}>{alt}"
+    print(hgvs_notation)
+    
+    # Construct the URL for Ensembl VEP
+    url = f"https://rest.ensembl.org/vep/human/hgvs/{hgvs_notation}?"
+ 
+    # Make GET request to the API
+    time.sleep(1)
+    response = requests.get(url, headers={"Content-Type": "application/json"})
+ 
+    # Check if request was successful
+    if response.status_code == 200:
+        # Parse the JSON response
+        json_response = response.json()
+ 
+        # Check if reference allele matches
+        if json_response and json_response[0]['allele_string'].startswith(ref):
+            return json_response
         else:
-            print(f"Bad request for variant {chrom}-{start}-{ref}-{alt}: {response.text}")
-            return None
+            raise ValueError(f"Reference allele mismatch for variant {chrom}-{start}-{ref}-{alt}. Ensembl returned {json_response[0]['allele_string']}")
+    else:
+        print(f"Bad request for variant {chrom}-{start}-{ref}-{alt}: {response.text}")
+        return None
 
-    print(f"Failed to retrieve data after {max_retries} retries.")
-    return None
 
 # Connect to MongoDB
 database_password = os.getenv('DB_PASSWD')
@@ -115,8 +80,8 @@ for variant in collection.find():
     # Split formatted_variant to extract chrom, pos, ref, alt
     parts = formatted_variant.split('-')
     chrom = parts[0]
-    start = int(parts[1])
-    end = int(parts[2])
+    start = parts[1]
+    end = parts[2]
     ref = parts[3]
     alt = parts[4]
 
@@ -132,7 +97,7 @@ for variant in collection.find():
             )
             print(f"Updated variant {formatted_variant} with allele frequency {allele_frequency}")
         else:
-            print(f"Failed to retrieve allele frequency for {formatted_variant}")
+           print(f"Failed to retrieve allele frequency for {formatted_variant}")
 
     except ValueError as e:
         print(str(e))
