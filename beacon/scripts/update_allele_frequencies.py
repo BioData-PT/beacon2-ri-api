@@ -15,7 +15,7 @@ def convert_to_grch38_ucsc(chromosome, start, end):
     if response.status_code == 200:
         # Parse response HTML (example assumes response is HTML format)
         # In reality, you would need to parse the specific content returned by UCSC
-        print(response.text())
+        print(response)
     else:
         print(f"Failed to fetch conversion for {chromosome}:{start}-{end}: {response.status_code}")
         return None
