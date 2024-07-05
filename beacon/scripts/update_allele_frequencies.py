@@ -40,20 +40,23 @@ def get(endpoint, **params):
 
 Spdi = namedtuple('Spdi', 'seq_id position deleted_sequence inserted_sequence')
 
-def verify_reference_base(chrom, pos, ref):
-    query_url = f'spdi/seq/{chrom}:{pos}:{len(ref)}:{ref}'
+def verify_reference_base(chrom, pos, ref, assembly='GCF_000001405.38'):
+    refseq_url = f"https://api.ncbi.nlm.nih.gov/variation/v0/beta/sequence/{chrom}:{pos}..{pos}?assembly={assembly}"
     try:
-        response = get(query_url)
-        return response['spdi']['deleted_sequence'] == ref
+        response = get(refseq_url)
+        actual_ref = response['sequence'][0]
+        return actual_ref == ref, actual_ref
     except Exception as e:
         print(f"Error verifying reference base: {e}")
-        return False
+        return False, None
 
 def query_ncbi_variation(formatted_variant, assembly='GCF_000001405.38'):
     try:
         chrom, pos, ref, alt = formatted_variant.split('-')
-        if not verify_reference_base(chrom, pos, ref):
-            print(f"Reference base mismatch for variant {formatted_variant}")
+        pos = int(pos)
+        valid_ref, actual_ref = verify_reference_base(chrom, pos, ref, assembly)
+        if not valid_ref:
+            print(f"Reference base mismatch for variant {formatted_variant}. Expected {ref}, got {actual_ref}")
             return None
         
         query_url = f'vcf/{chrom}/{pos}/{ref}/{alt}/contextuals'
