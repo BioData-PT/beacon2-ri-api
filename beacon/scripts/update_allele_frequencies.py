@@ -42,11 +42,10 @@ Spdi = namedtuple('Spdi', 'seq_id position deleted_sequence inserted_sequence')
 
 def query_ncbi_variation(formatted_variant):
     try:
-        INPUT_VCF_ASSEMBLY = 'GCF_000001405.38'
         chrom, pos, ref, alt = formatted_variant.split('-')
         alts = ','.join(map(str, alt))
         query_url = f'vcf/{chrom}/{pos}/{ref}/{alts}/contextuals'
-        spdis_for_alts = [Spdi(**spdi_dict) for spdi_dict in get(query_url, assembly=INPUT_VCF_ASSEMBLY)['data']['spdis']]
+        spdis_for_alts = [Spdi(**spdi_dict) for spdi_dict in get(query_url, assembly='GCF_000001405.38')['data']['spdis']]
         frequencies = {}
 
         for spdi in spdis_for_alts:
