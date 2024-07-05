@@ -44,16 +44,32 @@ def remap(spdi):
     remap_url = 'spdi/{}:{}:{}:{}/canonical_representative'.format(*spdi)
     return Spdi(**get(remap_url)['data'])
 
+def fetch_reference_base(chrom, pos):
+    query_url = f'spdi/NC_0000{chrom}.10:{pos}:1:1'
+    try:
+        response = get(query_url)
+        return response['data']['deleted_sequence']
+    except Exception as e:
+        print(f"Error fetching reference base for {chrom}-{pos}: {e}")
+        return None
+
+INPUT_VCF_ASSEMBLY = 'GCF_000001405.38'  # GRCh38 assembly
+
 def query_ncbi_variation(formatted_variant):
     try:
-        INPUT_VCF_ASSEMBLY = 'GCF_000001405.38'
+        # Fetch reference base from NCBI
         chrom, pos, ref, alt = formatted_variant.split('-')
+        
+        actual_ref = fetch_reference_base(chrom, pos)
+        if actual_ref and actual_ref != ref:
+            print(f"Reference base mismatch for {formatted_variant}: expected {ref}, got {actual_ref}")
+        ref = actual_ref  # Adjust to the correct reference base
+        
         alts = ','.join(map(str, alt))
         query_url = f'vcf/{chrom}/{pos}/{ref}/{alts}/contextuals'
         spdis_for_alts = [Spdi(**spdi_dict) for spdi_dict in get(query_url, assembly=INPUT_VCF_ASSEMBLY)['data']['spdis']]
         
-        if INPUT_VCF_ASSEMBLY != 'GCF_000001405.38':
-            spdis_for_alts = [remap(spdi) for spdi in spdis_for_alts]
+        spdis_for_alts = [remap(spdi) for spdi in spdis_for_alts]
         
         frequencies = {}
 
