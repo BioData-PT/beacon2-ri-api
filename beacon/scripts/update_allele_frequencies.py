@@ -80,6 +80,7 @@ collection = client.beacon.get_collection('genomicVariations')
 # Iterate over all variants, format them, query 1000 Genomes, and update the database
 for variant in collection.find():
     hgvs_id = variant["identifiers"]["genomicHGVSId"]
+    print("COMEÇA AQUI" + hgvs_id)
     start_grch38, end_grch38 = convert_to_grch38(hgvs_id)
     alt = variant['variation']['alternateBases']
     ref = variant['variation']['referenceBases']
