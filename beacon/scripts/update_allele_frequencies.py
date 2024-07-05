@@ -1,4 +1,4 @@
-import requests
+import requests, sys
 from pymongo import MongoClient
 import os
 
@@ -12,23 +12,40 @@ def format_variant_for_search(variant):
     return formatted_variant
 
 # Function to query 1000 Genomes for allele frequency
-def query_ncbi_variation(chrom, pos, ref, alt):
-    try:
-        # Construct the query URL
-        query_url = f"https://api.ncbi.nlm.nih.gov/variation/v0/variant/{chrom}-{pos}-{ref}-{alt}/frequency"
+def query_1000_genomes(chrom, pos, ref, alt):
+    # Construct the HGVS notation
+    hgvs_notation = f"{chrom}:g.{pos}{ref}>{alt}"
+    
+    server = "https://rest.ensembl.org"
+    ext = "/map/human/GRCh37/X:1000000..1000100:1/GRCh38?"
+ 
+    r = requests.get(server+ext, headers={ "Content-Type" : "application/json"})
+ 
+    if not r.ok:
+        r.raise_for_status()
+        sys.exit()
+    
+    decoded = r.json()
+    print(repr(decoded))
+    
+    # Construct the URL
+    url = f"https://rest.ensembl.org/vep/human/hgvs/{hgvs_notation}?"
 
-        # Make GET request to the API
-        response = requests.get(query_url)
+    # Make GET request to the API
+    response = requests.get(url, headers={"Content-Type": "application/json"})
 
-        # Check if request was successful
-        if response.status_code == 200:
-            return response.json()
+    # Check if request was successful
+    if response.status_code == 200:
+        # Parse the JSON response
+        json_response = response.json()
+
+        # Check if reference allele matches
+        if json_response[0]['allele_string'].startswith(ref):
+            return json_response
         else:
-            print(f"Bad request for variant {chrom}-{pos}-{ref}-{alt}: {response.text}")
-            return None
-
-    except Exception as e:
-        print(f"Failed to retrieve allele frequency for {chrom}-{pos}-{ref}-{alt}: {str(e)}")
+            raise ValueError(f"Reference allele mismatch for variant {chrom}-{pos}-{ref}-{alt}. Ensembl returned {json_response[0]['allele_string']}")
+    else:
+        print(f"Bad request for variant {chrom}-{pos}-{ref}-{alt}: {response.text}")
         return None
 
 # Connect to MongoDB
@@ -61,7 +78,7 @@ for variant in collection.find():
 
     try:
         # Query 1000 Genomes for allele frequency
-        allele_frequency = query_ncbi_variation(chrom, pos, ref, alt)
+        allele_frequency = query_1000_genomes(chrom, pos, ref, alt)
         print(allele_frequency)
 
         if allele_frequency is not None:
