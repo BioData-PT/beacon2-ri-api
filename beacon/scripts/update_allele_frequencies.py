@@ -44,7 +44,7 @@ for variant in collection.find():
     print("-----------")
     print(f"{formatted_variant}")
     chrom, pos, ref, alt = formatted_variant.split('-')
-    allele_frequency = query_gnomad(chrom, int(pos), ref, alt)
+    allele_frequency = query_gnomad(chrom, pos, ref, alt)
     print(allele_frequency)
     if allele_frequency is not None:
         collection.update_one(
