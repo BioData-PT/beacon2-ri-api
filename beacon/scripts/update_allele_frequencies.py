@@ -53,9 +53,12 @@ def query_1000_genomes(chrom, start, end, ref, alt, max_retries=5):
             return None
         
         ref_allele = ref_response.json().get('seq')
-        
-        if ref_allele != ref:
-            raise ValueError(f"Reference allele mismatch for variant {chrom}:{start}{ref}>{alt}. Ensembl returned {ref_allele}")
+
+        # Ensure the reference allele matches exactly at the position
+        exact_ref_allele = ref_allele[:len(ref)]
+
+        if exact_ref_allele != ref:
+            raise ValueError(f"Reference allele mismatch for variant {chrom}:{start}{ref}>{alt}. Ensembl returned {exact_ref_allele}")
 
         # Construct the HGVS notation
         hgvs_notation = f"{chrom}:g.{mapped_start}{ref}>{alt}"
