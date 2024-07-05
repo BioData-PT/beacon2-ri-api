@@ -62,7 +62,7 @@ def query_ncbi_variation(formatted_variant):
         print('ENTROUUUU')
         
         actual_ref = fetch_reference_base(chrom, pos)
-        print(actual_ref)
+        print(actual_ref + ref)
         if actual_ref and actual_ref != ref:
             print(f"Reference base mismatch for {formatted_variant}: expected {ref}, got {actual_ref}")
         ref = actual_ref  # Adjust to the correct reference base
