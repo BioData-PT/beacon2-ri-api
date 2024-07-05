@@ -40,9 +40,22 @@ def get(endpoint, **params):
 
 Spdi = namedtuple('Spdi', 'seq_id position deleted_sequence inserted_sequence')
 
+def verify_reference_base(chrom, pos, ref):
+    query_url = f'spdi/seq/{chrom}:{pos}:{len(ref)}:{ref}'
+    try:
+        response = get(query_url)
+        return response['spdi']['deleted_sequence'] == ref
+    except Exception as e:
+        print(f"Error verifying reference base: {e}")
+        return False
+
 def query_ncbi_variation(formatted_variant, assembly='GCF_000001405.38'):
     try:
         chrom, pos, ref, alt = formatted_variant.split('-')
+        if not verify_reference_base(chrom, pos, ref):
+            print(f"Reference base mismatch for variant {formatted_variant}")
+            return None
+        
         query_url = f'vcf/{chrom}/{pos}/{ref}/{alt}/contextuals'
         spdis_for_alts = [Spdi(**spdi_dict) for spdi_dict in get(query_url, assembly=assembly)['data']['spdis']]
         frequencies = {}
