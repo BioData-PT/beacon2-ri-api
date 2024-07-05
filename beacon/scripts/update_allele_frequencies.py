@@ -3,33 +3,24 @@ from pymongo import MongoClient
 import os
 import time
 
-# Function to convert GRCh37 to GRCh38 using Ensembl REST API
-def convert_to_grch38(start, alt, ref, chrom):
-    # Construct Ensembl REST URL for mapping from GRCh37 to GRCh38
-    ensembl_rest_url = f"https://rest.ensembl.org/map/human/GRCh37/{chrom}:{start}:{ref}:{alt}/GRCh38?"
-    print("LINK" + ensembl_rest_url)
-
-    # Make GET request to Ensembl REST API
-    response = requests.get(ensembl_rest_url, headers={"Content-Type": "application/json"})
-
+# Function to convert genomic coordinates from GRCh37 to GRCh38 using UCSC LiftOver
+def convert_to_grch38_ucsc(chromosome, start, end):
+    # Construct LiftOver URL
+    ucsc_liftover_url = f"http://genome.ucsc.edu/cgi-bin/hgLiftOver?hgsid=123456&db=hg19&hgFrom=hg19&hgTo=hg38&hgFindInfo=Find+Regions&submit=submit&position={chromosome}%3A{start}-{end}"
+    
+    # Make GET request to UCSC LiftOver
+    response = requests.get(ucsc_liftover_url)
+    
     # Check if request was successful
-    if response.ok:
-        # Parse JSON response
-        json_response = response.json()
-
-        # Extract mapped coordinates
-        mappings = json_response.get('mappings', [])
-        if mappings:
-            mapped_data = mappings[0].get('mapped', {})
-            start = mapped_data.get('start')
-            end = mapped_data.get('end')
-            return start, end
-        else:
-            print(f"No mappings found for {hgvs_id}")
-            return None, None
+    if response.status_code == 200:
+        # Parse response HTML (example assumes response is HTML format)
+        # In reality, you would need to parse the specific content returned by UCSC
+        print(response.text())
     else:
-        print(f"Failed to fetch mapping for {hgvs_id}: {response.status_code}")
-        return None, None
+        print(f"Failed to fetch conversion for {chromosome}:{start}-{end}: {response.status_code}")
+        return None
+
+
 
 # Function to query 1000 Genomes for allele frequency
 def query_1000_genomes(end_grch38, ref, alt, chrom):
@@ -82,10 +73,12 @@ collection = client.beacon.get_collection('genomicVariations')
 for variant in collection.find():
     hgvs_id = variant["identifiers"]["genomicHGVSId"]
     start = variant['_position']['startInteger']
+    end = variant['_position']['endInteger']
     alt = variant['variation']['alternateBases']
     ref = variant['variation']['referenceBases']
     chrom = variant['_position']['refseqId']
-    tart_grch38, end_grch38 = convert_to_grch38(start, alt, ref, chrom)
+    
+    tart_grch38, end_grch38 = convert_to_grch38_ucsc(chrom, start, end)
 
     try:
         # Query 1000 Genomes for allele frequency
