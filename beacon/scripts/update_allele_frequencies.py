@@ -6,7 +6,7 @@ import time
 # Function to query 1000 Genomes for allele frequency
 def query_1000_genomes(chrom, start, end, ref, alt):
     server = "https://rest.ensembl.org"
-    ext = f"/map/human/GRCh37/{chrom}:{start}..{end}/GRCh38?"
+    ext = f"/map/human/GRCh37/{chrom}:{start}..{end}:1/GRCh38?"
  
     r = requests.get(server + ext, headers={"Content-Type": "application/json"})
  
@@ -22,7 +22,7 @@ def query_1000_genomes(chrom, start, end, ref, alt):
     mapped_end = mapped_data['end']
     
     # Construct the HGVS notation
-    hgvs_notation = f"{chrom}:g.{mapped_start}{ref}>{alt}"
+    hgvs_notation = f"{chrom}:g.{mapped_end}{ref}>{alt}"
     
     # Construct the URL for Ensembl VEP
     url = f"https://rest.ensembl.org/vep/human/hgvs/{hgvs_notation}?"
