@@ -8,7 +8,7 @@ def query_1000_genomes(chrom, start, end, ref, alt):
     print("START " + start)
     print("END" + end)
     server = "https://rest.ensembl.org"
-    ext = f"/map/human/GRCh37/{chrom}:{start}..{end}:1/GRCh38?"
+    ext = f"/map/human/GRCh37/{chrom}:{start}..{end}/GRCh38?"
  
     r = requests.get(server + ext, headers={"Content-Type": "application/json"})
  
