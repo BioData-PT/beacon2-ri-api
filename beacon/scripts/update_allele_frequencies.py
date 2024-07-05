@@ -22,7 +22,7 @@ def query_1000_genomes(chrom, start, end, ref, alt):
     mapped_end = mapped_data['end']
     
     # Construct the HGVS notation
-    hgvs_notation = f"{chrom}:g.{mapped_end}{ref}>{alt}"
+    hgvs_notation = f"{chrom}:g.{mapped_start}{ref}>{alt}"
     
     # Construct the URL for Ensembl VEP
     url = f"https://rest.ensembl.org/vep/human/hgvs/{hgvs_notation}?"
@@ -63,26 +63,20 @@ collection = client.beacon.get_collection('genomicVariations')
 
 # Iterate over all variants, format them, query 1000 Genomes, and update the database
 for variant in collection.find():
+    
     chromosome = variant["_position"]["refseqId"]
     start_position = variant["_position"]["startInteger"]
     end_position = variant["_position"]["endInteger"]
     reference_base = variant["variation"]["referenceBases"]
     alternate_base = variant["variation"]["alternateBases"]
+    
     formatted_variant = f"{chromosome}-{start_position}-{end_position}-{reference_base}-{alternate_base}"
     print("-----------")
     print(f"{formatted_variant}")
 
-    # Split formatted_variant to extract chrom, pos, ref, alt
-    parts = formatted_variant.split('-')
-    chrom = parts[0]
-    start = parts[1]
-    end = parts[2]
-    ref = parts[3]
-    alt = parts[4]
-
     try:
         # Query 1000 Genomes for allele frequency
-        allele_frequency = query_1000_genomes(chrom, start, end, ref, alt)
+        allele_frequency = query_1000_genomes(chromosome, start_position, end_position, reference_base, alternate_base)
         print(allele_frequency)
 
         if allele_frequency is not None:
