@@ -14,12 +14,26 @@ def format_variant_for_search(variant):
 
 # function to query gnomAD for allele frequency
 def query_gnomad(formatted_variant):
-    url = f"https://gnomad.broadinstitute.org/api/variant/{formatted_variant}?dataset=gnomad_r4"
-    response = requests.get(url)
+    url = 'https://gnomad.broadinstitute.org/api'
+    query = '''
+        {
+        variant(variantId: "1-55516888-G-T") {
+            alleleFrequency
+            populations {
+            id
+            ac
+            an
+            af
+            }
+        }
+        }
+'''
+    response = requests.post(url, json={'query': query})
     if response.status_code == 200:
         data = response.json()
-        allele_frequency = data.get("variant", {}).get("allele_freq", None)
-        return allele_frequency
+        #allele_frequency = data.get("variant", {}).get("allele_freq", None)
+        #return allele_frequency
+        print(data)
     return None
 
 # connect to MongoDB
