@@ -40,34 +40,18 @@ def get(endpoint, **params):
 
 Spdi = namedtuple('Spdi', 'seq_id position deleted_sequence inserted_sequence')
 
-def verify_reference_base(chrom, pos, ref, assembly='GCF_000001405.38'):
-    refseq_url = f"https://api.ncbi.nlm.nih.gov/variation/v0/beta/sequence/{chrom}:{pos}..{pos}?assembly={assembly}"
-    try:
-        response = get(refseq_url)
-        actual_ref = response['sequence'][0]
-        return actual_ref == ref, actual_ref
-    except Exception as e:
-        print(f"Error verifying reference base: {e}")
-        return False, None
-
-def query_ncbi_variation(formatted_variant, assembly='GCF_000001405.38'):
+def query_ncbi_variation(formatted_variant):
     try:
         chrom, pos, ref, alt = formatted_variant.split('-')
-        pos = int(pos)
-        valid_ref, actual_ref = verify_reference_base(chrom, pos, ref, assembly)
-        if not valid_ref:
-            print(f"Reference base mismatch for variant {formatted_variant}. Expected {ref}, got {actual_ref}")
-            return None
-        
         query_url = f'vcf/{chrom}/{pos}/{ref}/{alt}/contextuals'
-        spdis_for_alts = [Spdi(**spdi_dict) for spdi_dict in get(query_url, assembly=assembly)['data']['spdis']]
+        spdis_for_alts = [Spdi(**spdi_dict) for spdi_dict in get(query_url)['data']['spdis']]
         frequencies = {}
 
         for spdi in spdis_for_alts:
             seq_id = spdi.seq_id
             min_pos = spdi.position
             max_pos = spdi.position + len(spdi.deleted_sequence)
-            frequency_records = get(f'interval/{seq_id}:{min_pos}:{max_pos-min_pos}/overlapping_frequency_records', assembly=assembly)['results']
+            frequency_records = get(f'interval/{seq_id}:{min_pos}:{max_pos-min_pos}/overlapping_frequency_records')['results']
             for interval, interval_data in frequency_records.items():
                 length, position = map(int, interval.split('@'))
                 allele_counts = interval_data['counts']['PRJNA507278']['allele_counts']
