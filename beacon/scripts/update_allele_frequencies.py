@@ -67,7 +67,8 @@ for variant in collection.find():
     
     
     base_url = "https://api.ncbi.nlm.nih.gov/variation/v0/refsnp/"
-    url = f"{base_url}{"rs6265"}"
+    variant_id = "rs6265"
+    url = f"{base_url}{variant_id}"
     response = requests.get(url)
     
     if response.status_code == 200:
