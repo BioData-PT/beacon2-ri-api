@@ -3,16 +3,6 @@ from pymongo import MongoClient
 import os
 import time
 
-# Function to format a single variant
-def format_variant_for_search(variant):
-    chromosome = variant["_position"]["refseqId"]
-    start_position = variant["_position"]["startInteger"]
-    end_position = variant["_position"]["endInteger"]
-    reference_base = variant["variation"]["referenceBases"]
-    alternate_base = variant["variation"]["alternateBases"]
-    formatted_variant = f"{chromosome}-{start_position}-{end_position}-{reference_base}-{alternate_base}"
-    return formatted_variant
-
 # Function to query 1000 Genomes for allele frequency
 def query_1000_genomes(chrom, start, end, ref, alt):
     server = "https://rest.ensembl.org"
@@ -25,9 +15,9 @@ def query_1000_genomes(chrom, start, end, ref, alt):
         sys.exit()
     
     decoded = r.json()
-    print(repr(decoded))
     mappings = decoded['mappings']
     mapped_data = mappings[0]['mapped']
+    print(mapped_data)
     mapped_start = mapped_data['start']
     mapped_end = mapped_data['end']
     
@@ -73,7 +63,12 @@ collection = client.beacon.get_collection('genomicVariations')
 
 # Iterate over all variants, format them, query 1000 Genomes, and update the database
 for variant in collection.find():
-    formatted_variant = format_variant_for_search(variant)
+    chromosome = variant["_position"]["refseqId"]
+    start_position = variant["_position"]["startInteger"]
+    end_position = variant["_position"]["endInteger"]
+    reference_base = variant["variation"]["referenceBases"]
+    alternate_base = variant["variation"]["alternateBases"]
+    formatted_variant = f"{chromosome}-{start_position}-{end_position}-{reference_base}-{alternate_base}"
     print("-----------")
     print(f"{formatted_variant}")
 
