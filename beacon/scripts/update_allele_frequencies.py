@@ -17,15 +17,11 @@ def query_1000_genomes(chrom, start, end, ref, alt):
         sys.exit()
     
     decoded = r.json()
-    mappings = repr(decoded)['mappings']
-    if mappings != []:
-        print("ENTROU")
-        mapped_data = mappings[0]['mapped']
-        mapped_start = mapped_data['start']
-        mapped_end = mapped_data['end']
-        print(mapped_data)
-    else:
-        print("DEU MERDA")
+    mappings = decoded['mappings']
+    mapped_data = mappings[0]['mapped']
+    mapped_start = mapped_data['start']
+    mapped_end = mapped_data['end']
+    print(mapped_data)
     
     # Construct the HGVS notation
     hgvs_notation = f"{chrom}:g.{mapped_end}{ref}>{alt}"
