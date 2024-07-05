@@ -26,7 +26,9 @@ def get(endpoint, **params):
     max_retries = 3
     for attempt in range(max_retries):
         try:
-            reply = requests.get(VAR_API_URL + endpoint, params=params)
+            api_url = "https://www.ncbi.nlm.nih.gov/variation/v0/" \
+            if endpoint.startswith('spdi') else VAR_API_URL
+            reply = requests.get(api_url + endpoint, params=params)
             reply.raise_for_status()
             return reply.json()
         except requests.exceptions.HTTPError as e:
