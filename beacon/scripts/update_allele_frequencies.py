@@ -53,16 +53,19 @@ def fetch_reference_base(chrom, pos):
         print(f"Error fetching reference base for {chrom}-{pos}: {e}")
         return None
 
-INPUT_VCF_ASSEMBLY = 'GCF_000001405.38'  # GRCh38 assembly
-
 def query_ncbi_variation(formatted_variant):
     try:
         # Fetch reference base from NCBI
         chrom, pos, ref, alt = formatted_variant.split('-')
+        
+        actual_ref = fetch_reference_base(chrom, pos)
+        if actual_ref and actual_ref != ref:
+            print(f"Reference base mismatch for {formatted_variant}: expected {ref}, got {actual_ref}")
+            ref = actual_ref  # Adjust to the correct reference base
+
         alts = ','.join(map(str, alt))
         query_url = f'vcf/{chrom}/{pos}/{ref}/{alts}/contextuals'
-        spdis_for_alts = [Spdi(**spdi_dict) for spdi_dict in get(query_url, assembly=INPUT_VCF_ASSEMBLY)['data']['spdis']]
-        print('merda')
+        spdis_for_alts = [Spdi(**spdi_dict) for spdi_dict in get(query_url)['data']['spdis']]
         
         spdis_for_alts = [remap(spdi) for spdi in spdis_for_alts]
         
@@ -118,7 +121,7 @@ for variant in collection.find():
         )
         print(f"Updated variant {formatted_variant} with allele frequencies {allele_frequencies}")
     else:
-       print(f"Failed to retrieve allele frequencies for {formatted_variant}")
+        print(f"Failed to retrieve allele frequencies for {formatted_variant}")
     # Sleep to respect rate limits
     time.sleep(1)
 
