@@ -25,6 +25,7 @@ def query_1000_genomes(chrom, start, end, ref, alt):
         sys.exit()
     
     decoded = r.json()
+    print(repr(decoded))
     mappings = decoded['mappings']
     mapped_data = mappings[0]['mapped']
     mapped_start = mapped_data['start']
@@ -32,7 +33,6 @@ def query_1000_genomes(chrom, start, end, ref, alt):
     
     # Construct the HGVS notation
     hgvs_notation = f"{chrom}:g.{mapped_end}{ref}>{alt}"
-    print(hgvs_notation)
     
     # Construct the URL for Ensembl VEP
     url = f"https://rest.ensembl.org/vep/human/hgvs/{hgvs_notation}?"
