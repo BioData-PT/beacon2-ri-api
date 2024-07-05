@@ -12,8 +12,11 @@ def format_variant_for_search(variant):
 
 # function to query for allele frequency
 def query_1000_genomes(chrom, pos, ref, alt):
+    # Construct the HGVS notation
+    hgvs_notation = f"{chrom}:g.{pos}{ref}>{alt}"
+    
     # Construct the URL
-    url = f"https://rest.ensembl.org/vep/human/hgvs/{chrom}:{pos}{ref}/{alt}?"
+    url = f"https://rest.ensembl.org/vep/human/hgvs/{hgvs_notation}?"
 
     # Make GET request to the API
     response = requests.get(url, headers={"Content-Type": "application/json"})
