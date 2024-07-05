@@ -22,11 +22,11 @@ def format_variant_for_search(variant):
 # Function to query NCBI Variation Services for allele frequency
 VAR_API_URL = "https://api.ncbi.nlm.nih.gov/variation/v0/"
 
-def get(endpoint):
+def get(endpoint, **params):
     max_retries = 3
     for attempt in range(max_retries):
         try:
-            reply = requests.get(VAR_API_URL + endpoint)
+            reply = requests.get(VAR_API_URL + endpoint, params=params)
             reply.raise_for_status()
             return reply.json()
         except requests.exceptions.HTTPError as e:
@@ -40,13 +40,21 @@ def get(endpoint):
 
 Spdi = namedtuple('Spdi', 'seq_id position deleted_sequence inserted_sequence')
 
+def remap(spdi):
+    remap_url = 'spdi/{}:{}:{}:{}/canonical_representative'.format(*spdi)
+    return Spdi(**get(remap_url)['data'])
+
 def query_ncbi_variation(formatted_variant):
     try:
+        INPUT_VCF_ASSEMBLY = 'GCF_000001405.25'
         chrom, pos, ref, alt = formatted_variant.split('-')
         alts = ','.join(map(str, alt))
         query_url = f'vcf/{chrom}/{pos}/{ref}/{alts}/contextuals'
-        print("AAAAAAAAAAAA")
-        spdis_for_alts = [Spdi(**spdi_dict) for spdi_dict in get(query_url)['data']['spdis']]
+        spdis_for_alts = [Spdi(**spdi_dict) for spdi_dict in get(query_url, assembly=INPUT_VCF_ASSEMBLY)['data']['spdis']]
+        
+        if INPUT_VCF_ASSEMBLY != 'GCF_000001405.38':
+            spdis_for_alts = [remap(spdi) for spdi in spdis_for_alts]
+        
         frequencies = {}
 
         for spdi in spdis_for_alts:
