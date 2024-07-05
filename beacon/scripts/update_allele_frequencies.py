@@ -27,7 +27,7 @@ def query_1000_genomes(chrom, pos, ref, alt):
     mappings = decoded['mappings']
     mapped_data = mappings[0]['mapped']
     mapped_start = mapped_data['start']
-    
+    print(ref)
     # Construct the HGVS notation
     hgvs_notation = f"{chrom}:g.{mapped_start}{ref}>{alt}"
     
