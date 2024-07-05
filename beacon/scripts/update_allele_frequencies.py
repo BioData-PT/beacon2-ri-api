@@ -39,6 +39,7 @@ def query_1000_genomes(chrom, pos, ref, alt):
     url = f"https://rest.ensembl.org/vep/human/hgvs/{hgvs_notation}?"
  
     # Make GET request to the API
+    time.sleep(1)
     response = requests.get(url, headers={"Content-Type": "application/json"})
  
     # Check if request was successful
@@ -85,7 +86,6 @@ for variant in collection.find():
     alt = parts[3]
 
     try:
-        time.sleep(1)
         # Query 1000 Genomes for allele frequency
         allele_frequency = query_1000_genomes(chrom, pos, ref, alt)
         print(allele_frequency)
