@@ -52,8 +52,12 @@ def query_1000_genomes(chrom, start, end, ref, alt):
         else:
             raise ValueError(f"Reference allele mismatch for variant {chrom}-{start}-{ref}-{alt}. Ensembl returned {json_response[0]['allele_string']}")
     else:
-        print(f"Bad request for variant {chrom}-{start}-{ref}-{alt}: {response.text}")
-        return None
+        try:
+            hgvs_notation = f"{chrom}:g.{start}{ref}>{alt}"
+            url = f"https://rest.ensembl.org/vep/human/hgvs/{hgvs_notation}?"
+        except ValueError:
+            print(f"Bad request for variant {chrom}-{start}-{ref}-{alt}: {response.text}")
+            return None
 
 
 # Connect to MongoDB
