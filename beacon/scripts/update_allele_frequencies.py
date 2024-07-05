@@ -16,15 +16,21 @@ def query_1000_genomes(chrom, start, end, ref, alt):
         sys.exit()
 
     decoded = r.json()
-    mappings = decoded['mappings']
-    print(mappings)
-    mapped_data = mappings[0]['mapped']
+    print("Decoded from Ensembl:")
+    print(decoded)
+    
+    if not decoded['mappings']:
+        raise ValueError(f"No mappings found for variant {chrom}-{start}-{ref}-{alt}")
+    
+    mapped_data = decoded['mappings'][0]['mapped']
     mapped_start = mapped_data['start']
     mapped_end = mapped_data['end']
+    print("Mapped data from Ensembl:")
     print(mapped_data)
     
     # Construct the HGVS notation
     hgvs_notation = f"{chrom}:g.{mapped_end}{ref}>{alt}"
+    print(f"HGVS Notation: {hgvs_notation}")
     
     # Construct the URL for Ensembl VEP
     url = f"https://rest.ensembl.org/vep/human/hgvs/{hgvs_notation}?"
@@ -46,6 +52,9 @@ def query_1000_genomes(chrom, start, end, ref, alt):
     else:
         print(f"Bad request for variant {chrom}-{start}-{ref}-{alt}: {response.text}")
         return None
+
+
+
 # Connect to MongoDB
 database_password = os.getenv('DB_PASSWD')
 client = MongoClient(
