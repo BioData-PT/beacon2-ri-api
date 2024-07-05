@@ -13,9 +13,6 @@ def format_variant_for_search(variant):
 
 # Function to query 1000 Genomes for allele frequency
 def query_1000_genomes(chrom, pos, ref, alt):
-    # Construct the HGVS notation
-    hgvs_notation = f"{chrom}:g.{pos}{ref}>{alt}"
-    
     server = "https://rest.ensembl.org"
     ext = "/map/human/GRCh37/X:1000000..1000100:1/GRCh38?"
  
@@ -27,6 +24,12 @@ def query_1000_genomes(chrom, pos, ref, alt):
     
     decoded = r.json()
     print(repr(decoded))
+    mappings = decoded['mappings']
+    mapped_data = mappings[0]['mapped']
+    mapped_end = mapped_data['end']
+    
+    # Construct the HGVS notation
+    hgvs_notation = f"{chrom}:g.{mapped_end}{ref}>{alt}"
     
     # Construct the URL
     url = f"https://rest.ensembl.org/vep/human/hgvs/{hgvs_notation}?"
