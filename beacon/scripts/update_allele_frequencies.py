@@ -1,16 +1,15 @@
-from collections import namedtuple
 import requests
 from pymongo import MongoClient
 import os
-from ratelimit import limits, sleep_and_retry
-from tqdm import tqdm
+import time
+from collections import namedtuple
 import itertools
 
-# function to flatten nested lists
+# Function to flatten nested lists
 def flatten(iterable):
     return list(itertools.chain.from_iterable(iterable))
 
-# function to format a single variant
+# Function to format a single variant
 def format_variant_for_search(variant):
     chromosome = variant["_position"]["refseqId"]
     start_position = variant["_position"]["startInteger"]
@@ -20,10 +19,9 @@ def format_variant_for_search(variant):
     formatted_variant = f"{chromosome}-{start_position}-{reference_base}-{alternate_base}"
     return formatted_variant
 
-# function to query NCBI Variation Services for allele frequency
+# Function to query NCBI Variation Services for allele frequency
 VAR_API_URL = "https://api.ncbi.nlm.nih.gov/variation/v0/"
-@sleep_and_retry
-@limits(calls=1, period=1)  # Limit request rate to 1 RPS
+
 def get(endpoint, **params):
     reply = requests.get(VAR_API_URL + endpoint, params=params)
     reply.raise_for_status()
@@ -58,8 +56,7 @@ def compute_frequencies(allele_counts):
     else:
         return {allele: 0.0 for allele in allele_counts.keys()}
 
-
-# connect to MongoDB
+# Connect to MongoDB
 database_password = os.getenv('DB_PASSWD')
 client = MongoClient(
     "mongodb://{}:{}@{}:{}/{}?authSource={}".format(
@@ -73,7 +70,7 @@ client = MongoClient(
 )
 collection = client.beacon.get_collection('genomicVariations')
 
-# iterate over all variants, format them, query NCBI, and update the database
+# Iterate over all variants, format them, query NCBI, and update the database
 for variant in collection.find():
     formatted_variant = format_variant_for_search(variant)
     print("-----------")
@@ -87,5 +84,7 @@ for variant in collection.find():
         print(f"Updated variant {formatted_variant} with allele frequencies {allele_frequencies}")
     else:
        print(f"Failed to retrieve allele frequencies for {formatted_variant}")
+    # Sleep to respect rate limits
+    time.sleep(1)
 
 print("Finished updating allele frequencies.")
