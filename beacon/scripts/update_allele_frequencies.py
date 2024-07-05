@@ -11,10 +11,9 @@ def format_variant_for_search(variant):
     return formatted_variant
 
 # function to query for allele frequency
-def query_1000_genomes(chrom, pos, ref, alt):
-    query_url = f"http://grch37.rest.ensembl.org/variation/human/{chrom}_{pos}_{ref}_{alt}?"
-    headers = {"Content-Type": "application/json"}
-    response = requests.get(query_url, headers=headers)
+def query_ensembl(chrom, pos, ref, alt):
+    query_url = f"http://grch37.rest.ensembl.org/variation/human/{chrom}_{pos}_{ref}_{alt}?content-type=application/json"
+    response = requests.get(query_url)
     if response.status_code == 200:
         return response.json()
     elif response.status_code == 400:
