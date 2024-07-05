@@ -61,8 +61,8 @@ def query_ncbi_variation(formatted_variant):
         chrom, pos, ref, alt = formatted_variant.split('-')
         alts = ','.join(map(str, alt))
         query_url = f'vcf/{chrom}/{pos}/{ref}/{alts}/contextuals'
-        print(query_url)
         spdis_for_alts = [Spdi(**spdi_dict) for spdi_dict in get(query_url, assembly=INPUT_VCF_ASSEMBLY)['data']['spdis']]
+        print(spdis_for_alts)
         
         spdis_for_alts = [remap(spdi) for spdi in spdis_for_alts]
         
