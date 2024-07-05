@@ -7,15 +7,16 @@ import time
 def format_variant_for_search(variant):
     chromosome = variant["_position"]["refseqId"]
     start_position = variant["_position"]["startInteger"]
+    end_position = variant["_position"]["endInteger"]
     reference_base = variant["variation"]["referenceBases"]
     alternate_base = variant["variation"]["alternateBases"]
-    formatted_variant = f"{chromosome}-{start_position}-{reference_base}-{alternate_base}"
+    formatted_variant = f"{chromosome}-{start_position}-{end_position}-{reference_base}-{alternate_base}"
     return formatted_variant
 
 # Function to query 1000 Genomes for allele frequency
-def query_1000_genomes(chrom, pos, ref, alt):
+def query_1000_genomes(chrom, start, end, ref, alt):
     server = "https://rest.ensembl.org"
-    ext = f"/map/human/GRCh37/{chrom}:{pos}..{pos}/GRCh38?"
+    ext = f"/map/human/GRCh37/{chrom}:{start}..{end}/GRCh38?"
  
     r = requests.get(server + ext, headers={"Content-Type": "application/json"})
  
@@ -25,12 +26,9 @@ def query_1000_genomes(chrom, pos, ref, alt):
     
     decoded = r.json()
     mappings = decoded['mappings']
-    
-    if not mappings:
-        raise ValueError(f"No mappings found for {chrom}:{pos} in GRCh38")
-    
     mapped_data = mappings[0]['mapped']
     mapped_start = mapped_data['start']
+    mapped_end = mapped_data['end']
     
     # Construct the HGVS notation
     hgvs_notation = f"{chrom}:g.{mapped_start}{ref}>{alt}"
@@ -81,13 +79,14 @@ for variant in collection.find():
     # Split formatted_variant to extract chrom, pos, ref, alt
     parts = formatted_variant.split('-')
     chrom = parts[0]
-    pos = parts[1]
-    ref = parts[2]
-    alt = parts[3]
+    start = parts[1]
+    end = parts[2]
+    ref = parts[3]
+    alt = parts[4]
 
     try:
         # Query 1000 Genomes for allele frequency
-        allele_frequency = query_1000_genomes(chrom, pos, ref, alt)
+        allele_frequency = query_1000_genomes(chrom, start, end, ref, alt)
         print(allele_frequency)
 
         if allele_frequency is not None:
