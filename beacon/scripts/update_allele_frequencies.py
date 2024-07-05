@@ -32,6 +32,7 @@ def query_1000_genomes(chrom, start, end, ref, alt):
     
     # Construct the HGVS notation
     hgvs_notation = f"{chrom}:g.{mapped_start}{ref}>{alt}"
+    print(hgvs_notation)
     
     # Construct the URL for Ensembl VEP
     url = f"https://rest.ensembl.org/vep/human/hgvs/{hgvs_notation}?"
@@ -49,9 +50,9 @@ def query_1000_genomes(chrom, start, end, ref, alt):
         if json_response and json_response[0]['allele_string'].startswith(ref):
             return json_response
         else:
-            raise ValueError(f"Reference allele mismatch for variant {chrom}-{pos}-{ref}-{alt}. Ensembl returned {json_response[0]['allele_string']}")
+            raise ValueError(f"Reference allele mismatch for variant {chrom}-{start}-{ref}-{alt}. Ensembl returned {json_response[0]['allele_string']}")
     else:
-        print(f"Bad request for variant {chrom}-{pos}-{ref}-{alt}: {response.text}")
+        print(f"Bad request for variant {chrom}-{start}-{ref}-{alt}: {response.text}")
         return None
 
 
