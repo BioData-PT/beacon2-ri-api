@@ -22,7 +22,7 @@ def query_1000_genomes(chrom, start, end, ref, alt):
     
     # Construct the HGVS notation
     hgvs_notation = f"{chrom}:g.{mapped_end}{ref}>{alt}"
-    print(f"GRCh38" + {hgvs_notation})
+    print(f"GRCh38 + {hgvs_notation}")
     
     # Construct the URL for Ensembl VEP
     url = f"https://rest.ensembl.org/vep/human/hgvs/{hgvs_notation}?"
@@ -73,7 +73,7 @@ for variant in collection.find():
     
     formatted_variant = f"{chromosome}-{start_position}-{end_position}-{reference_base}-{alternate_base}"
     print("------------------------------------")
-    print(f"Variant" + {formatted_variant})
+    print(f"Variant + {formatted_variant}")
     try:
         # Query 1000 Genomes for allele frequency
         allele_frequency = query_1000_genomes(chromosome, start_position, end_position, reference_base, alternate_base)
