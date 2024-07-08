@@ -20,16 +20,8 @@ def query_1000_genomes(chrom, start, end, ref, alt):
     mapped_start = mapped_data['start']
     mapped_end = mapped_data['end']
     
-    # Get reference allele from colocated_variants
-    colocated_variants = mapped_data.get('colocated_variants', [])
-    reference_allele = None
-    for variant in colocated_variants:
-        if variant['allele_string'].startswith(ref):
-            reference_allele = ref
-            break
-    
     # Construct the HGVS notation
-    hgvs_notation = f"{chrom}:g.{mapped_end}{reference_allele}>{alt}"
+    hgvs_notation = f"{chrom}:g.{mapped_end}{ref}>{alt}"
     
     # Construct the URL for Ensembl VEP
     url = f"https://rest.ensembl.org/vep/human/hgvs/{hgvs_notation}?"
@@ -49,6 +41,8 @@ def query_1000_genomes(chrom, start, end, ref, alt):
         else:
             raise ValueError(f"Reference allele mismatch for variant {chrom}-{start}-{ref}-{alt}. Ensembl returned {json_response[0]['allele_string']}")
     else:
+        extracted_allele = response.text.split('(')[1].split(')')[0]
+        print(extracted_allele)
         print(f"Bad request for variant {chrom}-{start}-{ref}-{alt}: {response.text}")
         return None
 
