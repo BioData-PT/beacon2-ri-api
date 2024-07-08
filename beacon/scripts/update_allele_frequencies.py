@@ -2,28 +2,26 @@ import requests, sys
 from pymongo import MongoClient
 import os
 import time
-
-
 # Function to query 1000 Genomes for allele frequency
 def query_1000_genomes(chrom, start, end, ref, alt):
-    
+    print("START " + f"{start}")
+    print("END " + f"{end}")
     server = "https://rest.ensembl.org"
-    ext = f"/sequence/region/human/{chrom}:{start}..{end}:1"
+    ext = f"/map/human/GRCh37/{chrom}:{start}..{end}:1/GRCh38?"
  
-    r = requests.get(server + ext)
+    r = requests.get(server + ext, headers={"Content-Type": "application/json"})
  
     if not r.ok:
         r.raise_for_status()
         sys.exit()
 
     decoded = r.json()
-    variables = decoded[0]
-    print(decoded)
     mappings = decoded['mappings']
-    #print(mappings)
+    print(mappings)
     mapped_data = mappings[0]['mapped']
+    mapped_start = mapped_data['start']
     mapped_end = mapped_data['end']
-    #print(mapped_data)
+    print(mapped_data)
     
     # Construct the HGVS notation
     hgvs_notation = f"{chrom}:g.{mapped_end}{ref}>{alt}"
@@ -60,9 +58,7 @@ client = MongoClient(
         "admin"
     )
 )
-
 collection = client.beacon.get_collection('genomicVariations')
-
 # Iterate over all variants, format them, query 1000 Genomes, and update the database
 for variant in collection.find():
     chromosome = variant["_position"]["refseqId"]
@@ -70,7 +66,6 @@ for variant in collection.find():
     end_position = variant["_position"]["endInteger"]
     reference_base = variant["variation"]["referenceBases"]
     alternate_base = variant["variation"]["alternateBases"]
-    hgvs_notation = variant["identifiers"]["genomicHGVSId"]
     
     formatted_variant = f"{chromosome}-{start_position}-{end_position}-{reference_base}-{alternate_base}"
     print("-----------")
@@ -82,7 +77,7 @@ for variant in collection.find():
         if allele_frequency is not None:
             collection.update_one(
                 {"variantInternalId": variant["variantInternalId"]},
-                {"$set": {"alleleFrequency": allele_frequency}}
+                {"$set": {"allele_frequency": allele_frequency}}
             )
             print(f"Updated variant {formatted_variant} with allele frequency {allele_frequency}")
         else:
