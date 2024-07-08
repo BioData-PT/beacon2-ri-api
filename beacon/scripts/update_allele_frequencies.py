@@ -3,9 +3,11 @@ from pymongo import MongoClient
 import os
 import time
 
+# Support function to convert reference and alternate alleles
 def reverse_complement(base):
     complement = {'A': 'T', 'T': 'A', 'C': 'G', 'G': 'C'}
     return complement[base]
+
 
 # Function to query 1000 Genomes for allele frequency
 def query_1000_genomes(chrom, start, end, ref, alt):
@@ -76,18 +78,24 @@ for variant in collection.find():
     try:
         # Query 1000 Genomes for allele frequency
         allele_frequency = query_1000_genomes(chromosome, start_position, end_position, reference_base, alternate_base)
+        
         if allele_frequency is not None:
+            print(allele_frequency)
             collection.update_one(
                 {"variantInternalId": variant["variantInternalId"]},
                 {"$set": {"alleleFrequency": allele_frequency}}
             )
             print(f"Updated variant {formatted_variant} with allele frequency {allele_frequency}")
+            
         else:
            print(f"Failed to retrieve allele frequency for {formatted_variant}")
+           
     except ValueError as e:
         print(str(e))
         continue
+    
     except Exception as e:
         print(f"Failed to process variant {formatted_variant}: {e}")
         continue
+    
 print("Finished updating allele frequencies.")
