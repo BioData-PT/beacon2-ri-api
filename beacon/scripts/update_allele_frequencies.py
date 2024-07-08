@@ -78,18 +78,11 @@ for variant in collection.find():
         allele_frequency = query_1000_genomes(chromosome, start_position, end_position, reference_base, alternate_base)
         print(allele_frequency)
         if allele_frequency is not None:
-            for colocated_variant in allele_frequency['colocated_variants']:
-                frequencies = colocated_variant['frequencies']
-                total_frequency = 0.0
-                for population, freq_info in frequencies.items():
-                    
-                    print(freq_info.values())
-                    total_frequency += sum(freq_info.values())
-                collection.update_one(
-                    {"variantInternalId": variant["variantInternalId"]},
-                    {"$set": {"alleleFrequency": total_frequency}}
-                )
-                print(f"Updated variant {formatted_variant} with allele frequency {total_frequency}")
+            collection.update_one(
+                {"variantInternalId": variant["variantInternalId"]},
+                {"$set": {"alleleFrequency": allele_frequency}}
+            )
+            print(f"Updated variant {formatted_variant} with allele frequency {allele_frequency}")
         else:
            print(f"Failed to retrieve allele frequency for {formatted_variant}")
     except ValueError as e:
