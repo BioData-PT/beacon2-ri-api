@@ -8,7 +8,7 @@ import time
 def query_1000_genomes(chrom, start, end, ref, alt):
     
     server = "https://rest.ensembl.org"
-    ext = f"/map/human/GRCh37/{chrom}:{start}..{end}:1/GRCh38?"
+    ext = f"sequence/region/human/{chrom}:{start}..{end}:1"
  
     r = requests.get(server + ext, headers={"Content-Type": "application/json"})
  
@@ -17,11 +17,13 @@ def query_1000_genomes(chrom, start, end, ref, alt):
         sys.exit()
 
     decoded = r.json()
+    variables = decoded.split(":")
+    print(variables)
     mappings = decoded['mappings']
-    print(mappings)
+    #print(mappings)
     mapped_data = mappings[0]['mapped']
     mapped_end = mapped_data['end']
-    print(mapped_data)
+    #print(mapped_data)
     
     # Construct the HGVS notation
     hgvs_notation = f"{chrom}:g.{mapped_end}{ref}>{alt}"
