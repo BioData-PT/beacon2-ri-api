@@ -1,48 +1,59 @@
 import requests
 
-# Function to get the reverse complement of a base
-def reverse_complement(base):
-    complement = {'A': 'T', 'T': 'A', 'C': 'G', 'G': 'C'}
-    return complement[base]
+def ensembl_liftover(chrom, pos, from_assembly, to_assembly):
+    # Ensembl REST API endpoint for genomic coordinate mapping
+    map_url = f"https://rest.ensembl.org/map/human/{from_assembly}/{to_assembly}/{chrom}:{pos}..{pos}:1"
 
-# Function to convert coordinates using UCSC liftOver API
-def liftOver_hg19_to_hg38(chrom, position, ref_base, alt_base):
-    url = "http://genome.ucsc.edu/cgi-bin/hgLiftOver"
-    params = {
-        'db': 'hg19',
-        'g': 'hgFixed',
-        'hgLiftOver.fromDb': 'hg19',
-        'hgLiftOver.toDb': 'hg38',
-        'position': f'{chrom}:{position}-{position}',
-        'format': 'json'
-    }
+    # Make GET request to Ensembl REST API for liftover mapping
+    headers = {"Content-Type": "application/json"}
+    response = requests.get(map_url, headers=headers)
 
-    response = requests.get(url, params=params)
-    result = response.json()
+    if response.ok:
+        data = response.json()
 
-    if result and 'over' in result:
-        new_chrom = result['over'][0]['chrom']
-        new_pos = result['over'][0]['chromStart'] + 1  # UCSC API returns 0-based start
-        strand = result['over'][0]['strand']
+        # Extract mapped coordinates
+        mapped = data[0]['mapped']
+        if mapped:
+            mapped_info = mapped[0]
+            new_chrom = mapped_info['assembly_name']
+            new_start = mapped_info['start']
+            new_end = mapped_info['end']
+            strand = mapped_info['strand']
 
-        if strand == '-':
-            # If on reverse strand, get the reverse complement of the alleles
-            new_ref_base = reverse_complement(ref_base)
-            new_alt_base = reverse_complement(alt_base)
+            # Ensembl REST API endpoint for fetching sequence region
+            seq_url = f"https://rest.ensembl.org/sequence/region/human/{new_chrom}:{new_start}..{new_end}:{strand}?content-type=application/json"
+
+            # Make GET request to Ensembl REST API for sequence data
+            response_seq = requests.get(seq_url, headers=headers)
+
+            if response_seq.ok:
+                seq_data = response_seq.json()
+                seq = seq_data['seq']
+                ref = seq[0]  # Reference allele
+                alt = seq[-1]  # Alternate allele
+
+                return new_chrom, new_start, new_end, strand, ref, alt
+            else:
+                response_seq.raise_for_status()
         else:
-            new_ref_base = ref_base
-            new_alt_base = alt_base
-
-        return f"hg38: chr{new_chrom}:{new_pos} {new_ref_base}>{new_alt_base}"
+            raise ValueError(f"No mapping found for {chrom}:{pos} from {from_assembly} to {to_assembly}")
     else:
-        return "Conversion failed"
+        response.raise_for_status()
 
-# Define the hg19 coordinate and alleles
-chrom = '22'
-position = 16050319
-ref_base = 'C'
-alt_base = 'T'
+# Example usage:
+chrom = "8"
+pos = "140300615"
+from_assembly = "GRCh37"
+to_assembly = "GRCh38"
 
-# Perform the conversion
-result = liftOver_hg19_to_hg38(chrom, position, ref_base, alt_base)
-print(result)
+try:
+    result = ensembl_liftover(chrom, pos, from_assembly, to_assembly)
+    print(f"Converted from {from_assembly} to {to_assembly}:")
+    print(f"Chromosome: {result[0]}")
+    print(f"Start: {result[1]}")
+    print(f"End: {result[2]}")
+    print(f"Strand: {result[3]}")
+    print(f"Reference allele: {result[4]}")
+    print(f"Alternate allele: {result[5]}")
+except Exception as e:
+    print(f"Error: {e}")
