@@ -39,12 +39,6 @@ def query_1000_genomes(chrom, start, end, ref, alt):
     if response.status_code == 200:
         # Parse the JSON response
         json_response = response.json()
- 
-        # Check if reference allele matches
-        if json_response and json_response[0]['allele_string'].startswith(ref):
-            return json_response
-        else:
-            raise ValueError(f"Reference allele mismatch for variant {chrom}-{start}-{ref}-{alt}. Ensembl returned {json_response[0]['allele_string']}")
     else:
         print(f"Bad request for variant {chrom}-{start}-{ref}-{alt}: {response.text}")
         return None
