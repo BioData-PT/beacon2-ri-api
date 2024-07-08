@@ -20,7 +20,6 @@ def query_1000_genomes(chrom, start, end, ref, alt):
     mappings = decoded['mappings']
     print(mappings)
     mapped_data = mappings[0]['mapped']
-    mapped_start = mapped_data['start']
     mapped_end = mapped_data['end']
     print(mapped_data)
     
@@ -77,11 +76,27 @@ for variant in collection.find():
     try:
         # Query 1000 Genomes for allele frequency
         allele_frequency = query_1000_genomes(chromosome, start_position, end_position, reference_base, alternate_base)
-        print(allele_frequency)
         if allele_frequency is not None:
+            # Aggregate total allele frequency
+            total_allele_frequency = {}
+            for colocated_variant in allele_frequency['colocated_variants']:
+                allele_string = colocated_variant['allele_string']
+                frequencies = colocated_variant['frequencies']
+                
+                # Initialize total frequency for this allele string
+                total_frequency = 0.0
+                
+                # Sum up frequencies across all populations
+                for population, freq_info in frequencies.items():
+                    total_frequency += sum(freq_info.values())
+                
+                # Store total frequency for this allele string
+                total_allele_frequency[allele_string] = total_frequency
+            
+            # Update MongoDB document with total allele frequency
             collection.update_one(
                 {"variantInternalId": variant["variantInternalId"]},
-                {"$set": {"alleleFrequency": allele_frequency}}
+                {"$set": {"alleleFrequency": total_allele_frequency}}
             )
             print(f"Updated variant {formatted_variant} with allele frequency {allele_frequency}")
         else:
