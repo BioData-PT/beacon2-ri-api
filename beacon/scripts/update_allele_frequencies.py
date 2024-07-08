@@ -1,9 +1,8 @@
-import requests
-import sys
+import requests, sys
 from pymongo import MongoClient
 import os
 import time
-
+# Function to query 1000 Genomes for allele frequency
 def query_1000_genomes(chrom, start, end, ref, alt):
     print("START " + f"{start}")
     print("END " + f"{end}")
@@ -18,13 +17,11 @@ def query_1000_genomes(chrom, start, end, ref, alt):
 
     decoded = r.json()
     mappings = decoded['mappings']
-    if not mappings:
-        print(f"No mapping found for {chrom}:{start}-{end}")
-        return None
-
+    print(mappings)
     mapped_data = mappings[0]['mapped']
     mapped_start = mapped_data['start']
     mapped_end = mapped_data['end']
+    print(mapped_data)
     
     # Construct the HGVS notation
     hgvs_notation = f"{chrom}:g.{mapped_start}{ref}>{alt}"
@@ -45,24 +42,10 @@ def query_1000_genomes(chrom, start, end, ref, alt):
         if json_response and json_response[0]['allele_string'].startswith(ref):
             return json_response
         else:
-            # If reference allele does not match, retry with actual reference allele from response
-            actual_ref = json_response[0]['allele_string'].split('/')[0]
-            if actual_ref != ref:
-                corrected_hgvs_notation = f"{chrom}:g.{mapped_end}{actual_ref}>{alt}"
-                corrected_url = f"https://rest.ensembl.org/vep/human/hgvs/{corrected_hgvs_notation}?"
-                time.sleep(1)
-                corrected_response = requests.get(corrected_url, headers={"Content-Type": "application/json"})
-                if corrected_response.status_code == 200:
-                    return corrected_response.json()
-                else:
-                    print(f"Bad request for corrected variant {chrom}-{start}-{actual_ref}-{alt}: {corrected_response.text}")
-                    return None
-            else:
-                raise ValueError(f"Reference allele mismatch for variant {chrom}-{start}-{ref}-{alt}. Ensembl returned {json_response[0]['allele_string']}")
+            raise ValueError(f"Reference allele mismatch for variant {chrom}-{start}-{ref}-{alt}. Ensembl returned {json_response[0]['allele_string']}")
     else:
         print(f"Bad request for variant {chrom}-{start}-{ref}-{alt}: {response.text}")
         return None
-
 # Connect to MongoDB
 database_password = os.getenv('DB_PASSWD')
 client = MongoClient(
@@ -75,6 +58,7 @@ client = MongoClient(
         "admin"
     )
 )
+
 collection = client.beacon.get_collection('genomicVariations')
 
 # Iterate over all variants, format them, query 1000 Genomes, and update the database
