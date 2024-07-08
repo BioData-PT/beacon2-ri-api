@@ -10,7 +10,7 @@ def query_1000_genomes(chrom, start, end, ref, alt):
     server = "https://rest.ensembl.org"
     ext = f"/sequence/region/human/{chrom}:{start}..{end}:1"
  
-    r = requests.get(server + ext, headers={"Content-Type": "application/json"})
+    r = requests.get(server + ext)
  
     if not r.ok:
         r.raise_for_status()
