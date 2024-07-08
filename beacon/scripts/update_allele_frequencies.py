@@ -34,6 +34,7 @@ def query_1000_genomes(chrom, start, end, ref, alt):
     # Make GET request to the API
     time.sleep(1)
     response = requests.get(url, headers={"Content-Type": "application/json"})
+    print(response.text)
  
     # Check if request was successful
     if response.status_code == 200:
