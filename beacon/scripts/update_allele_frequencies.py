@@ -80,7 +80,8 @@ for variant in collection.find():
         allele_frequency = query_1000_genomes(chromosome, start_position, end_position, reference_base, alternate_base)
         
         if allele_frequency is not None:
-            total_frequency = sum(allele_frequency['colocated_variants'][0]['frequencies'].values())
+            print(allele_frequency['colocated_variants'][0]['frequencies'].values())
+            #total_frequency = sum(allele_frequency['colocated_variants'][0]['frequencies'].values())
             collection.update_one(
                 {"variantInternalId": variant["variantInternalId"]},
                 {"$set": {"alleleFrequency": total_frequency}}
