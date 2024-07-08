@@ -2,14 +2,16 @@ import requests, sys
 from pymongo import MongoClient
 import os
 import time
+
+
 # Function to query 1000 Genomes for allele frequency
 def query_1000_genomes(chrom, start, end, ref, alt):
-    print("START " + f"{start}")
-    print("END " + f"{end}")
     server = "https://rest.ensembl.org"
     ext = f"/map/human/GRCh37/{chrom}:{start}..{end}:1/GRCh38?"
  
     r = requests.get(server + ext, headers={"Content-Type": "application/json"})
+    
+    https://rest.ensembl.org/map/human/GRCh37/22:16050074..16050075:1/GRCh38?
  
     if not r.ok:
         r.raise_for_status()
@@ -17,17 +19,20 @@ def query_1000_genomes(chrom, start, end, ref, alt):
 
     decoded = r.json()
     mappings = decoded['mappings']
-    print(mappings)
     mapped_data = mappings[0]['mapped']
-    mapped_start = mapped_data['start']
     mapped_end = mapped_data['end']
-    print(mapped_data)
+    sequence = decoded.get('seq')
+    print("SEQUENCEEEEEE" + sequence)
     
     # Construct the HGVS notation
     hgvs_notation = f"{chrom}:g.{mapped_end}{ref}>{alt}"
+    print(hgvs_notation)
     
     # Construct the URL for Ensembl VEP
     url = f"https://rest.ensembl.org/vep/human/hgvs/{hgvs_notation}?"
+    
+    https://rest.ensembl.org/vep/human/hgvs/22:g.15927943A>G
+    22:g.15927943A>G
  
     # Make GET request to the API
     time.sleep(1)
@@ -46,6 +51,8 @@ def query_1000_genomes(chrom, start, end, ref, alt):
     else:
         print(f"Bad request for variant {chrom}-{start}-{ref}-{alt}: {response.text}")
         return None
+    
+    
 # Connect to MongoDB
 database_password = os.getenv('DB_PASSWD')
 client = MongoClient(
@@ -58,7 +65,11 @@ client = MongoClient(
         "admin"
     )
 )
+
+
 collection = client.beacon.get_collection('genomicVariations')
+
+
 # Iterate over all variants, format them, query 1000 Genomes, and update the database
 for variant in collection.find():
     chromosome = variant["_position"]["refseqId"]
