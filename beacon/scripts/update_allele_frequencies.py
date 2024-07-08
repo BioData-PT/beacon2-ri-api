@@ -10,8 +10,6 @@ def query_1000_genomes(chrom, start, end, ref, alt):
     ext = f"/map/human/GRCh37/{chrom}:{start}..{end}:1/GRCh38?"
  
     r = requests.get(server + ext, headers={"Content-Type": "application/json"})
-    
-    #https://rest.ensembl.org/map/human/GRCh37/22:16050074..16050075:1/GRCh38?
  
     if not r.ok:
         r.raise_for_status()
@@ -28,8 +26,6 @@ def query_1000_genomes(chrom, start, end, ref, alt):
     
     # Construct the URL for Ensembl VEP
     url = f"https://rest.ensembl.org/vep/human/hgvs/{hgvs_notation}?"
-    
-    #https://rest.ensembl.org/vep/human/hgvs/22:g.15927943A>G
  
     # Make GET request to the API
     time.sleep(1)
