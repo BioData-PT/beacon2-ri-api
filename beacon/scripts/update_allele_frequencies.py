@@ -77,7 +77,7 @@ for variant in collection.find():
         if allele_frequency is not None:
             collection.update_one(
                 {"variantInternalId": variant["variantInternalId"]},
-                {"$set": {"allele_frequency": allele_frequency}}
+                {"$set": {"alleleFrequency": allele_frequency}}
             )
             print(f"Updated variant {formatted_variant} with allele frequency {allele_frequency}")
         else:
