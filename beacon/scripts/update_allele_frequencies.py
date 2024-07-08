@@ -8,7 +8,7 @@ import time
 def query_1000_genomes(chrom, start, end, ref, alt):
     
     server = "https://rest.ensembl.org"
-    ext = f"sequence/region/human/{chrom}:{start}..{end}:1"
+    ext = f"/sequence/region/human/{chrom}:{start}..{end}:1"
  
     r = requests.get(server + ext, headers={"Content-Type": "application/json"})
  
@@ -26,28 +26,28 @@ def query_1000_genomes(chrom, start, end, ref, alt):
     #print(mapped_data)
     
     # Construct the HGVS notation
-    #hgvs_notation = f"{chrom}:g.{mapped_end}{ref}>{alt}"
+    hgvs_notation = f"{chrom}:g.{mapped_end}{ref}>{alt}"
     
     # Construct the URL for Ensembl VEP
-    #url = f"https://rest.ensembl.org/vep/human/hgvs/{hgvs_notation}?"
+    url = f"https://rest.ensembl.org/vep/human/hgvs/{hgvs_notation}?"
  
     # Make GET request to the API
     time.sleep(1)
-    #response = requests.get(url, headers={"Content-Type": "application/json"})
+    response = requests.get(url, headers={"Content-Type": "application/json"})
  
     # Check if request was successful
-    #if response.status_code == 200:
+    if response.status_code == 200:
         # Parse the JSON response
-     #   json_response = response.json()
+        json_response = response.json()
  
         # Check if reference allele matches
-     #   if json_response and json_response[0]['allele_string'].startswith(ref):
-      #      return json_response
-      #  else:
-       #     raise ValueError(f"Reference allele mismatch for variant {chrom}-{start}-{ref}-{alt}. Ensembl returned {json_response[0]['allele_string']}")
-    #else:
-     #   print(f"Bad request for variant {chrom}-{start}-{ref}-{alt}: {response.text}")
-     #   return None
+        if json_response and json_response[0]['allele_string'].startswith(ref):
+            return json_response
+        else:
+            raise ValueError(f"Reference allele mismatch for variant {chrom}-{start}-{ref}-{alt}. Ensembl returned {json_response[0]['allele_string']}")
+    else:
+        print(f"Bad request for variant {chrom}-{start}-{ref}-{alt}: {response.text}")
+        return None
 # Connect to MongoDB
 database_password = os.getenv('DB_PASSWD')
 client = MongoClient(
