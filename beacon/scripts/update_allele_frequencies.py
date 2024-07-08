@@ -18,7 +18,7 @@ def query_1000_genomes(chrom, start, end, ref, alt):
 
     decoded = r.json()
     variables = decoded[0]
-    print(variables)
+    print(decoded)
     mappings = decoded['mappings']
     #print(mappings)
     mapped_data = mappings[0]['mapped']
