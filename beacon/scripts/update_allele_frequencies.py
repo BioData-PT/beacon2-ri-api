@@ -87,7 +87,7 @@ for variant in collection.find():
                     {"variantInternalId": variant["variantInternalId"]},
                     {"$set": {"alleleFrequency": total_frequency}}
                 )
-                print(f"Updated variant {formatted_variant} with allele frequency {allele_frequency}")
+                print(f"Updated variant {formatted_variant} with allele frequency {total_frequency}")
         else:
            print(f"Failed to retrieve allele frequency for {formatted_variant}")
     except ValueError as e:
