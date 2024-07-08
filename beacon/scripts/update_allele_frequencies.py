@@ -2,10 +2,28 @@ import requests, sys
 from pymongo import MongoClient
 import os
 import time
+
+def get_variant_details(hgvs_notation):
+    server = "https://rest.ensembl.org"
+    ext = f"/vep/human/hgvs/{hgvs_notation}?"
+    
+    response = requests.get(server + ext, headers={"Content-Type": "application/json"})
+    
+    if not response.ok:
+        response.raise_for_status()
+        sys.exit()
+    
+    return response.json()
+
+
 # Function to query 1000 Genomes for allele frequency
-def query_1000_genomes(chrom, start, end, ref, alt):
+def query_1000_genomes(chrom, start, end, ref, alt, hgvs_notation):
     print("START " + f"{start}")
     print("END " + f"{end}")
+    
+    strand = get_variant_details(hgvs_notation)[0]["strand"]
+    print(strand)
+    
     server = "https://rest.ensembl.org"
     ext = f"/map/human/GRCh37/{chrom}:{start}..{end}:1/GRCh38?"
  
@@ -68,13 +86,14 @@ for variant in collection.find():
     end_position = variant["_position"]["endInteger"]
     reference_base = variant["variation"]["referenceBases"]
     alternate_base = variant["variation"]["alternateBases"]
+    hgvs_notation = variant["identifiers"]["genomicHGVSId"]
     
     formatted_variant = f"{chromosome}-{start_position}-{end_position}-{reference_base}-{alternate_base}"
     print("-----------")
     print(f"{formatted_variant}")
     try:
         # Query 1000 Genomes for allele frequency
-        allele_frequency = query_1000_genomes(chromosome, start_position, end_position, reference_base, alternate_base)
+        allele_frequency = query_1000_genomes(chromosome, start_position, end_position, reference_base, alternate_base, hgvs_notation)
         print(allele_frequency)
         if allele_frequency is not None:
             collection.update_one(
