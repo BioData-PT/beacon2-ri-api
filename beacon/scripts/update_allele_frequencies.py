@@ -48,7 +48,7 @@ def query_1000_genomes(chrom, start, end, ref, alt):
             # If reference allele does not match, retry with actual reference allele from response
             actual_ref = json_response[0]['allele_string'].split('/')[0]
             if actual_ref != ref:
-                corrected_hgvs_notation = f"{chrom}:g.{mapped_start}{actual_ref}>{alt}"
+                corrected_hgvs_notation = f"{chrom}:g.{mapped_end}{actual_ref}>{alt}"
                 corrected_url = f"https://rest.ensembl.org/vep/human/hgvs/{corrected_hgvs_notation}?"
                 time.sleep(1)
                 corrected_response = requests.get(corrected_url, headers={"Content-Type": "application/json"})
