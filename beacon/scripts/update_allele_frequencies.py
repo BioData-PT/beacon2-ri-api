@@ -22,9 +22,10 @@ def query_1000_genomes(chrom, start, end, ref, alt):
     mappings = decoded['mappings']
     mapped_data = mappings[0]['mapped']
     mapped_end = mapped_data['end']
+    mapped_start = mapped_data['start']
     
     # Construct the HGVS notation
-    hgvs_notation = f"{chrom}:g.{mapped_end}{reverse_complement(ref)}>{reverse_complement(alt)}"
+    hgvs_notation = f"{chrom}:g.{mapped_start}{reverse_complement(ref)}>{reverse_complement(alt)}"
     print(f"GRCh38 + {hgvs_notation}")
     
     # Construct the URL for Ensembl VEP
