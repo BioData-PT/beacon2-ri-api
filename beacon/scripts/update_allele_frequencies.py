@@ -3,6 +3,9 @@ from pymongo import MongoClient
 import os
 import time
 
+def reverse_complement(base):
+    complement = {'A': 'T', 'T': 'A', 'C': 'G', 'G': 'C'}
+    return complement[base]
 
 # Function to query 1000 Genomes for allele frequency
 def query_1000_genomes(chrom, start, end, ref, alt):
@@ -21,7 +24,7 @@ def query_1000_genomes(chrom, start, end, ref, alt):
     mapped_end = mapped_data['end']
     
     # Construct the HGVS notation
-    hgvs_notation = f"{chrom}:g.{mapped_end}{ref}>{alt}"
+    hgvs_notation = f"{chrom}:g.{mapped_end}{reverse_complement(ref)}>{reverse_complement(alt)}"
     print(f"GRCh38 + {hgvs_notation}")
     
     # Construct the URL for Ensembl VEP
