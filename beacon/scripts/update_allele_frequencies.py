@@ -4,6 +4,8 @@ import os
 import time
 # Function to query 1000 Genomes for allele frequency
 def query_1000_genomes(chrom, start, end, ref, alt):
+    print("START " + f"{start}")
+    print("END " + f"{end}")
     server = "https://rest.ensembl.org"
     ext = f"/map/human/GRCh37/{chrom}:{start}..{end}:1/GRCh38?"
  
@@ -19,6 +21,7 @@ def query_1000_genomes(chrom, start, end, ref, alt):
     mapped_data = mappings[0]['mapped']
     mapped_start = mapped_data['start']
     mapped_end = mapped_data['end']
+    print(mapped_data)
     
     # Construct the HGVS notation
     hgvs_notation = f"{chrom}:g.{mapped_end}{ref}>{alt}"
@@ -41,11 +44,8 @@ def query_1000_genomes(chrom, start, end, ref, alt):
         else:
             raise ValueError(f"Reference allele mismatch for variant {chrom}-{start}-{ref}-{alt}. Ensembl returned {json_response[0]['allele_string']}")
     else:
-        extracted_allele = response.text.split('(')[1].split(')')[0]
-        print(extracted_allele)
         print(f"Bad request for variant {chrom}-{start}-{ref}-{alt}: {response.text}")
         return None
-
 # Connect to MongoDB
 database_password = os.getenv('DB_PASSWD')
 client = MongoClient(
@@ -58,9 +58,7 @@ client = MongoClient(
         "admin"
     )
 )
-
 collection = client.beacon.get_collection('genomicVariations')
-
 # Iterate over all variants, format them, query 1000 Genomes, and update the database
 for variant in collection.find():
     chromosome = variant["_position"]["refseqId"]
