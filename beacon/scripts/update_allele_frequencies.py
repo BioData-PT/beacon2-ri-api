@@ -24,7 +24,7 @@ def query_1000_genomes(chrom, start, end, ref, alt):
     print(mapped_data)
     
     # Construct the HGVS notation
-    hgvs_notation = f"{chrom}:g.{mapped_end}{ref}>{alt}"
+    hgvs_notation = f"{chrom}:g.{mapped_start}{ref}>{alt}"
     
     # Construct the URL for Ensembl VEP
     url = f"https://rest.ensembl.org/vep/human/hgvs/{hgvs_notation}?"
