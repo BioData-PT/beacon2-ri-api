@@ -21,7 +21,7 @@ def fetch_sequence(chrom, start, end, genome='GRCh38'):
     Fetch sequence for the given chromosome and position using Ensembl API.
     """
     server = "https://rest.ensembl.org"
-    ext = f"/sequence/region/human/{chrom}:{start}..{end}:{genome}?"
+    ext = f"/sequence/region/human/{chrom}:{start}..{end}?"
     headers = {"Content-Type": "application/json"}
     
     response = requests.get(server + ext, headers=headers)
