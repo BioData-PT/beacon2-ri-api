@@ -82,6 +82,8 @@ for variant in collection.find():
                 frequencies = colocated_variant['frequencies']
                 total_frequency = 0.0
                 for population, freq_info in frequencies.items():
+                    
+                    print(freq_info.values())
                     total_frequency += sum(freq_info.values())
                 collection.update_one(
                     {"variantInternalId": variant["variantInternalId"]},
