@@ -1,4 +1,3 @@
-import pyensembl
 from pyensembl import EnsemblRelease
 
 # Load the Ensembl releases
