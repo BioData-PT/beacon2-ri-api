@@ -34,7 +34,6 @@ def query_1000_genomes(chrom, start, end, ref, alt):
     url = f"https://rest.ensembl.org/vep/human/hgvs/{hgvs_notation}?"
  
     # make GET request to the API
-    time.sleep(0.1)
     response = requests.get(url, headers={"Content-Type": "application/json"})
  
     # check if request was successful
