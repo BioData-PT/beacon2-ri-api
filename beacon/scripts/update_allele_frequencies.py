@@ -83,7 +83,7 @@ for variant in collection.find():
             total_frequency = 0.0
             data = allele_frequency[0]['colocated_variants'][0]['frequencies']
             for key in data:
-                total_frequency = (data[key] == "gnomadg")
+                total_frequency = data[key]["gnomadg"]
             collection.update_one(
                 {"variantInternalId": variant["variantInternalId"]},
                 {"$set": {"alleleFrequency": total_frequency}}
