@@ -3,13 +3,14 @@ from pymongo import MongoClient
 import os
 import time
 
-# Support function to convert reference and alternate alleles
+
+# support function to convert reference and alternate alleles
 def reverse_complement(base):
     complement = {'A': 'T', 'T': 'A', 'C': 'G', 'G': 'C'}
     return complement[base]
 
 
-# Function to query 1000 Genomes for allele frequency
+# function to query 1000 Genomes for allele frequency
 def query_1000_genomes(chrom, start, end, ref, alt):
     server = "https://rest.ensembl.org"
     ext = f"/map/human/GRCh37/{chrom}:{start}..{end}:1/GRCh38?"
@@ -23,23 +24,22 @@ def query_1000_genomes(chrom, start, end, ref, alt):
     decoded = r.json()
     mappings = decoded['mappings']
     mapped_data = mappings[0]['mapped']
-    mapped_end = mapped_data['end']
     mapped_start = mapped_data['start']
     
-    # Construct the HGVS notation
+    # construct the HGVS notation
     hgvs_notation = f"{chrom}:g.{mapped_start}{reverse_complement(ref)}>{reverse_complement(alt)}"
     print(f"GRCh38 + {hgvs_notation}")
     
-    # Construct the URL for Ensembl VEP
+    # construct the URL for Ensembl VEP
     url = f"https://rest.ensembl.org/vep/human/hgvs/{hgvs_notation}?"
  
-    # Make GET request to the API
+    # make GET request to the API
     time.sleep(0.1)
     response = requests.get(url, headers={"Content-Type": "application/json"})
  
-    # Check if request was successful
+    # check if request was successful
     if response.status_code == 200:
-        # Parse the JSON response
+        # parse the JSON response
         json_response = response.json()
         return json_response
     else:
@@ -47,7 +47,7 @@ def query_1000_genomes(chrom, start, end, ref, alt):
         return None
     
     
-# Connect to MongoDB
+# connect to MongoDB
 database_password = os.getenv('DB_PASSWD')
 client = MongoClient(
     "mongodb://{}:{}@{}:{}/{}?authSource={}".format(
@@ -64,7 +64,7 @@ client = MongoClient(
 collection = client.beacon.get_collection('genomicVariations')
 
 
-# Iterate over all variants, format them, query 1000 Genomes, and update the database
+# iterate over all variants, format them, query 1000 Genomes, and update the database
 for variant in collection.find():
     chromosome = variant["_position"]["refseqId"]
     start_position = variant["_position"]["startInteger"]
@@ -76,7 +76,7 @@ for variant in collection.find():
     print("------------------------------------")
     print(f"Variant + {formatted_variant}")
     try:
-        # Query 1000 Genomes for allele frequency
+        # query 1000 Genomes for allele frequency
         allele_frequency = query_1000_genomes(chromosome, start_position, end_position, reference_base, alternate_base)
         
         if allele_frequency is not None:
@@ -84,7 +84,6 @@ for variant in collection.find():
             data = allele_frequency[0]['colocated_variants'][0]['frequencies']
             for key in data:
                 total_frequency += sum(data[key].values())
-            #total_frequency = sum(allele_frequency['colocated_variants'][0]['frequencies'].values())
             collection.update_one(
                 {"variantInternalId": variant["variantInternalId"]},
                 {"$set": {"alleleFrequency": total_frequency}}
