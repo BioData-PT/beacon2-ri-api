@@ -47,4 +47,3 @@ alt_allele = 'AAGAATGGCCTAATAC'
 
 # Convert coordinates from GRCh37 to GRCh38
 convert_coordinates_grch37_to_grch38(chromosome, position, ref_allele, alt_allele)
-``
