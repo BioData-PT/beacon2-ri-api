@@ -1,6 +1,6 @@
 import requests
 
-def get_sequence(server, region):
+def fetch_sequence(server, region):
     """Fetch sequence for a given region."""
     ext = f"/sequence/region/human/{region}?"
     response = requests.get(server + ext, headers={"Content-Type": "application/json"})
@@ -10,36 +10,27 @@ def get_sequence(server, region):
 
 def convert_coordinates_grch37_to_grch38(chromosome, position, ref_allele, alt_allele):
     server = "https://rest.ensembl.org"
-    ext = f"/map/human/GRCh37/{chromosome}:{position}..{position + len(ref_allele) - 1}/GRCh38?"
+    ext = f"/map/human/GRCh37/{chromosome}:{position}..{position}/GRCh38?"
     response = requests.get(server + ext, headers={"Content-Type": "application/json"})
     if not response.ok:
         response.raise_for_status()
     data = response.json()
-    
+
     if "mappings" in data and len(data["mappings"]) > 0:
         mapping = data["mappings"][0]["mapped"]
         grch38_chromosome = mapping["seq_region_name"]
         grch38_start = mapping["start"]
-        grch38_end = grch38_start + len(ref_allele) - 1
 
         # Fetch sequences for verification
-        grch37_region = f"{chromosome}:{position-10}-{position+10}"
-        grch38_region = f"{grch38_chromosome}:{grch38_start-10}-{grch38_end+10}"
-        grch37_seq = get_sequence(server, grch37_region)
-        grch38_seq = get_sequence(server, grch38_region)
+        grch37_seq = fetch_sequence(server, f"{chromosome}:{position-1}..{position}")
+        grch38_seq = fetch_sequence(server, f"{grch38_chromosome}:{grch38_start-1}..{grch38_start}")
 
-        print(f"GRCh37 region: {grch37_region} Sequence: {grch37_seq}")
-        print(f"GRCh38 region: {grch38_region} Sequence: {grch38_seq}")
-
-        # Find the new reference allele in the GRCh38 sequence
-        adjusted_ref_allele = grch38_seq[10:10+len(ref_allele)]
-        
-        # Adjust alternate allele based on the difference between the sequences
-        alt_allele_diff = alt_allele[len(ref_allele):]
-        adjusted_alt_allele = adjusted_ref_allele + alt_allele_diff
-
-        print(f"GRCh37: {chromosome}:{position} {ref_allele}>{alt_allele}")
-        print(f"GRCh38: {grch38_chromosome}:{grch38_start} {adjusted_ref_allele}>{adjusted_alt_allele}")
+        # Check if the sequences match the expected alleles
+        if grch37_seq == ref_allele and grch38_seq == alt_allele:
+            print(f"GRCh37: {chromosome}:{position} {ref_allele}>{alt_allele}")
+            print(f"GRCh38: {grch38_chromosome}:{grch38_start} {grch38_seq}>{ref_allele}")
+        else:
+            print("Sequence verification failed. Please check alleles and sequences.")
     else:
         print("No mappings found for the given coordinates.")
 
