@@ -32,6 +32,8 @@ def query_1000_genomes(chrom, start, end, ref, alt):
     
     # construct the URL for Ensembl VEP
     url = f"https://rest.ensembl.org/vep/human/hgvs/{hgvs_notation}?"
+    
+    if len()
  
     # make GET request to the API
     response = requests.get(url, headers={"Content-Type": "application/json"})
@@ -42,8 +44,15 @@ def query_1000_genomes(chrom, start, end, ref, alt):
         json_response = response.json()
         return json_response
     else:
-        print(f"Bad request for variant {chrom}-{start}-{ref}-{alt}: {response.text}")
-        return None
+        try: # downstream gene variant
+            hgvs_notation = f"{chrom}:g.{mapped_start}{alt}>{ref}"
+            response = requests.get(url, headers={"Content-Type": "application/json"})
+            json_response = response.json()
+            return json_response
+            
+        except ValueError as e:
+            print(f"Bad request for variant {chrom}-{start}-{ref}-{alt}: {e}")
+            return None
     
     
 # connect to MongoDB
