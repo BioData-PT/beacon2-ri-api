@@ -13,12 +13,12 @@ def liftover_37_to_38(chromosome, position, ref_allele, alt_allele):
     response = requests.post(url, data=data)
     if response.status_code == 200:
         converted = response.text
-        print("Raw Response:")
-        print(converted)  # Print the raw response for debugging
+        print("Raw Response (first 500 characters):")
+        print(converted[:500])  # Print the first 500 characters of the response for debugging
         # Parsing the result to extract the new position
         lines = converted.split('\n')
         for line in lines:
-            print(f"Line: {line}")
+            print(f"Line: {line[:80]}")  # Print the first 80 characters of each line for clarity
         if len(lines) > 1:
             new_position_line = lines[1].strip()
             parts = new_position_line.split()
