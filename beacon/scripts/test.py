@@ -1,49 +1,41 @@
 import requests
 
-def fetch_sequence(server, region):
-    """Fetch sequence for a given region."""
-    ext = f"/sequence/region/human/{region}?"
-    response = requests.get(server + ext, headers={"Content-Type": "application/json"})
-    if not response.ok:
-        response.raise_for_status()
-    return response.json()['seq']
+def liftover_37_to_38(chromosome, position, ref_allele, alt_allele):
+    url = "http://genome.ucsc.edu/cgi-bin/hgLiftOver"
+    data = {
+        'hgsid': '351',  # This is a placeholder, you can get a valid session ID from UCSC website.
+        'fromP': 'hg19',
+        'toP': 'hg38',
+        'submit': 'Submit',
+        'pos': f'{chromosome}:{position}-{position}'
+    }
 
-def convert_coordinates_grch37_to_grch38(chromosome, position, ref_allele, alt_allele):
-    server = "https://rest.ensembl.org"
-    
-    # Perform coordinate conversion from GRCh37 to GRCh38
-    grch37_region = f"{chromosome}:{position-1}..{position}"
-    ext = f"/map/human/GRCh37/{grch37_region}/GRCh38?"
-    response = requests.get(server + ext, headers={"Content-Type": "application/json"})
-    if not response.ok:
-        response.raise_for_status()
-    data = response.json()
-
-    if "mappings" in data and len(data["mappings"]) > 0:
-        mapping = data["mappings"][0]["mapped"]
-        grch38_chromosome = mapping["seq_region_name"]
-        grch38_start = mapping["start"]
-
-        # Fetch sequence around the mapped position in GRCh38
-        grch38_region = f"{grch38_chromosome}:{grch38_start-1}..{grch38_start+len(alt_allele)-1}"
-        grch38_seq = fetch_sequence(server, grch38_region)
-
-        # Fetch sequence around the variant in GRCh37
-        grch37_region_full = f"{chromosome}:{position-1}..{position+len(alt_allele)-1}"
-        grch37_seq = fetch_sequence(server, grch37_region_full)
-
-        # Print results
-        print(f"GRCh37: {chromosome}:{position} {ref_allele}>{alt_allele}")
-        print(f"GRCh37 Sequence: {grch37_seq}")
-        print(f"GRCh38: {grch38_chromosome}:{grch38_start} {grch38_seq[0]}>{grch38_seq}")
+    response = requests.post(url, data=data)
+    if response.status_code == 200:
+        converted = response.text
+        # Parsing the result to extract the new position
+        lines = converted.split('\n')
+        if len(lines) > 1:
+            new_position_line = lines[1].strip()
+            parts = new_position_line.split()
+            if len(parts) >= 2:
+                new_position = parts[1]
+                new_chromosome, new_start_end = new_position.split(':')
+                new_start, new_end = map(int, new_start_end.split('-'))
+                new_start += 1  # Convert from 0-based to 1-based coordinate
+                print(f"GRCh38: {new_chromosome}:{new_start} {ref_allele}>{alt_allele}")
+                return new_chromosome, new_start, ref_allele, alt_allele
+            else:
+                print("Error: Could not parse converted coordinates.")
+        else:
+            print("Error: Could not convert coordinates.")
     else:
-        print("No mappings found for the given coordinates.")
+        print(f"Error: UCSC LiftOver request failed with status code {response.status_code}")
 
-# Coordinates and allele change for GRCh37
+# Example usage
 chromosome = '22'
 position = 16064513
 ref_allele = 'A'
 alt_allele = 'AAGAATGGCCTAATAC'
 
-# Convert coordinates from GRCh37 to GRCh38
-convert_coordinates_grch37_to_grch38(chromosome, position, ref_allele, alt_allele)
+liftover_37_to_38(chromosome, position, ref_allele, alt_allele)
