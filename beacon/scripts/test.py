@@ -10,7 +10,13 @@ def fetch_sequence(server, region):
 
 def convert_coordinates_grch37_to_grch38(chromosome, position, ref_allele, alt_allele):
     server = "https://rest.ensembl.org"
-    ext = f"/map/human/GRCh37/{chromosome}:{position}..{position}/GRCh38?"
+    
+    # Fetch sequence around the variant in GRCh37
+    grch37_region = f"{chromosome}:{position-1}..{position}"
+    grch37_seq = fetch_sequence(server, grch37_region)
+
+    # Perform coordinate conversion from GRCh37 to GRCh38
+    ext = f"/map/human/GRCh37/{grch37_region}/GRCh38?"
     response = requests.get(server + ext, headers={"Content-Type": "application/json"})
     if not response.ok:
         response.raise_for_status()
@@ -21,11 +27,11 @@ def convert_coordinates_grch37_to_grch38(chromosome, position, ref_allele, alt_a
         grch38_chromosome = mapping["seq_region_name"]
         grch38_start = mapping["start"]
 
-        # Fetch sequences for verification
-        grch37_seq = fetch_sequence(server, f"{chromosome}:{position-1}..{position}")
-        grch38_seq = fetch_sequence(server, f"{grch38_chromosome}:{grch38_start-1}..{grch38_start}")
+        # Fetch sequence around the mapped position in GRCh38
+        grch38_region = f"{grch38_chromosome}:{grch38_start-1}..{grch38_start}"
+        grch38_seq = fetch_sequence(server, grch38_region)
 
-        # Check if the sequences match the expected alleles
+        # Compare fetched sequences with expected alleles
         if grch37_seq == ref_allele and grch38_seq == alt_allele:
             print(f"GRCh37: {chromosome}:{position} {ref_allele}>{alt_allele}")
             print(f"GRCh38: {grch38_chromosome}:{grch38_start} {grch38_seq}>{ref_allele}")
