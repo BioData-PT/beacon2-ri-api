@@ -15,6 +15,7 @@ def convert_coordinates_grch37_to_grch38(chromosome, position, ref_allele, alt_a
     if not response.ok:
         response.raise_for_status()
     data = response.json()
+    
     if "mappings" in data and len(data["mappings"]) > 0:
         mapping = data["mappings"][0]["mapped"]
         grch38_chromosome = mapping["seq_region_name"]
@@ -30,9 +31,12 @@ def convert_coordinates_grch37_to_grch38(chromosome, position, ref_allele, alt_a
         print(f"GRCh37 region: {grch37_region} Sequence: {grch37_seq}")
         print(f"GRCh38 region: {grch38_region} Sequence: {grch38_seq}")
 
-        # Adjust alleles based on sequences (for demonstration, you might need more sophisticated checks)
+        # Find the new reference allele in the GRCh38 sequence
         adjusted_ref_allele = grch38_seq[10:10+len(ref_allele)]
-        adjusted_alt_allele = alt_allele  # Assuming the alt allele doesn't change for this example
+        
+        # Adjust alternate allele based on the difference between the sequences
+        alt_allele_diff = alt_allele[len(ref_allele):]
+        adjusted_alt_allele = adjusted_ref_allele + alt_allele_diff
 
         print(f"GRCh37: {chromosome}:{position} {ref_allele}>{alt_allele}")
         print(f"GRCh38: {grch38_chromosome}:{grch38_start} {adjusted_ref_allele}>{adjusted_alt_allele}")
