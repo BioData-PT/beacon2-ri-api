@@ -90,8 +90,8 @@ for variant in collection.find():
         
         if allele_frequency is not None:
             total_frequency = 0.0
-            data = allele_frequency[0]['colocated_variants'][0]['frequencies']
-            if data:
+            if allele_frequency[0]['colocated_variants'][0]['frequencies'] is not None:
+                data = allele_frequency[0]['colocated_variants'][0]['frequencies']
                 for key in data:
                     if "gnomadg" in data[key] and "af" in data[key]:
                         total_frequency = data[key]["gnomadg"] + data[key]["af"]
