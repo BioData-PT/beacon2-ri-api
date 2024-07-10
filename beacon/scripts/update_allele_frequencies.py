@@ -4,7 +4,6 @@ from pymongo import MongoClient, UpdateOne
 import os
 from concurrent.futures import ThreadPoolExecutor, as_completed
 import threading
-import hashlib
 
 # Lock for threading
 lock = threading.Lock()
@@ -16,6 +15,10 @@ def complement(sequence):
 
 # Function to query 1000 Genomes for allele frequency
 def query_1000_genomes(chrom, start, end, ref, alt, type):
+    cache_key = f"{chrom}:{start}-{end}:{ref}>{alt}"
+    if cache_key in query_1000_genomes.cache:
+        return query_1000_genomes.cache[cache_key]
+
     server = "https://rest.ensembl.org"
     ext = f"/map/human/GRCh37/{chrom}:{start}..{end}:1/GRCh38?"
     
@@ -49,9 +52,14 @@ def query_1000_genomes(chrom, start, end, ref, alt, type):
     response = requests.get(url, headers={"Content-Type": "application/json"})
     
     if response.status_code == 200:
-        return response.json()
+        result = response.json()
+        query_1000_genomes.cache[cache_key] = result
+        return result
     else:
         return None
+
+# Initialize cache
+query_1000_genomes.cache = {}
 
 # Connect to MongoDB
 database_password = os.getenv('DB_PASSWD')
@@ -77,6 +85,8 @@ def process_variant(variant):
     variant_type = variant["variation"]['variantType']
     
     formatted_variant = f"{chromosome}-{start_position}-{end_position}-{reference_base}-{alternate_base}"
+    print("------------------------------------")
+    print(f"Variant + {formatted_variant}")
     
     allele_frequency = query_1000_genomes(chromosome, start_position, end_position, reference_base, alternate_base, variant_type)
     
@@ -96,12 +106,13 @@ def process_variant(variant):
                         total_frequency = 1 / collection.count_documents({})
                     if total_frequency == 0:
                         total_frequency = 1 / collection.count_documents({})
+                        
+                    print(f"Updated variant {formatted_variant} with allele frequency {total_frequency}")
                 
-                with lock:
-                    return UpdateOne(
-                        {"variantInternalId": variant["variantInternalId"]},
-                        {"$set": {"alleleFrequency": total_frequency}}
-                    )
+                return UpdateOne(
+                    {"variantInternalId": variant["variantInternalId"]},
+                    {"$set": {"alleleFrequency": total_frequency}}
+                )
     
     return None
 
