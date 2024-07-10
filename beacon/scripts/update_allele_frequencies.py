@@ -9,7 +9,7 @@ def complement(sequence):
 
 
 # function to query 1000 Genomes for allele frequency
-def query_1000_genomes(chrom, start, end, ref, alt):
+def query_1000_genomes(chrom, start, end, ref, alt, type):
     server = "https://rest.ensembl.org"
     ext = f"/map/human/GRCh37/{chrom}:{start}..{end}:1/GRCh38?"
  
@@ -23,9 +23,15 @@ def query_1000_genomes(chrom, start, end, ref, alt):
     mappings = decoded['mappings']
     mapped_data = mappings[0]['mapped']
     mapped_start = mapped_data['start']
+    mapped_end = mapped_data['end']
     
     # construct the HGVS notation
-    hgvs_notation = f"{chrom}:g.{mapped_start}{complement(ref)}>{complement(alt)}"
+    if (type == 'INDEL'):
+        hgvs_notation = f"{chrom}:g.{mapped_start}_{mapped_end}del{complement(ref)}ins{complement(alt)}"
+    elif (mapped_data['most_severe_consequence'] == 'downstream_gene_variant'):
+        hgvs_notation = f"{chrom}:g.{mapped_start}{complement(alt)}>{complement(ref)}"
+    else:
+        hgvs_notation = f"{chrom}:g.{mapped_start}{complement(ref)}>{complement(alt)}"
     
     # construct the URL for Ensembl VEP
     url = f"https://rest.ensembl.org/vep/human/hgvs/{hgvs_notation}?"
@@ -33,24 +39,14 @@ def query_1000_genomes(chrom, start, end, ref, alt):
     # make GET request to the API
     response = requests.get(url, headers={"Content-Type": "application/json"})
  
-    # check if request was successful
+    # see if request was successful
     if response.status_code == 200:
-        # parse the JSON response
         json_response = response.json()
         print(f"GRCh38 + {hgvs_notation}")
         return json_response
     else:
-        try: # downstream gene variant
-            hgvs_notation = f"{chrom}:g.{mapped_start}{complement(alt)}>{complement(ref)}"
-            print(f"GRCh38 + {hgvs_notation}")
-            url = f"https://rest.ensembl.org/vep/human/hgvs/{hgvs_notation}?"
-            response = requests.get(url, headers={"Content-Type": "application/json"})
-            json_response = response.json()
-            return json_response
-            
-        except ValueError as response:
-            print(f"Bad request for variant {chrom}-{start}-{ref}-{alt}: {response.text}")
-            return None
+        print(f"Bad request for variant {chrom}-{start}-{ref}-{alt}: {response.text}")
+        return None
     
     
 # connect to MongoDB
@@ -77,13 +73,14 @@ for variant in collection.find():
     end_position = variant["_position"]["endInteger"]
     reference_base = variant["variation"]["referenceBases"]
     alternate_base = variant["variation"]["alternateBases"]
+    variant_type = variant["variation"]['variantType']
     
     formatted_variant = f"{chromosome}-{start_position}-{end_position}-{reference_base}-{alternate_base}"
     print("------------------------------------")
     print(f"Variant + {formatted_variant}")
     try:
         # query 1000 Genomes for allele frequency
-        allele_frequency = query_1000_genomes(chromosome, start_position, end_position, reference_base, alternate_base)
+        allele_frequency = query_1000_genomes(chromosome, start_position, end_position, reference_base, alternate_base, variant_type)
         
         if allele_frequency is not None:
             total_frequency = 0.0
