@@ -90,8 +90,7 @@ for variant in collection.find():
         
         if allele_frequency is not None:
             total_frequency = 0.0
-            print(allele_frequency[0])
-            if "colocated_variantes" in allele_frequency[0]:
+            if "ccolocated_variants" in allele_frequency[0].ke:
                 if "frequencies" in allele_frequency[0]['colocated_variants'][0]:
                     data = allele_frequency[0]['colocated_variants'][0]['frequencies']
                     for key in data:
