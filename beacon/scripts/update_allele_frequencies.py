@@ -32,8 +32,6 @@ def query_1000_genomes(chrom, start, end, ref, alt):
     
     # construct the URL for Ensembl VEP
     url = f"https://rest.ensembl.org/vep/human/hgvs/{hgvs_notation}?"
-    
-    if len()
  
     # make GET request to the API
     response = requests.get(url, headers={"Content-Type": "application/json"})
