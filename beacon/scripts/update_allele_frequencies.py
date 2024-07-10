@@ -25,6 +25,11 @@ def query_1000_genomes(chrom, start, end, ref, alt, type):
     mapped_start = mapped_data['start']
     mapped_end = mapped_data['end']
     
+    ex = f"/sequence/region/human/{chrom}:{mapped_end}-{mapped_end}?"
+    re = requests.get(server + ex, headers={"Content-Type": "application/json"})
+    j = re.json
+    check = j['seq']
+    
     
     # construct the HGVS notation
     if type == 'INDEL':
