@@ -89,11 +89,11 @@ for variant in collection.find():
             total_frequency = 0.0
             data = allele_frequency[0]['colocated_variants'][0]['frequencies']
             for key in data:
-                if data[key]["gnomadg"] and data[key]["af"]:
+                if "gnomadg" in data[key] and "af" in data[key]:
                     total_frequency = data[key]["gnomadg"] + data[key]["af"]
-                elif data[key]["gnomadg"]:
+                elif "gnomadg" in data[key] and not "af" in data[key]:
                     total_frequency = data[key]["gnomadg"]
-                elif data[key]["af"]:
+                elif "gnomadg" not in data[key] and "af" in data[key]:
                     total_frequency = data[key]["af"]
                 else:
                     total_frequency = 1/collection.count_documents({}) # allele frequency in the beacon database
