@@ -1,13 +1,11 @@
 import requests, sys
 from pymongo import MongoClient
 import os
-import re
 
 
-# support function to convert reference and alternate alleles
-def reverse_complement(sequence):
+def complement(sequence):
     complement = {'A': 'T', 'T': 'A', 'C': 'G', 'G': 'C'}
-    return ''.join(complement[base] for base in sequence[::-1])
+    return ''.join(complement[base] for base in sequence)
 
 
 # function to query 1000 Genomes for allele frequency
@@ -16,7 +14,6 @@ def query_1000_genomes(chrom, start, end, ref, alt):
     ext = f"/map/human/GRCh37/{chrom}:{start}..{end}:1/GRCh38?"
  
     r = requests.get(server + ext, headers={"Content-Type": "application/json"})
-    pattern = r'\((\w)\)'
  
     if not r.ok:
         r.raise_for_status()
@@ -28,7 +25,7 @@ def query_1000_genomes(chrom, start, end, ref, alt):
     mapped_start = mapped_data['start']
     
     # construct the HGVS notation
-    hgvs_notation = f"{chrom}:g.{mapped_start}{reverse_complement(ref)}>{reverse_complement(alt)}"
+    hgvs_notation = f"{chrom}:g.{mapped_start}{complement(ref)}>{complement(alt)}"
     
     # construct the URL for Ensembl VEP
     url = f"https://rest.ensembl.org/vep/human/hgvs/{hgvs_notation}?"
@@ -44,7 +41,7 @@ def query_1000_genomes(chrom, start, end, ref, alt):
         return json_response
     else:
         try: # downstream gene variant
-            hgvs_notation = f"{chrom}:g.{mapped_start}{reverse_complement(alt)}>{reverse_complement(ref)}"
+            hgvs_notation = f"{chrom}:g.{mapped_start}{complement(alt)}>{complement(ref)}"
             print(f"GRCh38 + {hgvs_notation}")
             url = f"https://rest.ensembl.org/vep/human/hgvs/{hgvs_notation}?"
             response = requests.get(url, headers={"Content-Type": "application/json"})
