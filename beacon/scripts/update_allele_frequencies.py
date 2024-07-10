@@ -46,6 +46,8 @@ def query_1000_genomes(chrom, start, end, ref, alt):
         matches = re.findall(pattern, response)
         extracted_allele = matches[0]
         if extracted_allele == reverse_complement(alt): # downstream gene variant
+            print("ENTROUUUUUUUUUUU")
+            print(f"{extracted_allele}{reverse_complement(alt)}")
             hgvs_notation = f"{chrom}:g.{mapped_start}{alt}>{ref}"
             response = requests.get(url, headers={"Content-Type": "application/json"})
             json_response = response.json()
