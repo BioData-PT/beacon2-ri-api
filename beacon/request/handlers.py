@@ -222,13 +222,25 @@ def generic_handler(db_fn, request=None):
 
 
             ######################## BUDGET ######################## 
-
+            
+            # see if user is authenticated but not registered and if they already made the query in the past
             if not registered and not public:
+
+                search_criteria = {
+                "userId": access_token,
+                "query": qparams_dataset.query
+                }
+
+            response_history = client.db['history'].find_one(search_criteria)["response"]
+
+            if response_history is not None:
+                return await json_stream(request, response_history)
+
+            else:
                 remove_from_count, records = budget_strategy(access_token, db_fn_submodule, records)
                 count -= remove_from_count
-                
-            dataset_result = (count, list(records))
-            datasets_query_results[dataset_id] = (dataset_result)
+                dataset_result = (count, list(records))
+                datasets_query_results[dataset_id] = (dataset_result)
         
         
         LOG.debug(f"schema = {entity_schema}")
@@ -237,19 +249,6 @@ def generic_handler(db_fn, request=None):
         requested_granularity = qparams.query.requested_granularity
         max_granularity = Granularity(conf.max_beacon_granularity)
         response_granularity = Granularity.get_lower(requested_granularity, max_granularity)
-
-        # see if authenticated but not registered user already made that query in the past
-        if not registered and not public:
-
-            search_criteria = {
-            "userId": access_token,
-            "query": qparams_dataset.query
-            }
-
-            response_history = client.db['history'].find_one(search_criteria)["response"]
-
-            if response_history:
-                return await json_stream(request, response_history)
 
         
         # build response
