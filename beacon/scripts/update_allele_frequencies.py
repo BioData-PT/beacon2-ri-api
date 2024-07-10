@@ -1,7 +1,7 @@
 import requests, sys
 from pymongo import MongoClient
 import os
-import time
+import re
 
 
 # support function to convert reference and alternate alleles
@@ -16,6 +16,7 @@ def query_1000_genomes(chrom, start, end, ref, alt):
     ext = f"/map/human/GRCh37/{chrom}:{start}..{end}:1/GRCh38?"
  
     r = requests.get(server + ext, headers={"Content-Type": "application/json"})
+    pattern = r'\((\w)\)'
  
     if not r.ok:
         r.raise_for_status()
@@ -42,14 +43,16 @@ def query_1000_genomes(chrom, start, end, ref, alt):
         json_response = response.json()
         return json_response
     else:
-        try: # downstream gene variant
+        matches = re.findall(pattern, response)
+        extracted_allele = matches[0]
+        if extracted_allele == reverse_complement(alt): # downstream gene variant
             hgvs_notation = f"{chrom}:g.{mapped_start}{alt}>{ref}"
             response = requests.get(url, headers={"Content-Type": "application/json"})
             json_response = response.json()
             return json_response
             
-        except ValueError as e:
-            print(f"Bad request for variant {chrom}-{start}-{ref}-{alt}: {e}")
+        else:
+            print(f"Bad request for variant {chrom}-{start}-{ref}-{alt}: {response.text}")
             return None
     
     
@@ -111,6 +114,7 @@ for variant in collection.find():
         continue
     
     except Exception as e:
+        
         print(f"Failed to process variant {formatted_variant}: {e}")
         continue
     
