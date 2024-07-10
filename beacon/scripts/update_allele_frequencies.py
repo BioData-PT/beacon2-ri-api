@@ -4,6 +4,7 @@ from pymongo import MongoClient, UpdateOne
 import os
 from concurrent.futures import ThreadPoolExecutor, as_completed
 import threading
+import hashlib
 
 # Lock for threading
 lock = threading.Lock()
@@ -15,10 +16,6 @@ def complement(sequence):
 
 # Function to query 1000 Genomes for allele frequency
 def query_1000_genomes(chrom, start, end, ref, alt, type):
-    cache_key = f"{chrom}:{start}-{end}:{ref}>{alt}"
-    if cache_key in query_1000_genomes.cache:
-        return query_1000_genomes.cache[cache_key]
-
     server = "https://rest.ensembl.org"
     ext = f"/map/human/GRCh37/{chrom}:{start}..{end}:1/GRCh38?"
     
@@ -41,7 +38,7 @@ def query_1000_genomes(chrom, start, end, ref, alt, type):
     if type == 'INDEL':
         hgvs_notation = f"{chrom}:g.{mapped_start}_{mapped_end}del{complement(ref)}ins{complement(alt)}"
     elif check == complement(alt):
-        hgvs_notation = f"{chrom}:g.{mapped_start}{complement(alt)}>{complement(ref)}"
+        hgvs_notation = f"{chrom}:g.{mapped_start}{complement(ref)}>{complement(alt)}"
     elif 'most_severe_consequence' in mapped_data and mapped_data['most_severe_consequence'] == 'downstream_gene_variant':
         hgvs_notation = f"{chrom}:g.{mapped_start}{complement(alt)}>{complement(ref)}"
     else:
@@ -52,14 +49,9 @@ def query_1000_genomes(chrom, start, end, ref, alt, type):
     response = requests.get(url, headers={"Content-Type": "application/json"})
     
     if response.status_code == 200:
-        result = response.json()
-        query_1000_genomes.cache[cache_key] = result
-        return result
+        return response.json()
     else:
         return None
-
-# Initialize cache
-query_1000_genomes.cache = {}
 
 # Connect to MongoDB
 database_password = os.getenv('DB_PASSWD')
@@ -84,35 +76,37 @@ def process_variant(variant):
     alternate_base = variant["variation"]["alternateBases"]
     variant_type = variant["variation"]['variantType']
     
-    formatted_variant = f"{chromosome}-{start_position}-{end_position}-{reference_base}-{alternate_base}"
-    print("------------------------------------")
-    print(f"Variant + {formatted_variant}")
+    with lock:
     
-    allele_frequency = query_1000_genomes(chromosome, start_position, end_position, reference_base, alternate_base, variant_type)
-    
-    if allele_frequency is not None:
-        total_frequency = 0.0
-        if "colocated_variants" in allele_frequency[0]:
-            if "frequencies" in allele_frequency[0]['colocated_variants'][0]:
-                data = allele_frequency[0]['colocated_variants'][0]['frequencies']
-                for key in data:
-                    if "gnomadg" in data[key] and "af" in data[key]:
-                        total_frequency = data[key]["gnomadg"] + data[key]["af"]
-                    elif "gnomadg" in data[key] and not "af" in data[key]:
-                        total_frequency = data[key]["gnomadg"]
-                    elif "gnomadg" not in data[key] and "af" in data[key]:
-                        total_frequency = data[key]["af"]
-                    else:
-                        total_frequency = 1 / collection.count_documents({})
-                    if total_frequency == 0:
-                        total_frequency = 1 / collection.count_documents({})
-                        
-                    print(f"Updated variant {formatted_variant} with allele frequency {total_frequency}")
-                
-                return UpdateOne(
-                    {"variantInternalId": variant["variantInternalId"]},
-                    {"$set": {"alleleFrequency": total_frequency}}
-                )
+        formatted_variant = f"{chromosome}-{start_position}-{end_position}-{reference_base}-{alternate_base}"
+        print("------------------------------------")
+        print(f"Variant + {formatted_variant}")
+        
+        allele_frequency = query_1000_genomes(chromosome, start_position, end_position, reference_base, alternate_base, variant_type)
+        
+        if allele_frequency is not None:
+            total_frequency = 0.0
+            if "colocated_variants" in allele_frequency[0]:
+                if "frequencies" in allele_frequency[0]['colocated_variants'][0]:
+                    data = allele_frequency[0]['colocated_variants'][0]['frequencies']
+                    for key in data:
+                        if "gnomadg" in data[key] and "af" in data[key]:
+                            total_frequency = data[key]["gnomadg"] + data[key]["af"]
+                        elif "gnomadg" in data[key] and not "af" in data[key]:
+                            total_frequency = data[key]["gnomadg"]
+                        elif "gnomadg" not in data[key] and "af" in data[key]:
+                            total_frequency = data[key]["af"]
+                        else:
+                            total_frequency = 1 / collection.count_documents({})
+                        if total_frequency == 0:
+                            total_frequency = 1 / collection.count_documents({})
+                    
+                        print(f"Updated variant {formatted_variant} with allele frequency {total_frequency}")
+                    
+                        return UpdateOne(
+                            {"variantInternalId": variant["variantInternalId"]},
+                            {"$set": {"alleleFrequency": total_frequency}}
+                        )
     
     return None
 
