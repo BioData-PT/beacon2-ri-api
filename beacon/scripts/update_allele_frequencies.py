@@ -44,7 +44,7 @@ def query_1000_genomes(chrom, start, end, ref, alt):
         return json_response
     else:
         try: # downstream gene variant
-            hgvs_notation = f"{chrom}:g.{mapped_start}{alt}>{ref}"
+            hgvs_notation = f"{chrom}:g.{mapped_start}{reverse_complement(alt)}>{reverse_complement(ref)}"
             response = requests.get(url, headers={"Content-Type": "application/json"})
             json_response = response.json()
             return json_response
