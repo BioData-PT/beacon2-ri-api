@@ -25,7 +25,8 @@ def query_1000_genomes(chrom, start, end, ref, alt, type):
     mapped_start = mapped_data['start']
     mapped_end = mapped_data['end']
     
-    re = requests.get(f"https://rest.ensembl.org/sequence/region/human/{chrom}:{mapped_end}-{mapped_end}?content-type=application/json")
+    u = f"https://rest.ensembl.org/sequence/region/human/{chrom}:{mapped_end}-{mapped_end}?content-type=application/json"
+    re = requests.get(u)
     json = re.json
     check = json['seq']
     
