@@ -35,6 +35,7 @@ def query_1000_genomes(chrom, start, end, ref, alt, type):
     if type == 'INDEL':
         hgvs_notation = f"{chrom}:g.{mapped_start}_{mapped_end}del{complement(ref)}ins{complement(alt)}"
     if check == complement(alt):
+        print(f"CHECKKKKKKK + {check}")
         hgvs_notation = f"{chrom}:g.{mapped_start}{complement(alt)}>{complement(ref)}"
     elif 'most_severe_consequence' in  mapped_data:
         if mapped_data['most_severe_consequence'] == 'downstream_gene_variant':
