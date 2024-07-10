@@ -45,6 +45,7 @@ def query_1000_genomes(chrom, start, end, ref, alt):
     else:
         try: # downstream gene variant
             hgvs_notation = f"{chrom}:g.{mapped_start}{reverse_complement(alt)}>{reverse_complement(ref)}"
+            url = f"https://rest.ensembl.org/vep/human/hgvs/{hgvs_notation}?"
             response = requests.get(url, headers={"Content-Type": "application/json"})
             json_response = response.json()
             return json_response
