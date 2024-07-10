@@ -90,7 +90,7 @@ for variant in collection.find():
         
         if allele_frequency is not None:
             total_frequency = 0.0
-            if allele_frequency[0]['colocated_variants'][0]['frequencies'] is not None:
+            if "frequencies" in allele_frequency[0]['colocated_variants'][0]:
                 data = allele_frequency[0]['colocated_variants'][0]['frequencies']
                 for key in data:
                     if "gnomadg" in data[key] and "af" in data[key]:
@@ -100,6 +100,8 @@ for variant in collection.find():
                     elif "gnomadg" not in data[key] and "af" in data[key]:
                         total_frequency = data[key]["af"]
                     else:
+                        total_frequency = 1/collection.count_documents({}) # allele frequency in the beacon database
+                    if total_frequency == 0:
                         total_frequency = 1/collection.count_documents({}) # allele frequency in the beacon database
                 collection.update_one(
                     {"variantInternalId": variant["variantInternalId"]},
