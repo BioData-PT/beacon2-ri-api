@@ -26,10 +26,11 @@ def query_1000_genomes(chrom, start, end, ref, alt, type):
     mapped_end = mapped_data['end']
     
     # construct the HGVS notation
-    if (type == 'INDEL'):
+    if type == 'INDEL':
         hgvs_notation = f"{chrom}:g.{mapped_start}_{mapped_end}del{complement(ref)}ins{complement(alt)}"
-    elif (mapped_data['most_severe_consequence'] == 'downstream_gene_variant'):
-        hgvs_notation = f"{chrom}:g.{mapped_start}{complement(alt)}>{complement(ref)}"
+    elif 'most_severe_consequence' in  mapped_data:
+        if mapped_data['most_severe_consequence'] == 'downstream_gene_variant':
+            hgvs_notation = f"{chrom}:g.{mapped_start}{complement(alt)}>{complement(ref)}"
     else:
         hgvs_notation = f"{chrom}:g.{mapped_start}{complement(ref)}>{complement(alt)}"
     
