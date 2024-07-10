@@ -25,9 +25,13 @@ def query_1000_genomes(chrom, start, end, ref, alt, type):
     mapped_start = mapped_data['start']
     mapped_end = mapped_data['end']
     
+    check = requests.get(f"https://rest.ensembl.org/sequence/region/human/{chrom}:{mapped_end}-{mapped_end}?content-type=application/json").json['seq']
+    
     # construct the HGVS notation
     if type == 'INDEL':
         hgvs_notation = f"{chrom}:g.{mapped_start}_{mapped_end}del{complement(ref)}ins{complement(alt)}"
+    elif check == complement(alt):
+        hgvs_notation = f"{chrom}:g.{mapped_start}{complement(alt)}>{complement(ref)}"
     elif 'most_severe_consequence' in  mapped_data:
         if mapped_data['most_severe_consequence'] == 'downstream_gene_variant':
             hgvs_notation = f"{chrom}:g.{mapped_start}{complement(alt)}>{complement(ref)}"
