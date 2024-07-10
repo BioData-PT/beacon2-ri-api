@@ -29,7 +29,6 @@ def query_1000_genomes(chrom, start, end, ref, alt):
     
     # construct the HGVS notation
     hgvs_notation = f"{chrom}:g.{mapped_start}{reverse_complement(ref)}>{reverse_complement(alt)}"
-    print(f"GRCh38 + {hgvs_notation}")
     
     # construct the URL for Ensembl VEP
     url = f"https://rest.ensembl.org/vep/human/hgvs/{hgvs_notation}?"
@@ -41,10 +40,12 @@ def query_1000_genomes(chrom, start, end, ref, alt):
     if response.status_code == 200:
         # parse the JSON response
         json_response = response.json()
+        print(f"GRCh38 + {hgvs_notation}")
         return json_response
     else:
         try: # downstream gene variant
             hgvs_notation = f"{chrom}:g.{mapped_start}{reverse_complement(alt)}>{reverse_complement(ref)}"
+            print(f"GRCh38 + {hgvs_notation}")
             url = f"https://rest.ensembl.org/vep/human/hgvs/{hgvs_notation}?"
             response = requests.get(url, headers={"Content-Type": "application/json"})
             json_response = response.json()
