@@ -89,7 +89,14 @@ for variant in collection.find():
             total_frequency = 0.0
             data = allele_frequency[0]['colocated_variants'][0]['frequencies']
             for key in data:
-                total_frequency = data[key]["gnomadg"]
+                if data[key]["gnomadg"] and data[key]["af"]:
+                    total_frequency = data[key]["gnomadg"] + data[key]["af"]
+                elif data[key]["gnomadg"]:
+                    total_frequency = data[key]["gnomadg"]
+                elif data[key]["af"]:
+                    total_frequency = data[key]["af"]
+                else:
+                    total_frequency = 1/collection.count_documents({}) # allele frequency in the beacon database
             collection.update_one(
                 {"variantInternalId": variant["variantInternalId"]},
                 {"$set": {"alleleFrequency": total_frequency}}
