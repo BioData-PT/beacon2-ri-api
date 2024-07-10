@@ -27,7 +27,7 @@ def query_1000_genomes(chrom, start, end, ref, alt, type):
     
     ex = f"/sequence/region/human/{chrom}:{mapped_end}-{mapped_end}?"
     re = requests.get(server + ex, headers={"Content-Type": "application/json"})
-    j = re.json
+    j = re.json()
     check = j['seq']
     
     
