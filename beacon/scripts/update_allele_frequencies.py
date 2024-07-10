@@ -43,18 +43,13 @@ def query_1000_genomes(chrom, start, end, ref, alt):
         json_response = response.json()
         return json_response
     else:
-        matches = re.findall(pattern, response)
-        extracted_allele = matches[0]
-        print(extracted_allele)
-        if extracted_allele == reverse_complement(alt): # downstream gene variant
-            print("ENTROUUUUUUUUUUU")
-            print(f"{extracted_allele} + {reverse_complement(alt)}")
+        try: # downstream gene variant
             hgvs_notation = f"{chrom}:g.{mapped_start}{alt}>{ref}"
             response = requests.get(url, headers={"Content-Type": "application/json"})
             json_response = response.json()
             return json_response
             
-        else:
+        except ValueError as response:
             print(f"Bad request for variant {chrom}-{start}-{ref}-{alt}: {response.text}")
             return None
     
@@ -94,19 +89,22 @@ for variant in collection.find():
         if allele_frequency is not None:
             total_frequency = 0.0
             data = allele_frequency[0]['colocated_variants'][0]['frequencies']
-            for key in data:
-                if "gnomadg" in data[key] and "af" in data[key]:
-                    total_frequency = data[key]["gnomadg"] + data[key]["af"]
-                elif "gnomadg" in data[key] and not "af" in data[key]:
-                    total_frequency = data[key]["gnomadg"]
-                elif "gnomadg" not in data[key] and "af" in data[key]:
-                    total_frequency = data[key]["af"]
-                else:
-                    total_frequency = 1/collection.count_documents({}) # allele frequency in the beacon database
-            collection.update_one(
-                {"variantInternalId": variant["variantInternalId"]},
-                {"$set": {"alleleFrequency": total_frequency}}
-            )
+            if data:
+                for key in data:
+                    if "gnomadg" in data[key] and "af" in data[key]:
+                        total_frequency = data[key]["gnomadg"] + data[key]["af"]
+                    elif "gnomadg" in data[key] and not "af" in data[key]:
+                        total_frequency = data[key]["gnomadg"]
+                    elif "gnomadg" not in data[key] and "af" in data[key]:
+                        total_frequency = data[key]["af"]
+                    else:
+                        total_frequency = 1/collection.count_documents({}) # allele frequency in the beacon database
+                collection.update_one(
+                    {"variantInternalId": variant["variantInternalId"]},
+                    {"$set": {"alleleFrequency": total_frequency}}
+                )
+            else:
+                total_frequency = 1/collection.count_documents({}) # allele frequency in the beacon database
             print(f"Updated variant {formatted_variant} with allele frequency {total_frequency}")
             
         else:
