@@ -25,7 +25,7 @@ def query_1000_genomes(chrom, start, end, ref, alt, type):
     mapped_start = mapped_data['start']
     mapped_end = mapped_data['end']
     
-    ex = f"/sequence/region/human/{chrom}:{mapped_end}-{mapped_end}?"
+    ex = f"/sequence/region/human/{chrom}:{mapped_start}-{mapped_start}?"
     re = requests.get(server + ex, headers={"Content-Type": "application/json"})
     j = re.json()
     check = j['seq']
@@ -36,7 +36,7 @@ def query_1000_genomes(chrom, start, end, ref, alt, type):
         hgvs_notation = f"{chrom}:g.{mapped_start}_{mapped_end}del{complement(ref)}ins{complement(alt)}"
     if check == complement(alt):
         print(f"CHECKKKKKKK + {check}")
-        hgvs_notation = f"{chrom}:g.{mapped_start}{complement(alt)}>{complement(ref)}"
+        hgvs_notation = f"{chrom}:g.{mapped_start}{complement(ref)}>{complement(alt)}"
     elif 'most_severe_consequence' in  mapped_data:
         if mapped_data['most_severe_consequence'] == 'downstream_gene_variant':
             hgvs_notation = f"{chrom}:g.{mapped_start}{complement(alt)}>{complement(ref)}"
