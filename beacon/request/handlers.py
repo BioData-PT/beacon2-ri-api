@@ -9,7 +9,9 @@ from aiohttp.web_request import Request
 from bson import json_util
 from beacon import conf
 from beacon.db import client
+from pymongo import ReturnDocument
 import yaml
+import math
 
 from beacon.request import ontologies
 from beacon.request.model import AlphanumericFilter, Granularity, RequestParams
@@ -63,87 +65,95 @@ def collection_handler(db_fn, request=None):
     return wrapper
 
 # support functions for the budget strategy
-def get_user_budget(userId, individualId):
-    user_budget = client.db['budget'].find_one({"userId": userId, "individualId": individualId})
-    return user_budget.get("budget", 0) if user_budget else 0
 
-def deduct_user_budget(userId, individualId, amount):
-    client.db['budget'].update_one({"userId": userId, "individualId": individualId}, {"$inc": {"budget": -amount}})
+# update the budget of a specific individual for a user in the budget collection
+def update_individual_budget(access_token, individual_id, amount):
+    budget_info = client.db['budget'].find_one_and_update(
+        {
+            "userId": access_token,
+            "individualId": individual_id
+        },
+        {
+            "$inc": {"budget": -amount}
+        },
+        return_document=ReturnDocument.AFTER
+    )
+    return budget_info
 
-import math
 
-def budget_strategy(access_token, db_fn_submodule, records, qparams):
-
-    remove_from_count = 0
-    records_to_remove = []
-
-    # Step 1: Set all bj = -log(p)
-    for record in records:
-        p_value = 0.5  # max uncertainty we can have
-        bj = -math.log(p_value)
-        record['budget'] = bj  # Store the budget in the record CHANGEEEEEEE !!!!!!!!!!
+def pvalue_strategy(access_token, db_fn_submodule, records, qparams):
 
     for record in records:
         individual_ids = set()
 
-        # Step 4: Compute the risk ri = -log(1 - Di/N)
-        Di = len(records)  # Number of records with the variant
-        N = 1000  # Total number of records in the database (example value, adjust as needed)
+        # step 4: compute the risk ri = -log(1 - Di)
+        allele_frequency = record.get('alleleFrequency')
+        Di = (1 - allele_frequency) ** (2 * N)
+        N = client.beacon.get_collection('genomicVariations').count_documents({})  # total number of genomic variants
         ri = -math.log(1 - (Di / N))
 
         # for genomicVariants, fetch individualId from the biosample collection
         if db_fn_submodule == "g_variants":
             case_level_data = record.get('caseLevelData', [])
             for case in case_level_data:
-                individual_id = case.get('biosampleId')  # biosample id = individual id
+                individual_id = case.get('biosampleId')  # biosampleId = individualId
                 individual_ids.add(individual_id)
+                
         # for other collections the individualId is in the record
         else:
             individualId = record.get('individualId')
             if individualId:
                 individual_ids.add(individualId)
+                
+        individuals_to_remove = set()
 
         for individualId in individual_ids:
+            
             search_criteria = {
                 "userId": access_token,
                 "individualId": individualId
             }
 
-            # Step 2: Check if query has been asked before
+            # Step 2: check if query has been asked before
             response_history = client.db['history'].find_one({"userId": access_token, "query": qparams.query})
             if response_history:
-                return response_history["response"], records  # Return previous answer if query was asked before
+                return response_history["response"], records  # Return stored answer if query was asked before
 
-            # Step 3: Check if there are records with bj > ri
+            # Step 3: check if there are records with bj > ri
             budget_info = client.db['budget'].find_one(search_criteria)
             if not budget_info:
-                # Define a default budget amount
-                default_budget = 100  # DEFINE THIS VALUE
+                p_value = 0.5 # upper bound on test errors
+                bj = -math.log(p_value)  # initial budget
                 budget_info = {
                     "userId": access_token,
                     "individualId": individualId,
-                    "budget": default_budget
+                    "budget": bj
                 }
                 client.db['budget'].insert_one(budget_info)
 
-            # Re-fetch the budget_info to ensure we have the latest data
+            # re-fetch the budget_info to ensure we have the latest data
             budget_info = client.db['budget'].find_one(search_criteria)
 
             if budget_info and budget_info['budget'] <= ri:
-                # Mark the records for removal if budget is not enough
-                records_to_remove.append(record)
+                individuals_to_remove.add(individualId)
             else:
                 if budget_info['budget'] > ri:
-                    # Step 6: Reduce their budgets by ri
-                    amount = ri  # Use ri for deduction
-                    deduct_user_budget(access_token, individualId, amount)
+                    # Step 7: reduce their budgets by ri
+                    updated_budget_info = update_individual_budget(access_token, individualId, ri)
+                    if updated_budget_info['budget'] <= 0:
+                        individuals_to_remove.add(individualId)
 
-    # Remove marked records outside the loop to avoid modifying the list while iterating
-    for record in records_to_remove:
-        remove_from_count += 1
-        records.remove(record)
+    if individuals_to_remove:
+            # filter the individuals from the record
+            if db_fn_submodule == "g_variants":
+                record['caseLevelData'] = [case for case in record['caseLevelData'] if case.get('individualId') not in individuals_to_remove]
+            else:
+                if 'individualId' in record and isinstance(record['individualId'], list):
+                    record['individualId'] = [ind for ind in record['individualId'] if ind not in individuals_to_remove]
+                elif 'individualId' in record and record['individualId'] in individuals_to_remove:
+                    record['individualId'] = None
 
-    return remove_from_count, records
+    return records
 
 
 
@@ -230,11 +240,10 @@ def generic_handler(db_fn, request=None):
             LOG.debug(f"Dataset Qparams = {qparams_dataset}")
             entity_schema, count, records = db_fn(entry_id, qparams_dataset)
 
-            ######################## BUDGET ########################
+            ######################## P-VALUE ########################
 
-            # Apply the budget strategy
-            remove_from_count, records = budget_strategy(access_token, db_fn_submodule, records, qparams)
-            count -= remove_from_count
+            # apply the p-value strategy if user is querying about genomic variants
+            records = pvalue_strategy(access_token, db_fn_submodule, records, qparams)
             dataset_result = (count, list(records))
             datasets_query_results[dataset_id] = (dataset_result)
 
