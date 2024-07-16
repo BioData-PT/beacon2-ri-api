@@ -242,10 +242,11 @@ def generic_handler(db_fn, request=None):
 
             ######################## P-VALUE ########################
 
-            # apply the p-value strategy if user is querying about genomic variants
-            records = pvalue_strategy(access_token, db_fn_submodule, records, qparams)
-            dataset_result = (count, list(records))
-            datasets_query_results[dataset_id] = (dataset_result)
+            # apply the p-value strategy if user is authenticated but not registered
+            if not public and not registered:
+                records = pvalue_strategy(access_token, db_fn_submodule, records, qparams)
+                dataset_result = (count, list(records))
+                datasets_query_results[dataset_id] = (dataset_result)
 
         LOG.debug(f"schema = {entity_schema}")
 
