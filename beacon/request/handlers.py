@@ -86,24 +86,17 @@ def pvalue_strategy(access_token, db_fn_submodule, records, qparams):
     for record in records:
         individual_ids = set()
 
-        # step 4: compute the risk ri = -log(1 - Di)
+        # step 4: compute the risk for that query: ri = -log(1 - Di)
         allele_frequency = record.get('alleleFrequency')
+        N = client.beacon.get_collection('individuals').count_documents({})  # total number of individuals !!! if user requestes dataset, N = individuals in that dataset
         Di = (1 - allele_frequency) ** (2 * N)
-        N = client.beacon.get_collection('genomicVariations').count_documents({})  # total number of genomic variants
         ri = -math.log(1 - (Di / N))
 
-        # for genomicVariants, fetch individualId from the biosample collection
-        if db_fn_submodule == "g_variants":
-            case_level_data = record.get('caseLevelData', [])
-            for case in case_level_data:
-                individual_id = case.get('biosampleId')  # biosampleId = individualId
-                individual_ids.add(individual_id)
-                
-        # for other collections the individualId is in the record
-        else:
-            individualId = record.get('individualId')
-            if individualId:
-                individual_ids.add(individualId)
+        # fetch individualId from the biosample collection
+        case_level_data = record.get('caseLevelData', [])
+        for case in case_level_data:
+            individual_id = case.get('biosampleId')  # biosampleId = individualId
+            individual_ids.add(individual_id)
                 
         individuals_to_remove = set()
 
@@ -139,21 +132,15 @@ def pvalue_strategy(access_token, db_fn_submodule, records, qparams):
             else:
                 if budget_info['budget'] > ri:
                     # Step 7: reduce their budgets by ri
-                    updated_budget_info = update_individual_budget(access_token, individualId, ri)
-                    if updated_budget_info['budget'] <= 0:
-                        individuals_to_remove.add(individualId)
+                    update_individual_budget(access_token, individualId, ri)
 
     if individuals_to_remove:
             # filter the individuals from the record
-            if db_fn_submodule == "g_variants":
-                record['caseLevelData'] = [case for case in record['caseLevelData'] if case.get('individualId') not in individuals_to_remove]
-            else:
-                if 'individualId' in record and isinstance(record['individualId'], list):
-                    record['individualId'] = [ind for ind in record['individualId'] if ind not in individuals_to_remove]
-                elif 'individualId' in record and record['individualId'] in individuals_to_remove:
-                    record['individualId'] = None
+            for individual in individuals_to_remove:
+                print(f"The individual with id " + {individual} + "was removed from the output") # signal to know when individuals have no more budget left
+            record['caseLevelData'] = [case for case in record['caseLevelData'] if case.get('biosampleId') not in individuals_to_remove]
 
-    return records
+    return None, records
 
 
 
@@ -242,11 +229,14 @@ def generic_handler(db_fn, request=None):
 
             ######################## P-VALUE ########################
 
-            # apply the p-value strategy if user is authenticated but not registered
-            if not public and not registered:
-                records = pvalue_strategy(access_token, db_fn_submodule, records, qparams)
+            # apply the p-value strategy if user is authenticated but not registered and only if submodule is genomic variations
+            if not public and not registered and db_fn_submodule == "g_variants":
+                history, records = pvalue_strategy(access_token, db_fn_submodule, records, qparams)
                 dataset_result = (count, list(records))
                 datasets_query_results[dataset_id] = (dataset_result)
+                
+            if history is not None:
+                return await json_stream(request, history)
 
         LOG.debug(f"schema = {entity_schema}")
 
