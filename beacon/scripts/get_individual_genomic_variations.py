@@ -24,7 +24,7 @@ def get_genomic_variants_for_individual(biosample_id):
     genomic_variants = collection.find(query, {'_id': 1})
 
     # Extract the IDs of the genomic variants
-    variant_ids = [variant['variantInternalId'] for variant in genomic_variants]
+    variant_ids = [variant['_id'] for variant in genomic_variants]
 
     return variant_ids
 
