@@ -195,7 +195,7 @@ def generic_handler(db_fn, request=None):
         # TODO query all datasets in parallel
         tasks_dataset_queries = []
         # { dataset_id:(count, records) }
-        datasets_query_results: Dict[str, Tuple[int, List[dict]]] = {}
+        datasets_query_results = {}
 
         db_fn_submodule = str(db_fn.__module__).split(".")[-1]
         LOG.debug(f"db_fn submodule = {db_fn_submodule}")
