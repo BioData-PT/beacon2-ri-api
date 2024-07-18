@@ -14,7 +14,7 @@ def lift_over(positions):
         response.raise_for_status()  # Raise an exception for bad status codes
         
         # Check if response contains JSON data
-        if response.headers.get('content-type') == 'application/json':
+        if 'application/json' in response.headers.get('content-type', ''):
             result = response.json()
             return result
         else:
