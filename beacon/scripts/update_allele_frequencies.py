@@ -113,12 +113,14 @@ for variant in collection.find():
                         {"$set": {"alleleFrequency": total_frequency}}
                     )
                 else:
+                    print(len(variant["caseLevelData"]))
                     total_frequency = beacon_allele_frequency/client.beacon.get_collection('individuals').count_documents({}) # allele frequency in the beacon database
                     collection.update_one(
                         {"variantInternalId": variant["variantInternalId"]},
                         {"$set": {"alleleFrequency": total_frequency}}
                     )
             else:
+                print(len(variant["caseLevelData"]))
                 total_frequency = beacon_allele_frequency/client.beacon.get_collection('individuals').count_documents({}) # allele frequency in the beacon database
             print(f"Updated variant {formatted_variant} with allele frequency {total_frequency}")
             collection.update_one(
