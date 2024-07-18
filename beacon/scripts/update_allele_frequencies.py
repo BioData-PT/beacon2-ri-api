@@ -99,7 +99,7 @@ for variant in collection.find():
                     data = allele_frequency[0]['colocated_variants'][0]['frequencies']
                     for key in data:
                         if "gnomadg" in data[key] and "af" in data[key]:
-                            total_frequency = data[key]["gnomadg"] + data[key]["af"]
+                            total_frequency = data[key]["af"]
                         elif "gnomadg" in data[key] and not "af" in data[key]:
                             total_frequency = data[key]["gnomadg"]
                         elif "gnomadg" not in data[key] and "af" in data[key]:
