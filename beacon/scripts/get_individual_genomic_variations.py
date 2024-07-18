@@ -20,8 +20,8 @@ def get_genomic_variants_for_individual(biosample_id):
     # Query to find all genomic variants for the given biosampleId
     query = {'caseLevelData.biosampleId': biosample_id}
 
-    # Find the genomic variants
-    genomic_variants = collection.find(query, {'variantInternalId': 1})
+    # Find the genomic variants and sort by alleleFrequency
+    genomic_variants = collection.find(query, {'variantInternalId': 1, 'alleleFrequency': 1}).sort('alleleFrequency', 1)
 
     # Extract the IDs of the genomic variants
     variant_ids = [variant['variantInternalId'] for variant in genomic_variants]
@@ -33,7 +33,7 @@ def main():
     variant_ids = get_genomic_variants_for_individual(biosample_id)
     
     if variant_ids:
-        print(f"The genomic variants for biosampleId {biosample_id} are:")
+        print(f"The genomic variants for biosampleId {biosample_id} are (sorted by alleleFrequency):")
         for vid in variant_ids:
             print(vid)
     else:
