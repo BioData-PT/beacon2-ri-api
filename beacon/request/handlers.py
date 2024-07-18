@@ -137,7 +137,7 @@ def pvalue_strategy(access_token, db_fn_submodule, records, qparams):
     if individuals_to_remove:
             # filter the individuals from the record
             for individual in individuals_to_remove:
-                print(f"The individual with id " + {individual} + "was removed from the output") # signal to know when individuals have no more budget left
+                print(f"The individual with id " + {individual} + "was removed from the output") # signal to know when an individual has no more budget left
             record['caseLevelData'] = [case for case in record['caseLevelData'] if case.get('biosampleId') not in individuals_to_remove]
 
     return None, records
