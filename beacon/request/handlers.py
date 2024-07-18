@@ -108,7 +108,7 @@ def pvalue_strategy(access_token, db_fn_submodule, records, qparams):
             }
 
             # Step 2: check if query has been asked before
-            response_history = client.db['history'].find_one({"userId": access_token, "query": qparams.query})
+            response_history = client.db['history'].find_one({"userId": access_token, "query": qparams.query.summary()})
             if response_history:
                 return response_history["response"], records  # Return stored answer if query was asked before
 
@@ -195,7 +195,7 @@ def generic_handler(db_fn, request=None):
         # TODO query all datasets in parallel
         tasks_dataset_queries = []
         # { dataset_id:(count, records) }
-        datasets_query_results = {}
+        datasets_query_results:Dict[str, Tuple[int,List[dict]]] = {}
 
         db_fn_submodule = str(db_fn.__module__).split(".")[-1]
         LOG.debug(f"db_fn submodule = {db_fn_submodule}")
@@ -258,7 +258,7 @@ def generic_handler(db_fn, request=None):
 
         document = {
             "userId": access_token,
-            "query": qparams.query,
+            "query": qparams.query.summary(),
             "response": response
         }
 
