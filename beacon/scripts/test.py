@@ -2,15 +2,10 @@ import requests
 import json
 
 def lift_over(positions):
-    url = "https://api.genome.ucsc.edu/liftOver"
-    data = {
-        "positions": positions,
-        "from": "hg19",
-        "to": "hg38"
-    }
+    url = "https://liftover.broadinstitute.org/#input=22-16052394-GAAAGCCAGAACCACTC-G&hg=hg19-to-hg38"
     
     try:
-        response = requests.post(url, json=data)
+        response = requests.post(url)
         response.raise_for_status()  # Raise an exception for bad status codes
         
         # Check if response contains JSON data
