@@ -2,7 +2,7 @@ import requests
 import json
 
 def lift_over(positions):
-    url = "https://liftover.broadinstitute.org/#input=22-16052394-GAAAGCCAGAACCACTC-G&hg=hg19-to-hg38"
+    url = "https://api.genome.ucsc.edu/liftOver/#input=22-16052394-GAAAGCCAGAACCACTC-G&hg=hg19-to-hg38"
     
     try:
         response = requests.post(url)
