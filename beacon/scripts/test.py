@@ -5,7 +5,7 @@ def lift_over(positions):
     url = "https://api.genome.ucsc.edu/liftOver/#input=22-16052394-GAAAGCCAGAACCACTC-G&hg=hg19-to-hg38"
     
     try:
-        response = requests.post(url)
+        response = requests.get(url)
         response.raise_for_status()  # Raise an exception for bad status codes
         
         # Check if response contains JSON data
