@@ -39,7 +39,7 @@ def query_1000_genomes(chrom, start, end, ref, alt, type):
     elif 'most_severe_consequence' in  mapped_data:
         if mapped_data['most_severe_consequence'] == 'downstream_gene_variant':
             hgvs_notation = f"{chrom}:g.{mapped_start}{complement(alt)}>{complement(ref)}"
-    else:
+    elif type == "SNP":
         hgvs_notation = f"{chrom}:g.{mapped_start}{complement(ref)}>{complement(alt)}"
     
     # construct the URL for Ensembl VEP
@@ -83,6 +83,7 @@ for variant in collection.find():
     reference_base = variant["variation"]["referenceBases"]
     alternate_base = variant["variation"]["alternateBases"]
     variant_type = variant["variation"]['variantType']
+    beacon_allele_frequency = len(variant["caseLevelData"])
     
     formatted_variant = f"{chromosome}-{start_position}-{end_position}-{reference_base}-{alternate_base}"
     print("------------------------------------")
@@ -112,9 +113,9 @@ for variant in collection.find():
                         {"$set": {"alleleFrequency": total_frequency}}
                     )
                 else:
-                    total_frequency = 1/collection.count_documents({}) # allele frequency in the beacon database
+                    total_frequency = 1/beacon_allele_frequency # allele frequency in the beacon database
             else:
-                total_frequency = 1/collection.count_documents({}) # allele frequency in the beacon database
+                total_frequency = 1/beacon_allele_frequency # allele frequency in the beacon database
             print(f"Updated variant {formatted_variant} with allele frequency {total_frequency}")
             
         else:
