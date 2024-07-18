@@ -127,10 +127,10 @@ def pvalue_strategy(access_token, db_fn_submodule, records, qparams):
             # re-fetch the budget_info to ensure we have the latest data
             budget_info = client.db['budget'].find_one(search_criteria)
 
-            if budget_info and budget_info['budget'] <= ri:
+            if budget_info and budget_info['budget'] < ri:
                 individuals_to_remove.add(individualId)
             else:
-                if budget_info['budget'] > ri:
+                if budget_info['budget'] >= ri:
                     # Step 7: reduce their budgets by ri
                     update_individual_budget(access_token, individualId, ri)
 
