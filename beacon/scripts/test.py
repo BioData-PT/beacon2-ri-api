@@ -1,4 +1,5 @@
 import requests
+import json
 
 def lift_over(positions):
     url = "https://api.genome.ucsc.edu/liftOver"
@@ -7,12 +8,16 @@ def lift_over(positions):
         "from": "hg19",
         "to": "hg38"
     }
-    response = requests.post(url, json=data)
-    if response.status_code == 200:
+    try:
+        response = requests.post(url, json=data)
+        response.raise_for_status()  # Raise an exception for bad status codes
         result = response.json()
         return result
-    else:
-        print(f"Error: {response.status_code}, {response.text}")
+    except requests.exceptions.RequestException as e:
+        print(f"Error making LiftOver request: {e}")
+        return None
+    except json.JSONDecodeError as e:
+        print(f"Error decoding JSON response: {e}")
         return None
 
 def main():
