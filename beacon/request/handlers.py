@@ -281,8 +281,8 @@ def generic_handler(db_fn, request=None):
             "response": response
         }
 
-        if not store:
-            client.beacon.get_collection(client.beacon['history']).insert_one(document=document)
+        if not store: # !!!!! JUST TESTING TO SEE IF IT KEEPS THE RECORD IN THE DB WHILE ALL DATASETS ARE ACCESSIBLE TO ALL USERS (public or not)
+            client.beacon.get_collection(client.beacon['history']).insert_one(document)
 
         return await json_stream(request, response)
 
