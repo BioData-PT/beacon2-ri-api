@@ -231,9 +231,8 @@ def generic_handler(db_fn, request=None):
 
             # apply the p-value strategy if user is authenticated but not registered and only if submodule is genomic variations
             if not public and not registered and db_fn_submodule == "g_variants":
-                LOG.debug(f"PUBLICCCCCCCC = {public}")
-                LOG.debug(f"REGISTEREDDDDDD = {registered}")
                 history, records = pvalue_strategy(access_token, records, qparams)
+                LOG.debug(f"RECORDS RECORDS RECORDS = {records}")
                 dataset_result = (count, list(records))
                 datasets_query_results[dataset_id] = (dataset_result)
                 
