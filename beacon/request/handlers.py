@@ -148,7 +148,7 @@ def pvalue_strategy(access_token, records, qparams):
                     LOG.debug(f"BUDGET BUDGET BUDGET, INFO = {budget_info}")
                     # Step 7: reduce their budgets by ri
                     update_individual_budget(access_token, individualId, ri)
-                    doc = update_individual_budget("user_token", 123456789, 200)
+                    doc = update_individual_budget("user_token", "123456789", 200)
                     budget_info = client.db['budget'].find_one(search_criteria)
                     LOG.debug(f"BUDGET BUDGET BUDGET, INFO = {doc}")
 
