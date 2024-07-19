@@ -96,6 +96,7 @@ def pvalue_strategy(access_token, records, qparams):
         case_level_data = record.get('caseLevelData', [])
         for case in case_level_data:
             individual_id = case.get('biosampleId')  # biosampleId = individualId
+            LOG.debug(f"RECORDS RECORDS RECORDS, INDIVIDUAL = {individual_id}")
             individual_ids.add(individual_id)
                 
         individuals_to_remove = set()
@@ -232,7 +233,6 @@ def generic_handler(db_fn, request=None):
             # apply the p-value strategy if user is authenticated but not registered and only if submodule is genomic variations
             if not public and not registered and db_fn_submodule == "g_variants":
                 history, records = pvalue_strategy(access_token, records, qparams)
-                LOG.debug(f"RECORDS RECORDS RECORDS = {records}")
                 dataset_result = (count, list(records))
                 datasets_query_results[dataset_id] = (dataset_result)
                 
