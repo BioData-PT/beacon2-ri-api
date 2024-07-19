@@ -84,7 +84,6 @@ def update_individual_budget(access_token, individual_id, amount):
 def pvalue_strategy(access_token, records, qparams):
 
     for record in records:
-        LOG.debug(f"RECORD TEST SARA SARA SARA = {access_token}")
         individual_ids = set()
 
         # step 4: compute the risk for that query: ri = -log(1 - Di)
@@ -232,6 +231,8 @@ def generic_handler(db_fn, request=None):
 
             # apply the p-value strategy if user is authenticated but not registered and only if submodule is genomic variations
             if not public and not registered and db_fn_submodule == "g_variants":
+                LOG.debug(f"PUBLICCCCCCCC = {public}")
+                LOG.debug(f"REGISTEREDDDDDD = {registered}")
                 history, records = pvalue_strategy(access_token, records, qparams)
                 dataset_result = (count, list(records))
                 datasets_query_results[dataset_id] = (dataset_result)
