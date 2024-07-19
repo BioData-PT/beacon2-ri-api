@@ -281,7 +281,7 @@ def generic_handler(db_fn, request=None):
             "response": response
         }
 
-        if store:
+        if not store:
             client.beacon.get_collection(client.beacon['history']).insert_one(document=document)
 
         return await json_stream(request, response)
