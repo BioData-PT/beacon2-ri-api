@@ -84,6 +84,7 @@ def update_individual_budget(access_token, individual_id, amount):
 def pvalue_strategy(access_token, records, qparams):
 
     for record in records:
+        LOG.debug(f"RECORD TEST SARA SARA SARA = {access_token}")
         individual_ids = set()
 
         # step 4: compute the risk for that query: ri = -log(1 - Di)
