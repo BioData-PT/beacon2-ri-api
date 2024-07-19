@@ -69,7 +69,6 @@ def build_generic_response(
         }
         
         # if dataset is not authorized, erase the records part
-        LOG.debug(f"DATASETS = {accessible_datasets}")
         if dataset_id not in accessible_datasets:
             dataset_response["results"] = []
             
