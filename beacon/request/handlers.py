@@ -69,11 +69,13 @@ def collection_handler(db_fn, request=None):
 # update the budget of a specific individual for a user in the budget collection
 def update_individual_budget(user_id, individual_id, amount):
     budget_collection = client.db['budget']
-    result = budget_collection.update_one(
+    updated_document = budget_collection.find_one_and_update(
         {"userId": user_id, "individualId": individual_id},
-        {"$inc": {"budget": -amount}}
+        {"$inc": {"budget": -amount}},
+        return_document=True  # Return the updated document
     )
-    LOG.debug(f"Update result: matched_count={result.matched_count}, modified_count={result.modified_count}")
+    LOG.debug(f"Updated document: {updated_document}")
+    return updated_document
 
 
 def pvalue_strategy(access_token, records, qparams):
@@ -134,9 +136,9 @@ def pvalue_strategy(access_token, records, qparams):
                     LOG.debug(f"BUDGET BUDGET BUDGET, INFO = {budget_info}")
                     # Step 7: reduce their budgets by ri
                     update_individual_budget(access_token, individualId, ri)
-                    update_individual_budget('user_token', '123456789', 200)
+                    doc = update_individual_budget('user_token', '123456789', 200)
                     budget_info = client.db['budget'].find_one(search_criteria)
-                    LOG.debug(f"BUDGET BUDGET BUDGET, INFO = {budget_info}")
+                    LOG.debug(f"BUDGET BUDGET BUDGET, INFO = {doc}")
 
     if individuals_to_remove:
             # filter the individuals from the record
