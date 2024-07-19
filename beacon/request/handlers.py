@@ -121,6 +121,7 @@ def pvalue_strategy(access_token, records, qparams):
             # Step 2: check if query has been asked before
             response_history = client.beacon['history'].find_one({"userId": access_token, "query": qparams.summary()})
             if response_history:
+                LOG.debug(f"ESTA NO MONGO E ELE VAI LA BUSCAR EHEH")
                 return response_history["response"], records  # Return stored answer if query was asked before
 
             # Step 3: check if there are records with bj > ri
