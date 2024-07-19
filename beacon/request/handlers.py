@@ -69,7 +69,7 @@ def collection_handler(db_fn, request=None):
 # update the budget of a specific individual for a user in the budget collection
 def update_individual_budget(user_id, individual_id, amount):
     try:
-        budget_collection = client.db['budget']
+        budget_collection = client.beacon['budget']
         LOG.debug(f"Updating budget for user_id={user_id}, individual_id={individual_id} by amount={amount}")
 
         # Find the document and update it, returning the updated document
@@ -119,12 +119,12 @@ def pvalue_strategy(access_token, records, qparams):
             }
 
             # Step 2: check if query has been asked before
-            response_history = client.db['history'].find_one({"userId": access_token, "query": qparams.summary()})
+            response_history = client.beacon['history'].find_one({"userId": access_token, "query": qparams.summary()})
             if response_history:
                 return response_history["response"], records  # Return stored answer if query was asked before
 
             # Step 3: check if there are records with bj > ri
-            budget_info = client.db['budget'].find_one(search_criteria)
+            budget_info = client.beacon['budget'].find_one(search_criteria)
             LOG.debug(f"BUDGET BUDGET BUDGET, INFO = {budget_info}")
             if not budget_info:
                 p_value = 0.5 # upper bound on test errors
@@ -134,10 +134,10 @@ def pvalue_strategy(access_token, records, qparams):
                     "individualId": individualId,
                     "budget": bj
                 }
-                client.db['budget'].insert_one(budget_info)
+                client.beacon['budget'].insert_one(budget_info)
 
             # re-fetch the budget_info to ensure we have the latest data
-            budget_info = client.db['budget'].find_one(search_criteria)
+            budget_info = client.beacon['budget'].find_one(search_criteria)
             LOG.debug(f"BUDGET BUDGET BUDGET, INFO = {budget_info}")
 
             if budget_info and budget_info['budget'] < ri:
@@ -148,10 +148,7 @@ def pvalue_strategy(access_token, records, qparams):
                     LOG.debug(f"BUDGET BUDGET BUDGET, INFO = {budget_info}")
                     # Step 7: reduce their budgets by ri
                     update_individual_budget(access_token, individualId, ri)
-                    budget_info = client.db['budget'].find_one(search_criteria)
-                    docs = client.db['budget'].find()
-                    for doc in docs:
-                        LOG.debug(f"DOCCCCC = {doc}")
+                    budget_info = client.beacon['budget'].find_one(search_criteria)
 
     if individuals_to_remove:
             # filter the individuals from the record
@@ -284,7 +281,7 @@ def generic_handler(db_fn, request=None):
         }
 
         if store:
-            client.beacon.get_collection(client.db['history']).insert_one(document=document)
+            client.beacon.get_collection(client.beacon['history']).insert_one(document=document)
 
         return await json_stream(request, response)
 
