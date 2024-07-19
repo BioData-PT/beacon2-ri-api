@@ -67,18 +67,13 @@ def collection_handler(db_fn, request=None):
 # support functions for the budget strategy
 
 # update the budget of a specific individual for a user in the budget collection
-def update_individual_budget(access_token, individual_id, amount):
-    budget_info = client.db['budget'].find_one_and_update(
-        {
-            "userId": access_token,
-            "individualId": individual_id
-        },
-        {
-            "$inc": {"budget": -amount}
-        },
-        return_document=ReturnDocument.AFTER
+def update_individual_budget(user_id, individual_id, amount):
+    budget_collection = client.db['budget']
+    result = budget_collection.update_one(
+        {"userId": user_id, "individualId": individual_id},
+        {"$inc": {"budget": -amount}}
     )
-    return budget_info
+    LOG.debug(f"Update result: matched_count={result.matched_count}, modified_count={result.modified_count}")
 
 
 def pvalue_strategy(access_token, records, qparams):
