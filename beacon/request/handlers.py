@@ -68,15 +68,27 @@ def collection_handler(db_fn, request=None):
 
 # update the budget of a specific individual for a user in the budget collection
 def update_individual_budget(user_id, individual_id, amount):
-    budget_collection = client.db['budget']
-    updated_document = budget_collection.find_one_and_update(
-        {"userId": user_id, "individualId": individual_id},
-        {"$inc": {"budget": -amount}},
-        return_document=True  # Return the updated document
-    )
-    LOG.debug(f"Updated document: {updated_document}")
-    return updated_document
+    try:
+        budget_collection = client.db['budget']
+        LOG.debug(f"Updating budget for user_id={user_id}, individual_id={individual_id} by amount={amount}")
 
+        # Find the document and update it, returning the updated document
+        updated_document = budget_collection.find_one_and_update(
+            {"userId": user_id, "individualId": individual_id},
+            {"$inc": {"budget": -amount}},
+            return_document=ReturnDocument.AFTER  # Return the updated document
+        )
+
+        if updated_document is None:
+            LOG.debug(f"No document matched the filter. Update not performed.")
+        else:
+            LOG.debug(f"Updated document: {updated_document}")
+
+        return updated_document
+
+    except Exception as e:
+        LOG.error(f"Error updating budget: {str(e)}")
+        return None
 
 def pvalue_strategy(access_token, records, qparams):
 
@@ -136,7 +148,7 @@ def pvalue_strategy(access_token, records, qparams):
                     LOG.debug(f"BUDGET BUDGET BUDGET, INFO = {budget_info}")
                     # Step 7: reduce their budgets by ri
                     update_individual_budget(access_token, individualId, ri)
-                    doc = update_individual_budget('user_token', '123456789', 200)
+                    doc = update_individual_budget("user_token", 123456789, 200)
                     budget_info = client.db['budget'].find_one(search_criteria)
                     LOG.debug(f"BUDGET BUDGET BUDGET, INFO = {doc}")
 
