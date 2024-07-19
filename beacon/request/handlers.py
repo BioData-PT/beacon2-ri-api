@@ -127,6 +127,7 @@ def pvalue_strategy(access_token, records, qparams):
 
             # re-fetch the budget_info to ensure we have the latest data
             budget_info = client.db['budget'].find_one(search_criteria)
+            LOG.debug(f"BUDGET BUDGET BUDGET, INFO = {budget_info}")
 
             if budget_info and budget_info['budget'] < ri:
                 individuals_to_remove.add(individualId)
