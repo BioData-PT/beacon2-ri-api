@@ -130,11 +130,14 @@ def pvalue_strategy(access_token, records, qparams):
             LOG.debug(f"BUDGET BUDGET BUDGET, INFO = {budget_info}")
 
             if budget_info and budget_info['budget'] < ri:
+                
                 individuals_to_remove.add(individualId)
             else:
                 if budget_info['budget'] >= ri:
                     # Step 7: reduce their budgets by ri
+                    LOG.debug(f"BUDGET BUDGET BUDGET, value BEFORE = {budget_info['budget']}")
                     update_individual_budget(access_token, individualId, ri)
+                    LOG.debug(f"BUDGET BUDGET BUDGET, value AFTER = {budget_info['budget']}")
 
     if individuals_to_remove:
             # filter the individuals from the record
