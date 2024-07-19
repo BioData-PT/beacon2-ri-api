@@ -148,8 +148,9 @@ def pvalue_strategy(access_token, records, qparams):
                     LOG.debug(f"BUDGET BUDGET BUDGET, INFO = {budget_info}")
                     # Step 7: reduce their budgets by ri
                     update_individual_budget(access_token, individualId, ri)
-                    doc = client.db['budget'].find()
-                    LOG.debug(f"DOCCCCC = {doc is None}")
+                    docs = client.db['budget'].find()
+                    for doc in docs:
+                        LOG.debug(f"DOCCCCC = {doc}")
                     budget_info = client.db['budget'].find_one(search_criteria)
 
     if individuals_to_remove:
