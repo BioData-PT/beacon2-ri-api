@@ -137,10 +137,6 @@ def pvalue_strategy(access_token, records, qparams):
                     update_individual_budget("user_token", 123456789, 200)
                     budget_info = client.db['budget'].find_one(search_criteria)
                     LOG.debug(f"BUDGET BUDGET BUDGET, INFO = {budget_info}")
-                    LOG.debug(f"BUDGET BUDGET BUDGET, INFO = {client.db['budget'].find_one({
-                "userId": "user_token",
-                "individualId": 123456789
-            })}")
 
     if individuals_to_remove:
             # filter the individuals from the record
