@@ -136,6 +136,7 @@ def pvalue_strategy(access_token, records, qparams):
                 individuals_to_remove.add(individualId)
             else:
                 if budget_info['budget'] >= ri:
+                    LOG.debug(f"BUDGET BUDGET BUDGET, INFO = {budget_info}")
                     # Step 7: reduce their budgets by ri
                     LOG.debug(f"BUDGET BUDGET BUDGET, value BEFORE = {budget_info['budget']}")
                     LOG.debug(f"BUDGET BUDGET BUDGET, RI = {ri}")
