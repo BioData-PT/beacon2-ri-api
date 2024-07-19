@@ -108,7 +108,7 @@ def pvalue_strategy(access_token, records, qparams):
             }
 
             # Step 2: check if query has been asked before
-            response_history = client.db['history'].find_one({"userId": access_token, "query": qparams.query.summary()})
+            response_history = client.db['history'].find_one({"userId": access_token, "query": qparams.summary()})
             if response_history:
                 return response_history["response"], records  # Return stored answer if query was asked before
 
@@ -258,7 +258,7 @@ def generic_handler(db_fn, request=None):
 
         document = {
             "userId": access_token,
-            "query": qparams.query.summary(),
+            "query": qparams.summary(),
             "response": response
         }
 
