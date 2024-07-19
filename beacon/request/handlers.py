@@ -116,6 +116,7 @@ def pvalue_strategy(access_token, records, qparams):
 
             # Step 3: check if there are records with bj > ri
             budget_info = client.db['budget'].find_one(search_criteria)
+            LOG.debug(f"BUDGET BUDGET BUDGET, INFO = {budget_info}")
             if not budget_info:
                 p_value = 0.5 # upper bound on test errors
                 bj = -math.log(p_value)  # initial budget
