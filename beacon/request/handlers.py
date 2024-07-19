@@ -125,7 +125,6 @@ def pvalue_strategy(access_token, records, qparams):
 
             # Step 3: check if there are records with bj > ri
             budget_info = client.beacon['budget'].find_one(search_criteria)
-            LOG.debug(f"BUDGET BUDGET BUDGET, INFO = {budget_info}")
             if not budget_info:
                 p_value = 0.5 # upper bound on test errors
                 bj = -math.log(p_value)  # initial budget
@@ -138,7 +137,6 @@ def pvalue_strategy(access_token, records, qparams):
 
             # re-fetch the budget_info to ensure we have the latest data
             budget_info = client.beacon['budget'].find_one(search_criteria)
-            LOG.debug(f"BUDGET BUDGET BUDGET, INFO = {budget_info}")
 
             if budget_info and budget_info['budget'] < ri:
                 
@@ -153,7 +151,7 @@ def pvalue_strategy(access_token, records, qparams):
     if individuals_to_remove:
             # filter the individuals from the record
             for individual in individuals_to_remove:
-                print(f"The individual with id " + {individual} + "was removed from the output") # signal to know when an individual has no more budget left
+                LOG.debug(f"The individual with id " + {individual} + "was removed from the output") # signal to know when an individual has no more budget left
             record['caseLevelData'] = [case for case in record['caseLevelData'] if case.get('biosampleId') not in individuals_to_remove]
 
     return None, records
@@ -254,6 +252,7 @@ def generic_handler(db_fn, request=None):
                 datasets_query_results[dataset_id] = (dataset_result)
                 
             if history is not None:
+                LOG.debug(f"ENTROU PORQUE TEM HISTORYYYYYY")
                 return await json_stream(request, history)
 
         LOG.debug(f"schema = {entity_schema}")
