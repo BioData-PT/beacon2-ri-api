@@ -280,6 +280,7 @@ def generic_handler(db_fn, request=None):
         }
 
         if store:
+            LOG.debug(f"DEVIA SER GUARDADOOOOO")
             client.beacon.get_collection(client.beacon['history']).insert_one(document=document)
 
         return await json_stream(request, response)
