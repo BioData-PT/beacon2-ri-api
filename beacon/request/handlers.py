@@ -153,7 +153,7 @@ def pvalue_strategy(access_token, records, qparams):
                         "individualId": "123456789"
                     }
                     doc = client.db['budget'].find_one(criteria)
-                    LOG.debug(f"BUDGET BUDGET BUDGET, INFO = {doc}")
+                    LOG.debug(f"DOCCCCC = {doc}")
                     budget_info = client.db['budget'].find_one(search_criteria)
 
     if individuals_to_remove:
