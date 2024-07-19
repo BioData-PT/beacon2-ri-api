@@ -74,7 +74,7 @@ def update_individual_budget(user_id, individual_id, amount):
 
         # Find the document and update it, returning the updated document
         updated_document = budget_collection.find_one_and_update(
-            {"userId": user_id, "individualId": individual_id},
+            {"individualId": individual_id, "userId": user_id},
             {"$inc": {"budget": -amount}},
             return_document=ReturnDocument.AFTER  # Return the updated document
         )
