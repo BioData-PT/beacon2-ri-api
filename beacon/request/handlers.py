@@ -136,6 +136,7 @@ def pvalue_strategy(access_token, records, qparams):
                 if budget_info['budget'] >= ri:
                     # Step 7: reduce their budgets by ri
                     LOG.debug(f"BUDGET BUDGET BUDGET, value BEFORE = {budget_info['budget']}")
+                    LOG.debug(f"BUDGET BUDGET BUDGET, RI = {ri}")
                     update_individual_budget(access_token, individualId, ri)
                     budget_info = client.db['budget'].find_one(search_criteria)
                     LOG.debug(f"BUDGET BUDGET BUDGET, value AFTER = {budget_info['budget']}")
