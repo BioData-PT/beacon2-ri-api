@@ -75,12 +75,13 @@ def main():
     if variant_ids:
         print(f"The genomic variants for biosampleId {biosample_id} are (sorted by alleleFrequency):")
         for vid in variant_ids:
+            variant_doc = collection.find_one({'variantInternalId': vid})
             print(f"Querying variant id: {vid}")
-            alt = collection.find({'variantInternalId': vid})["variation"]["alternateBases"]
-            ref = collection.find({'variantInternalId': vid})["variation"]["referenceBases"]
-            start = collection.find({'variantInternalId': vid})["_position"]["startInteger"]
-            end = collection.find({'variantInternalId': vid})["_position"]["endInteger"]
-            vType = collection.find({'variantInternalId': vid})["variation"]['variantType']
+            alt = variant_doc["variation"]["alternateBases"]
+            ref = variant_doc["variation"]["referenceBases"]
+            start = variant_doc["_position"]["startInteger"]
+            end = variant_doc["_position"]["endInteger"]
+            vType = variant_doc["variation"]['variantType']
             stdout, stderr = query_variant_with_curl(access_token, alt, ref, start, end, vType)
             print("Response:", stdout)
             if stderr:
