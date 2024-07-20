@@ -33,34 +33,35 @@ def get_genomic_variants_for_individual(biosample_id):
 def query_variant_with_curl(access_token, alt, ref, start, end, vType):
     # Construct the curl command
     curl_command = [
-        'curl',
-        '-H', 'Content-Type: application/json',
-        '-X', 'POST',
-        '-H', f"Authorization: Bearer {access_token}",
-        '-d', f'''{{
-            "meta": {{
-                "apiVersion": "2.0"
+    'curl',
+    '-H', 'Content-Type: application/json',
+    '-X', 'POST',
+    '-H', f'Authorization: Bearer {access_token}',
+    '-d', f'''{{
+        "meta": {{
+            "apiVersion": "2.0"
+        }},
+        "query": {{
+            "requestParameters": {{
+                "alternateBases": "{alt}",
+                "referenceBases": "{ref}",
+                "start": [{start}],
+                "end": [{end}],
+                "variantType": "{vType}"
             }},
-            "query": {{
-                "requestParameters": {
-                f"alternateBases: {alt}" ,
-                f"referenceBases: {ref}" ,
-                f"start: [ {start} ]",
-                f"end: [ {end} ]",
-                f"variantType: {vType}"
-        },,
-                "filters": [],
-                "includeResultsetResponses": "HIT",
-                "pagination": {{
-                    "skip": 0,
-                    "limit": 10
-                }},
-                "testMode": false,
-                "requestedGranularity": "record"
-            }}
-        }}''',
-        'http://localhost:5050/api/g_variants/'
-    ]
+            "filters": [],
+            "includeResultsetResponses": "HIT",
+            "pagination": {{
+                "skip": 0,
+                "limit": 10
+            }},
+            "testMode": false,
+            "requestedGranularity": "record"
+        }}
+    }}''',
+    'http://localhost:5050/api/g_variants/'
+]
+
 
     # Execute the curl command and capture the output
     result = subprocess.run(curl_command, capture_output=True, text=True)
@@ -78,15 +79,10 @@ def main():
             variant_doc = collection.find_one({'variantInternalId': vid})
             print(f"Querying variant id: {vid}")
             alt = variant_doc["variation"]["alternateBases"]
-            print(f"ALT: {alt}")
             ref = variant_doc["variation"]["referenceBases"]
-            print(f"REF: {ref}")
             start = variant_doc["_position"]["startInteger"]
-            print(f"START: {start}")
             end = variant_doc["_position"]["endInteger"]
-            print(f"END: {end}")
             vType = variant_doc["variation"]['variantType']
-            print(f"TYPE: {vType}")
             stdout, stderr = query_variant_with_curl(access_token, alt, ref, start, end, vType)
             print("Response:", stdout)
             if stderr:
