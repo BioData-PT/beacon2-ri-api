@@ -129,6 +129,7 @@ def pvalue_strategy(access_token, records, qparams):
             if not budget_info:
                 p_value = 0.5 # upper bound on test errors
                 bj = -math.log(p_value)  # initial budget
+                LOG.debug(f"INITIAL BUDGET CHECK = {bj}")
                 budget_info = {
                     "userId": access_token,
                     "individualId": individualId,
