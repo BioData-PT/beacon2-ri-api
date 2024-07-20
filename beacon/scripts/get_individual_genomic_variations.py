@@ -78,10 +78,15 @@ def main():
             variant_doc = collection.find_one({'variantInternalId': vid})
             print(f"Querying variant id: {vid}")
             alt = variant_doc["variation"]["alternateBases"]
+            print(f"ALT: {alt}")
             ref = variant_doc["variation"]["referenceBases"]
+            print(f"REF: {ref}")
             start = variant_doc["_position"]["startInteger"]
+            print(f"START: {start}")
             end = variant_doc["_position"]["endInteger"]
+            print(f"END: {end}")
             vType = variant_doc["variation"]['variantType']
+            print(f"TYPE: {vType}")
             stdout, stderr = query_variant_with_curl(access_token, alt, ref, start, end, vType)
             print("Response:", stdout)
             if stderr:
