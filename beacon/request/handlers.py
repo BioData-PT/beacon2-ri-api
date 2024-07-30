@@ -99,7 +99,7 @@ def pvalue_strategy(access_token, records, qparams):
         allele_frequency = record.get('alleleFrequency')
         LOG.debug(f"ALLELE FREQUENCY = {allele_frequency}")
         N = client.beacon.get_collection('individuals').count_documents({})  # total number of individuals !! if user requestes dataset, N = individuals in that dataset
-        print(f"THIS IS THE NUMBER OF INDIVIDUALS" + {N})
+        print(f"THIS IS THE NUMBER OF INDIVIDUALS + {N}")
         Di = (1 - allele_frequency) ** (2 * N)
         ri = -math.log(1 - (Di / N))
 
