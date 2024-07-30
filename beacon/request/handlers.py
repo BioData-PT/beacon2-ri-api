@@ -99,6 +99,7 @@ def pvalue_strategy(access_token, records, qparams):
         allele_frequency = record.get('alleleFrequency')
         LOG.debug(f"ALLELE FREQUENCY = {allele_frequency}")
         N = client.beacon.get_collection('individuals').count_documents({})  # total number of individuals !! if user requestes dataset, N = individuals in that dataset
+        print(f"THIS IS THE NUMBER OF INDIVIDUALS" + {N})
         Di = (1 - allele_frequency) ** (2 * N)
         ri = -math.log(1 - (Di / N))
 
@@ -122,7 +123,7 @@ def pvalue_strategy(access_token, records, qparams):
             response_history = client.beacon['history'].find_one({"userId": access_token, "query": qparams.summary()})
             if response_history:
                 LOG.debug(f"ESTA NO MONGO E ELE VAI LA BUSCAR EHEH")
-                return response_history["response"], records  # Return stored answer if query was asked before
+                return response_history["response"], records  # Return stored answer if query was asked before by the same user
 
             # Step 3: check if there are records with bj > ri
             budget_info = client.beacon['budget'].find_one(search_criteria)
