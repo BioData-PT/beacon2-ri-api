@@ -78,6 +78,8 @@ def main():
         for vid in variant_ids:
             variant_doc = collection.find_one({'variantInternalId': vid})
             print(f"Querying variant id: {vid}")
+            N = client.beacon.get_collection('individuals').count_documents({})  # total number of individuals !! if user requestes dataset, N = individuals in that dataset
+            print(f"THIS IS THE NUMBER OF INDIVIDUALS + {N}")
             alt = variant_doc["variation"]["alternateBases"]
             ref = variant_doc["variation"]["referenceBases"]
             start = variant_doc["_position"]["startInteger"]
