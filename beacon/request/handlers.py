@@ -101,6 +101,7 @@ def pvalue_strategy(access_token, records, qparams):
         N = client.beacon.get_collection('individuals').count_documents({})  # total number of individuals !! if user requestes dataset, N = individuals in that dataset
         Di = (1 - allele_frequency) ** (2 * N)
         ri = -math.log(1 - (Di / N))
+        LOG.debug(f"O CUSTO DESTA QUERY É ESTE = {ri}")
 
         # fetch individualId from the biosample collection
         case_level_data = record.get('caseLevelData', [])
