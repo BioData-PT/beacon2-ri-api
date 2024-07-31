@@ -254,9 +254,9 @@ def generic_handler(db_fn, request=None):
                 dataset_result = (count, list(records))
                 datasets_query_results[dataset_id] = (dataset_result)
                 
-            if history is not None:
-                LOG.debug(f"ENTROU PORQUE TEM HISTORYYYYYY")
-                return await json_stream(request, history)
+                if history is not None:
+                    LOG.debug(f"ENTROU PORQUE TEM HISTORYYYYYY")
+                    return await json_stream(request, history)
 
         LOG.debug(f"schema = {entity_schema}")
 
