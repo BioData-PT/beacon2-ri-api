@@ -4,6 +4,8 @@ import copy
 import logging
 import math
 from typing import Dict, List, Tuple
+
+import numpy as np
 from aiohttp import web
 from aiohttp.web_request import Request
 from bson import json_util
@@ -11,7 +13,6 @@ from beacon import conf
 from beacon.db import client
 from pymongo import ReturnDocument
 import yaml
-import math
 
 from beacon.request import ontologies
 from beacon.request.model import AlphanumericFilter, Granularity, RequestParams
@@ -100,7 +101,7 @@ def pvalue_strategy(access_token, records, qparams):
         LOG.debug(f"ALLELE FREQUENCY = {allele_frequency}")
         N = client.beacon.get_collection('individuals').count_documents({})  # total number of individuals !! if user requestes dataset, N = individuals in that dataset
         Di = (1 - allele_frequency) ** (2 * N)
-        ri = -math.log(1 - (Di / N))
+        ri = -np.log(1 - Di)
         LOG.debug(f"O CUSTO DESTA QUERY É ESTE = {ri}")
 
         # fetch individualId from the biosample collection
@@ -129,7 +130,7 @@ def pvalue_strategy(access_token, records, qparams):
             budget_info = client.beacon['budget'].find_one(search_criteria)
             if not budget_info:
                 p_value = 0.5 # upper bound on test errors
-                bj = -math.log(p_value)  # initial budget
+                bj = -np.log(p_value)  # initial budget
                 LOG.debug(f"INITIAL BUDGET CHECK = {bj}")
                 budget_info = {
                     "userId": access_token,
