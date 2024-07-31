@@ -151,7 +151,7 @@ def pvalue_strategy(access_token, records, qparams):
                     update_individual_budget(access_token, individualId, ri)
                     budget_info = client.beacon['budget'].find_one(search_criteria)
 
-    if individuals_to_remove:
+        if individuals_to_remove:
             # filter the individuals from the record
             for individual in individuals_to_remove:
                 LOG.debug(f"The individual with id " + {individual} + "was removed from the output") # signal to know when an individual has no more budget left
