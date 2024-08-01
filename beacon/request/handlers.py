@@ -92,6 +92,7 @@ def update_individual_budget(user_id, individual_id, amount):
         return None
 
 def pvalue_strategy(access_token, records, qparams):
+    helper = []
 
     for record in records:
         individual_ids = set()
@@ -159,9 +160,13 @@ def pvalue_strategy(access_token, records, qparams):
             record['caseLevelData'] = [case for case in record['caseLevelData'] if case.get('biosampleId') not in individuals_to_remove]
             if not record['caseLevelData']:
                 LOG.debug("CASE LEVEL DATA IS EMPTY")
-                records = records.remove(record)
+                helper.append(record)
+    for x in helper:
+        a = list(records)
+        a.remove(x)
+        
 
-    return None, records
+    return None, a
 
 
 
