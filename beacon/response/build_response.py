@@ -58,6 +58,7 @@ def build_generic_response(
 
         num_dataset_results = results_by_dataset[dataset_id][0]
         dataset_results = results_by_dataset[dataset_id][1]
+        total_cases = results_by_dataset[dataset_id][2]
         num_total_results += num_dataset_results
         
         dataset_response = {
@@ -65,7 +66,7 @@ def build_generic_response(
             "exists": num_dataset_results > 0,
             "setType": "dataset",
             "results": dataset_results,
-            "resultsCount": num_dataset_results
+            "resultsCount": total_cases
         }
         
         # if dataset is not authorized, erase the records part
