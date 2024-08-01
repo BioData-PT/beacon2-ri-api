@@ -260,7 +260,7 @@ def generic_handler(db_fn, request=None):
             LOG.debug(f"REGISTERED = {registered}")
             if not public and not registered and db_fn_submodule == "g_variants":
                 history, records = pvalue_strategy(access_token, records, qparams)
-                dataset_result = (count, [])
+                dataset_result = (count, records)
                 datasets_query_results[dataset_id] = (dataset_result)
                 
                 if history is not None:
