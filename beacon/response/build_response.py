@@ -77,14 +77,19 @@ def build_generic_response(
         if dataset_id not in accessible_datasets and not registered and not public:
             store = True
     
-    beacon_response = {
-        'meta': build_meta(qparams, entity_schema, granularity),
-        'responseSummary': build_response_summary(0 > 0, num_total_results),
-        'beaconHandovers': conf.beacon_handovers,
-        'response': {
-            'resultSets': response_list
+    beacon_response = []
+            
+    if not dataset_results == []:
+    
+        beacon_response = {
+            'meta': build_meta(qparams, entity_schema, granularity),
+            'responseSummary': build_response_summary(num_total_results > 0, num_total_results),
+            'beaconHandovers': conf.beacon_handovers,
+            'response': {
+                'resultSets': response_list
+            }
         }
-    }
+    
 
     return beacon_response, store
 
