@@ -163,6 +163,7 @@ def pvalue_strategy(access_token, records, qparams):
                 helper.append(record)
     LOG.debug(helper)            
     a = list(records)
+    LOG.debug("AAAAAAA")
     LOG.debug(a)
     for x in helper:
         a.remove(x)
