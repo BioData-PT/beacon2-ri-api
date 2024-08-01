@@ -161,6 +161,10 @@ def pvalue_strategy(access_token, records, qparams):
             if not record['caseLevelData']:
                 LOG.debug("CASE LEVEL DATA IS EMPTY")
                 helper.append(record)
+                
+    
+    LOG.debug(records)
+    LOG.debug("RECORDSSSS em cima")
     LOG.debug(helper)            
     a = list(records)
     LOG.debug("AAAAAAA")
