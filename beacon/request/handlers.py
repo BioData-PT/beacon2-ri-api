@@ -158,10 +158,12 @@ def pvalue_strategy(access_token, records, qparams):
             for individual in individuals_to_remove:
                 LOG.debug(f"The individual with id {individual} was removed from the output") # signal to know when an individual has no more budget left
             record['caseLevelData'] = [case for case in record['caseLevelData'] if case.get('biosampleId') not in individuals_to_remove]
-            if  record['caseLevelData']:
-                LOG.debug("CASE LEVEL DATA IS EMPTY")
+            if  record['caseLevelData'] != []:
+                LOG.debug("CASE LEVEL DATA IS NOT EMPTY")
                 helper.append(record)
-                
+        else:
+            helper.append(record)
+            
     LOG.debug("Este e o HELPERRRR")
     LOG.debug(helper)
         
