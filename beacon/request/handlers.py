@@ -162,8 +162,8 @@ def pvalue_strategy(access_token, records, qparams):
                 LOG.debug("CASE LEVEL DATA IS EMPTY")
                 helper.append(record)
                 
-    
-    
+    LOG.debug("Este e o HELPERRRR")
+    LOG.debug(helper)
         
 
     return None, helper
