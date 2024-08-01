@@ -79,7 +79,7 @@ def build_generic_response(
     
     beacon_response = {
         'meta': build_meta(qparams, entity_schema, granularity),
-        'responseSummary': build_response_summary(num_total_results > 0, num_total_results),
+        'responseSummary': build_response_summary(0 > 0, num_total_results),
         'beaconHandovers': conf.beacon_handovers,
         'response': {
             'resultSets': response_list
