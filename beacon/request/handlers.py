@@ -159,7 +159,7 @@ def pvalue_strategy(access_token, records, qparams):
             record['caseLevelData'] = [case for case in record['caseLevelData'] if case.get('biosampleId') not in individuals_to_remove]
             if not record['caseLevelData']:
                 LOG.debug("CASE LEVEL DATA IS EMPTY")
-                records.remove(record)
+                records = list(records).remove(record)
 
     return None, records
 
