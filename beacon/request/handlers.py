@@ -93,6 +93,7 @@ def update_individual_budget(user_id, individual_id, amount):
 
 def pvalue_strategy(access_token, records, qparams):
     helper = []
+    total_cases = 0
 
     for record in records:
         individual_ids = set()
@@ -163,12 +164,14 @@ def pvalue_strategy(access_token, records, qparams):
                 helper.append(record)
         else:
             helper.append(record)
+        
+        total_cases += len(record['caseLevelData'])
             
     LOG.debug("Este e o HELPERRRR")
     LOG.debug(helper)
         
 
-    return None, helper
+    return None, helper, total_cases
 
 
 
@@ -261,8 +264,8 @@ def generic_handler(db_fn, request=None):
             LOG.debug(f"PUBLIC = {public}")
             LOG.debug(f"REGISTERED = {registered}")
             if not public and not registered and db_fn_submodule == "g_variants":
-                history, records = pvalue_strategy(access_token, records, qparams)
-                dataset_result = (count, records)
+                history, records, total_cases = pvalue_strategy(access_token, records, qparams)
+                dataset_result = (count, records, total_cases)
                 datasets_query_results[dataset_id] = (dataset_result)
                 
                 if history is not None:
