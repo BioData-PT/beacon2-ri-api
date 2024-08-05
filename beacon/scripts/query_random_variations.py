@@ -67,6 +67,8 @@ def query_variant_with_curl(access_token, alt, ref, start, end, vType):
 def main():
     access_token = input("Enter the access token: ")
     
+    count = 1
+    
     while True:
         variant_docs = get_random_genomic_variants()
         
@@ -75,6 +77,8 @@ def main():
             break
         
         for variant_doc in variant_docs:
+            print(f"Variant number: {count}")
+            count += 1
             print(f"Querying variant id: {variant_doc['variantInternalId']}")
             variant_full_doc = collection.find_one({'variantInternalId': variant_doc['variantInternalId']})
             alt = variant_full_doc["variation"]["alternateBases"]
