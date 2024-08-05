@@ -71,7 +71,7 @@ def collection_handler(db_fn, request=None):
 def update_individual_budget(user_id, individual_id, amount):
     try:
         budget_collection = client.beacon['budget']
-        LOG.debug(f"Updating budget for user_id={user_id}, individual_id={individual_id} by amount={amount}")
+        LOG.debug(f"Updating budget for individual_id={individual_id} by amount={amount}")
 
         # Find the document and update it, returning the updated document
         updated_document = budget_collection.find_one_and_update(
@@ -79,11 +79,6 @@ def update_individual_budget(user_id, individual_id, amount):
             {"$inc": {"budget": -amount}},
             return_document=ReturnDocument.AFTER  # Return the updated document
         )
-
-        if updated_document is None:
-            LOG.debug(f"No document matched the filter. Update not performed.")
-        else:
-            LOG.debug(f"Updated document: {updated_document}")
 
         return updated_document
 
@@ -100,7 +95,6 @@ def pvalue_strategy(access_token, records, qparams):
 
         # step 4: compute the risk for that query: ri = -log(1 - Di)
         allele_frequency = record.get('alleleFrequency')
-        LOG.debug(f"ALLELE FREQUENCY = {allele_frequency}")
         N = client.beacon.get_collection('individuals').count_documents({})  # total number of individuals !! if user requestes dataset, N = individuals in that dataset
         Di = (1 - allele_frequency) ** (2 * N)
         ri = -np.log(1 - Di)
@@ -110,7 +104,6 @@ def pvalue_strategy(access_token, records, qparams):
         case_level_data = record.get('caseLevelData', [])
         for case in case_level_data:
             individual_id = case.get('biosampleId')  # biosampleId = individualId
-            LOG.debug(f"RECORDS RECORDS RECORDS, INDIVIDUAL = {individual_id}")
             individual_ids.add(individual_id)
                 
         individuals_to_remove = set()
@@ -133,7 +126,6 @@ def pvalue_strategy(access_token, records, qparams):
             if not budget_info:
                 p_value = 0.5 # upper bound on test errors
                 bj = -np.log(p_value)  # initial budget
-                LOG.debug(f"INITIAL BUDGET CHECK = {bj}")
                 budget_info = {
                     "userId": access_token,
                     "individualId": individualId,
@@ -149,7 +141,6 @@ def pvalue_strategy(access_token, records, qparams):
                 individuals_to_remove.add(individualId)
             else:
                 if budget_info['budget'] >= ri:
-                    LOG.debug(f"BUDGET BUDGET BUDGET, INFO = {budget_info}")
                     # Step 7: reduce their budgets by ri
                     update_individual_budget(access_token, individualId, ri)
                     budget_info = client.beacon['budget'].find_one(search_criteria)
@@ -158,18 +149,14 @@ def pvalue_strategy(access_token, records, qparams):
             # filter the individuals from the record
             for individual in individuals_to_remove:
                 LOG.debug(f"The individual with id {individual} was removed from the output") # signal to know when an individual has no more budget left
+                print(f"The individual with id {individual} was removed from the output")
             record['caseLevelData'] = [case for case in record['caseLevelData'] if case.get('biosampleId') not in individuals_to_remove]
             if  record['caseLevelData'] != []:
-                LOG.debug("CASE LEVEL DATA IS NOT EMPTY")
                 helper.append(record)
         else:
             helper.append(record)
         
-        total_cases += len(record['caseLevelData'])
-            
-    LOG.debug("Este e o HELPERRRR")
-    LOG.debug(helper)
-        
+        total_cases += len(record['caseLevelData'])        
 
     return None, helper, total_cases
 
