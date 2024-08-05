@@ -90,7 +90,6 @@ def update_individual_budget(user_id, individual_id, amount):
 def pvalue_strategy(access_token, records, qparams):
     helper = []
     total_cases = 0
-    count = 1
 
     for record in records:
         individual_ids = set()
@@ -100,8 +99,6 @@ def pvalue_strategy(access_token, records, qparams):
         N = client.beacon.get_collection('individuals').count_documents({})  # total number of individuals !! if user requestes dataset, N = individuals in that dataset
         Di = (1 - allele_frequency) ** (2 * N)
         ri = -(math.log10(1 - Di))
-        LOG.debug(f"Variant number: {count}")
-        count += 1
         LOG.debug(f"O CUSTO DESTA QUERY É ESTE = {ri}")
 
         # fetch individualId from the biosample collection
@@ -151,7 +148,9 @@ def pvalue_strategy(access_token, records, qparams):
 
         if individuals_to_remove:
             # filter the individuals from the record
+            LOG.debug(f"!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!")
             LOG.debug(f"The individuals removed are: {list(individuals_to_remove)}") # signal to know which individuals have no more budget
+            LOG.debug(f"!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!")
             record['caseLevelData'] = [case for case in record['caseLevelData'] if case.get('biosampleId') not in individuals_to_remove]
             if  record['caseLevelData'] != []:
                 helper.append(record)
@@ -250,9 +249,12 @@ def generic_handler(db_fn, request=None):
             ######################## P-VALUE ########################
 
             # apply the p-value strategy if user is authenticated but not registered and only if submodule is genomic variations
+            count = 1
             LOG.debug(f"PUBLIC = {public}")
             LOG.debug(f"REGISTERED = {registered}")
             if not public and not registered and db_fn_submodule == "g_variants":
+                LOG.debug(f"VARIANT NUMBER: {count}")
+                count += 1
                 history, records, total_cases = pvalue_strategy(access_token, records, qparams)
                 dataset_result = (count, records, total_cases)
                 datasets_query_results[dataset_id] = (dataset_result)

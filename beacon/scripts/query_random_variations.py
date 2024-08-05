@@ -17,12 +17,15 @@ client = MongoClient(
         "admin"
     )
 )
+
 collection = client.beacon.get_collection('genomicVariations')
+
 
 def clear_budget_and_history_collections():
     client.beacon.get_collection('budget').delete_many({})
     client.beacon.get_collection('history').delete_many({})
     print("Cleared budget and history collections.")
+    
 
 def get_random_genomic_variants(sample_size=1):
     # Get a random sample of genomic variants
@@ -31,6 +34,7 @@ def get_random_genomic_variants(sample_size=1):
         {"$project": {"variantInternalId": 1, "alleleFrequency": 1}}
     ]
     return list(collection.aggregate(pipeline))
+
 
 def query_variant_with_curl(access_token, alt, ref, start, end, vType):
     # Construct the curl command
