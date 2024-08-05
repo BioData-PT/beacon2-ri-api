@@ -253,8 +253,6 @@ def generic_handler(db_fn, request=None):
             LOG.debug(f"PUBLIC = {public}")
             LOG.debug(f"REGISTERED = {registered}")
             if not public and not registered and db_fn_submodule == "g_variants":
-                LOG.debug(f"VARIANT NUMBER: {count}")
-                count += 1
                 history, records, total_cases = pvalue_strategy(access_token, records, qparams)
                 dataset_result = (count, records, total_cases)
                 datasets_query_results[dataset_id] = (dataset_result)
