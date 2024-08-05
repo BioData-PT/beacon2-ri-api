@@ -70,7 +70,7 @@ def build_generic_response(
         }
         
         # if dataset is not authorized, erase the records part
-        if dataset_id not in accessible_datasets and registered:
+        if dataset_id not in accessible_datasets or not registered:
             dataset_response["results"] = []
             
         response_list.append(dataset_response)
