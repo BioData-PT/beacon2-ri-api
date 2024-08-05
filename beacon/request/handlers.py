@@ -98,7 +98,7 @@ def pvalue_strategy(access_token, records, qparams):
         LOG.debug(f"ALLELE FREQUENCY = {allele_frequency}")
         N = client.beacon.get_collection('individuals').count_documents({})  # total number of individuals !! if user requestes dataset, N = individuals in that dataset
         Di = (1 - allele_frequency) ** (2 * N)
-        ri = -np.log(1 - Di)
+        ri = -(np.log(1 - Di))
         LOG.debug(f"O CUSTO DESTA QUERY É ESTE = {ri}")
 
         # fetch individualId from the biosample collection
@@ -126,7 +126,7 @@ def pvalue_strategy(access_token, records, qparams):
             budget_info = client.beacon['budget'].find_one(search_criteria)
             if not budget_info:
                 p_value = 0.5 # upper bound on test errors
-                bj = -np.log(p_value)  # initial budget
+                bj = -(np.log(p_value))  # initial budget
                 budget_info = {
                     "userId": access_token,
                     "individualId": individualId,
