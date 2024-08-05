@@ -15,7 +15,15 @@ client = MongoClient(
         "admin"
     )
 )
+
 collection = client.beacon.get_collection('genomicVariations')
+
+
+def clear_budget_and_history_collections():
+    client.beacon.get_collection('budget').delete_many({})
+    client.beacon.get_collection('history').delete_many({})
+    print("Cleared budget and history collections.")
+    
 
 def get_genomic_variants_for_individual(biosample_id):
 
@@ -70,6 +78,10 @@ def query_variant_with_curl(access_token, alt, ref, start, end, vType):
 def main():
     access_token = input("Enter the access token: ")
     biosample_id = input("Enter the individualId to search: ")
+    
+    # Clear budget and history collections before starting queries
+    clear_budget_and_history_collections()
+    
     variant_ids = get_genomic_variants_for_individual(biosample_id)
     
     # Try and query all the variants starting with the lower frequency ones and see when the individual is removed from the output

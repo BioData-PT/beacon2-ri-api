@@ -19,6 +19,11 @@ client = MongoClient(
 )
 collection = client.beacon.get_collection('genomicVariations')
 
+def clear_budget_and_history_collections():
+    client.beacon.get_collection('budget').delete_many({})
+    client.beacon.get_collection('history').delete_many({})
+    print("Cleared budget and history collections.")
+
 def get_random_genomic_variants(sample_size=1):
     # Get a random sample of genomic variants
     pipeline = [
@@ -66,6 +71,9 @@ def query_variant_with_curl(access_token, alt, ref, start, end, vType):
 
 def main():
     access_token = input("Enter the access token: ")
+    
+    # Clear budget and history collections before starting queries
+    clear_budget_and_history_collections()
     
     count = 1
     
