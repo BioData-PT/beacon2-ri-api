@@ -96,10 +96,8 @@ def pvalue_strategy(access_token, records, qparams):
 
         # step 4: compute the risk for that query: ri = -log(1 - Di)
         allele_frequency = record.get('alleleFrequency')
-        LOG.debug(f"ALLELE FREQUENCY = {allele_frequency}")
         N = client.beacon.get_collection('individuals').count_documents({})  # total number of individuals !! if user requestes dataset, N = individuals in that dataset
         Di = (1 - allele_frequency) ** (2 * N)
-        LOG.debug(f"DI É = {Di}")
         ri = -(math.log10(1 - Di))
         LOG.debug(f"O CUSTO DESTA QUERY É ESTE = {ri}")
 
@@ -150,8 +148,7 @@ def pvalue_strategy(access_token, records, qparams):
 
         if individuals_to_remove:
             # filter the individuals from the record
-            for individual in individuals_to_remove:
-                LOG.debug(f"The individual with id {individual} was removed from the output") # signal to know when an individual has no more budget left
+            LOG.debug(f"The individuals removed are: {list(individuals_to_remove)}") # signal to know which individuals have no more budget
             record['caseLevelData'] = [case for case in record['caseLevelData'] if case.get('biosampleId') not in individuals_to_remove]
             if  record['caseLevelData'] != []:
                 helper.append(record)
