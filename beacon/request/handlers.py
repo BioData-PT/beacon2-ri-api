@@ -71,7 +71,7 @@ def collection_handler(db_fn, request=None):
 def update_individual_budget(user_id, individual_id, amount):
     try:
         budget_collection = client.beacon['budget']
-        LOG.debug(f"Updating budget for individual_id={individual_id} by amount={amount}")
+        #LOG.debug(f"Updating budget for individual_id={individual_id} by amount={amount}")
 
         # Find the document and update it, returning the updated document
         updated_document = budget_collection.find_one_and_update(
