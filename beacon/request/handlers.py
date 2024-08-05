@@ -117,9 +117,9 @@ def pvalue_strategy(access_token, records, qparams):
 
             # Step 2: check if query has been asked before
             response_history = client.beacon['history'].find_one({"userId": access_token, "query": qparams.summary()})
-            if response_history:
+            if response_history is not None:
                 LOG.debug(f"ESTA NO MONGO E ELE VAI LA BUSCAR EHEH")
-                return response_history["response"], records  # Return stored answer if query was asked before by the same user
+                return response_history["response"], helper, total_cases  # Return stored answer if query was asked before by the same user
 
             # Step 3: check if there are records with bj > ri
             budget_info = client.beacon['budget'].find_one(search_criteria)
@@ -149,7 +149,6 @@ def pvalue_strategy(access_token, records, qparams):
             # filter the individuals from the record
             for individual in individuals_to_remove:
                 LOG.debug(f"The individual with id {individual} was removed from the output") # signal to know when an individual has no more budget left
-                print(f"The individual with id {individual} was removed from the output")
             record['caseLevelData'] = [case for case in record['caseLevelData'] if case.get('biosampleId') not in individuals_to_remove]
             if  record['caseLevelData'] != []:
                 helper.append(record)
