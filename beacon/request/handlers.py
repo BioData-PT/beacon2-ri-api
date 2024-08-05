@@ -90,6 +90,7 @@ def update_individual_budget(user_id, individual_id, amount):
 def pvalue_strategy(access_token, records, qparams):
     helper = []
     total_cases = 0
+    count = 1
 
     for record in records:
         individual_ids = set()
@@ -99,6 +100,7 @@ def pvalue_strategy(access_token, records, qparams):
         N = client.beacon.get_collection('individuals').count_documents({})  # total number of individuals !! if user requestes dataset, N = individuals in that dataset
         Di = (1 - allele_frequency) ** (2 * N)
         ri = -(math.log10(1 - Di))
+        LOG.debug(f"Variant number: {count}")
         LOG.debug(f"O CUSTO DESTA QUERY É ESTE = {ri}")
 
         # fetch individualId from the biosample collection
