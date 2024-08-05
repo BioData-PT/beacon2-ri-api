@@ -95,6 +95,7 @@ def pvalue_strategy(access_token, records, qparams):
 
         # step 4: compute the risk for that query: ri = -log(1 - Di)
         allele_frequency = record.get('alleleFrequency')
+        LOG.debug(f"ALLELE FREQUENCY = {allele_frequency}")
         N = client.beacon.get_collection('individuals').count_documents({})  # total number of individuals !! if user requestes dataset, N = individuals in that dataset
         Di = (1 - allele_frequency) ** (2 * N)
         ri = -np.log(1 - Di)
