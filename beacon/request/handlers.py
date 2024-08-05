@@ -101,6 +101,7 @@ def pvalue_strategy(access_token, records, qparams):
         Di = (1 - allele_frequency) ** (2 * N)
         ri = -(math.log10(1 - Di))
         LOG.debug(f"Variant number: {count}")
+        count += 1
         LOG.debug(f"O CUSTO DESTA QUERY É ESTE = {ri}")
 
         # fetch individualId from the biosample collection
