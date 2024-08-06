@@ -80,8 +80,9 @@ def main():
     clear_budget_and_history_collections()
     
     count = 1
+    var = 1
     
-    while True:
+    while var == 1:
         variant_docs = get_random_genomic_variants()
         
         if not variant_docs:
@@ -104,11 +105,13 @@ def main():
             if stdout == True:
                 print(f"Individuals were removed")
                 print(stdout)
+                var = 0
                 break
+                
             
-            print("Response:", stdout)
-            if stderr:
-                print("Error:", stderr)
+            #print("Response:", stdout)
+            #if stderr:
+            #    print("Error:", stderr)
 
 if __name__ == "__main__":
     main()
