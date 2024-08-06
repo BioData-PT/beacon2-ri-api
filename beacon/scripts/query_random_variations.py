@@ -111,10 +111,8 @@ def main():
                 #if stderr:
                 #    print("Error:", stderr)
         i += 1
-    # Store the variant numbers where individuals were removed
-    with open('removed_variants.json', 'w') as f:
-        json.dump(variant_removal_list, f)
     
+    print(variant_removal_list)
     print("Run complete. Variants where individuals were removed are stored in removed_variants.json.")
 
 if __name__ == "__main__":
