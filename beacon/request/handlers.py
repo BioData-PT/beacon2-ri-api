@@ -90,6 +90,8 @@ def update_individual_budget(user_id, individual_id, amount):
 def pvalue_strategy(access_token, records, qparams):
     helper = []
     total_cases = 0
+    
+    removed = False
 
     for record in records:
         individual_ids = set()
@@ -148,6 +150,7 @@ def pvalue_strategy(access_token, records, qparams):
 
         if individuals_to_remove:
             # filter the individuals from the record
+            removed = True
             LOG.debug(f"!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!")
             LOG.debug(f"The individuals removed are: {list(individuals_to_remove)}") # signal to know which individuals have no more budget
             LOG.debug(f"!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!")
@@ -159,7 +162,7 @@ def pvalue_strategy(access_token, records, qparams):
         
         total_cases += len(record['caseLevelData'])        
 
-    return None, helper, total_cases
+    return None, helper, total_cases, removed
 
 
 
@@ -253,7 +256,7 @@ def generic_handler(db_fn, request=None):
             LOG.debug(f"PUBLIC = {public}")
             LOG.debug(f"REGISTERED = {registered}")
             if not public and not registered and db_fn_submodule == "g_variants":
-                history, records, total_cases = pvalue_strategy(access_token, records, qparams)
+                history, records, total_cases, removed = pvalue_strategy(access_token, records, qparams)
                 dataset_result = (count, records, total_cases)
                 datasets_query_results[dataset_id] = (dataset_result)
                 
@@ -289,6 +292,9 @@ def generic_handler(db_fn, request=None):
 
         if not store: # !!!!! JUST TESTING TO SEE IF IT KEEPS THE RECORD IN THE DB WHILE ALL DATASETS ARE ACCESSIBLE TO ALL USERS (public or not)
             client.beacon['history'].insert_one(document)
+            
+        if removed:
+            return True
 
         return await json_stream(request, response)
 

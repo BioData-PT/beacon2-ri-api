@@ -99,6 +99,11 @@ def main():
             end = variant_full_doc["_position"]["endInteger"]
             vType = variant_full_doc["variation"]['variantType']
             stdout, stderr = query_variant_with_curl(access_token, alt, ref, start, end, vType)
+            
+            if stdout:
+                print(f"Individuals were removed")
+                break
+            
             print("Response:", stdout)
             if stderr:
                 print("Error:", stderr)
