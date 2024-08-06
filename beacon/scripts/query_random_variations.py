@@ -1,7 +1,7 @@
 import os
 import subprocess
 from pymongo import MongoClient
-import json
+import time
 
 # Connect to MongoDB
 database_password = os.getenv('DB_PASSWD')
@@ -73,6 +73,8 @@ def main():
     i = 0
     variant_removal_list = []
     
+    start_time = time.time()
+    
     while i < 100:
         count = 1
         var = 1
@@ -111,9 +113,15 @@ def main():
                 #if stderr:
                 #    print("Error:", stderr)
         i += 1
+        
+    end_time = time.time()  # End the timer
+    
+    # Calculate total time taken
+    total_time = end_time - start_time
     
     print(variant_removal_list)
     print("Run complete. Variants where individuals were removed are stored in removed_variants.json.")
+    print(f"Total time taken: {total_time} seconds")
 
 if __name__ == "__main__":
     main()
