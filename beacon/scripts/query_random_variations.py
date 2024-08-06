@@ -1,6 +1,5 @@
 import os
 import subprocess
-import random
 from pymongo import MongoClient
 import json
 
@@ -20,13 +19,11 @@ client = MongoClient(
 
 collection = client.beacon.get_collection('genomicVariations')
 
-
 def clear_budget_and_history_collections():
     client.beacon.get_collection('budget').delete_many({})
     client.beacon.get_collection('history').delete_many({})
     print("Cleared budget and history collections.")
     
-
 def get_random_genomic_variants(sample_size=1):
     # Get a random sample of genomic variants
     pipeline = [
@@ -34,7 +31,6 @@ def get_random_genomic_variants(sample_size=1):
         {"$project": {"variantInternalId": 1, "alleleFrequency": 1}}
     ]
     return list(collection.aggregate(pipeline))
-
 
 def query_variant_with_curl(access_token, alt, ref, start, end, vType):
     # Construct the curl command
@@ -72,46 +68,53 @@ def query_variant_with_curl(access_token, alt, ref, start, end, vType):
     result = subprocess.run(curl_command, capture_output=True, text=True)
     return result.stdout, result.stderr
 
-
 def main():
     access_token = input("Enter the access token: ")
     
     # Clear budget and history collections before starting queries
     clear_budget_and_history_collections()
     
-    count = 1
-    var = 1
+    variant_removal_list = []
     
-    while var == 1:
-        variant_docs = get_random_genomic_variants()
+    for i in range(100):
+        count = 1
+        var = 1
         
-        if not variant_docs:
-            print("No genomic variants found in the database.")
-            break
-        
-        for variant_doc in variant_docs:
-            print(f"Variant number: {count}")
-            count += 1
-            print(f"Querying variant id: {variant_doc['variantInternalId']}")
-            variant_full_doc = collection.find_one({'variantInternalId': variant_doc['variantInternalId']})
-            alt = variant_full_doc["variation"]["alternateBases"]
-            ref = variant_full_doc["variation"]["referenceBases"]
-            start = variant_full_doc["_position"]["startInteger"]
-            end = variant_full_doc["_position"]["endInteger"]
-            vType = variant_full_doc["variation"]['variantType']
-            stdout, stderr = query_variant_with_curl(access_token, alt, ref, start, end, vType)
+        while var == 1:
+            variant_docs = get_random_genomic_variants()
             
-            print(stdout)
-            if stdout == "true":
-                print(f"Individuals were removed")
-                print(stdout)
-                var = 0
+            if not variant_docs:
+                print("No genomic variants found in the database.")
                 break
-                
             
-            #print("Response:", stdout)
-            #if stderr:
-            #    print("Error:", stderr)
+            for variant_doc in variant_docs:
+                print(f"Variant number: {count}")
+                count += 1
+                print(f"Querying variant id: {variant_doc['variantInternalId']}")
+                variant_full_doc = collection.find_one({'variantInternalId': variant_doc['variantInternalId']})
+                alt = variant_full_doc["variation"]["alternateBases"]
+                ref = variant_full_doc["variation"]["referenceBases"]
+                start = variant_full_doc["_position"]["startInteger"]
+                end = variant_full_doc["_position"]["endInteger"]
+                vType = variant_full_doc["variation"]['variantType']
+                stdout, stderr = query_variant_with_curl(access_token, alt, ref, start, end, vType)
+                
+                print(stdout)
+                if stdout == "true":
+                    print(f"Individuals were removed")
+                    variant_removal_list.append(variant_doc['variantInternalId'])
+                    var = 0
+                    break
+                
+                #print("Response:", stdout)
+                #if stderr:
+                #    print("Error:", stderr)
+    
+    # Store the variant numbers where individuals were removed
+    with open('removed_variants.json', 'w') as f:
+        json.dump(variant_removal_list, f)
+    
+    print("Run complete. Variants where individuals were removed are stored in removed_variants.json.")
 
 if __name__ == "__main__":
     main()
