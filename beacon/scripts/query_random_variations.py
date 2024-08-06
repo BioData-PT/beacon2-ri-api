@@ -101,10 +101,10 @@ def main():
             stdout, stderr = query_variant_with_curl(access_token, alt, ref, start, end, vType)
             
             print(stdout)
-        #if stdout:
-            #print(f"Individuals were removed")
-            #print(stdout)
-            #break
+        if stdout:
+            print(f"Individuals were removed")
+            print(stdout)
+            break
             
             print("Response:", stdout)
             if stderr:
