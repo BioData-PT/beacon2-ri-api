@@ -100,7 +100,7 @@ def main():
             vType = variant_full_doc["variation"]['variantType']
             stdout, stderr = query_variant_with_curl(access_token, alt, ref, start, end, vType)
             
-            if stdout:
+            if stdout == True:
                 print(f"Individuals were removed")
                 break
             
