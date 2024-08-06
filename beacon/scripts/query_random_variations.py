@@ -101,6 +101,7 @@ def main():
                 end = variant_full_doc["_position"]["endInteger"]
                 vType = variant_full_doc["variation"]['variantType']
                 stdout, stderr = query_variant_with_curl(access_token, alt, ref, start, end, vType)
+                print(f"Walk number: {i}")
                 
                 print(stdout)
                 if stdout == "true":
