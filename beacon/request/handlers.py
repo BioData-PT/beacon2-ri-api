@@ -293,10 +293,8 @@ def generic_handler(db_fn, request=None):
         if not store: # !!!!! JUST TESTING TO SEE IF IT KEEPS THE RECORD IN THE DB WHILE ALL DATASETS ARE ACCESSIBLE TO ALL USERS (public or not)
             client.beacon['history'].insert_one(document)
         
-        
-        return await removed
 
-        #return await json_stream(request, response)
+        return await json_stream(request, removed)
 
     return wrapper
 
