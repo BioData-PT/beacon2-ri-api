@@ -102,6 +102,7 @@ def main():
             
         if stdout:
             print(f"Individuals were removed")
+            print(stdout)
             break
             
             print("Response:", stdout)
