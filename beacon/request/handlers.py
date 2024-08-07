@@ -98,7 +98,7 @@ def pvalue_strategy(access_token, records, qparams):
 
         # step 4: compute the risk for that query: ri = -log(1 - Di)
         allele_frequency = record.get('alleleFrequency')
-        N = client.beacon.get_collection('individuals').count_documents({})  # total number of individuals !! if user requestes dataset, N = individuals in that dataset
+        N = 100000 #client.beacon.get_collection('individuals').count_documents({})  # total number of individuals !! if user requestes dataset, N = individuals in that dataset
         Di = (1 - allele_frequency) ** (2 * N)
         ri = -(math.log10(1 - Di))
         LOG.debug(f"O CUSTO DESTA QUERY É ESTE = {ri}")
@@ -119,7 +119,7 @@ def pvalue_strategy(access_token, records, qparams):
             }
 
             # Step 2: check if query has been asked before
-            response_history = 100000 #client.beacon['history'].find_one({"userId": access_token, "query": qparams.summary()})
+            response_history = client.beacon['history'].find_one({"userId": access_token, "query": qparams.summary()})
             if response_history is not None:
                 LOG.debug(f"Query was previously done by the same user")
                 return response_history["response"], helper, total_cases, removed  # Return stored answer if query was asked before by the same user
