@@ -119,7 +119,7 @@ def pvalue_strategy(access_token, records, qparams):
             }
 
             # Step 2: check if query has been asked before
-            response_history = client.beacon['history'].find_one({"userId": access_token, "query": qparams.summary()})
+            response_history = 100000 #client.beacon['history'].find_one({"userId": access_token, "query": qparams.summary()})
             if response_history is not None:
                 LOG.debug(f"Query was previously done by the same user")
                 return response_history["response"], helper, total_cases, removed  # Return stored answer if query was asked before by the same user

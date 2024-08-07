@@ -1,3 +1,4 @@
+import json
 import os
 import subprocess
 from pymongo import MongoClient
@@ -105,7 +106,7 @@ def main():
     
     # Calculate total time taken
     total_time = end_time - start_time
-    
+
     print(queried_variant_ids)
     print("Run complete. Variants where individuals were removed are stored in removed_variants.json.")
     print(f"Total time taken: {total_time} seconds")
