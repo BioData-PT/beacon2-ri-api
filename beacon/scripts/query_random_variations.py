@@ -2,6 +2,7 @@ import os
 import subprocess
 from pymongo import MongoClient
 import time
+import json
 
 # Connect to MongoDB
 database_password = os.getenv('DB_PASSWD')
@@ -123,6 +124,12 @@ def main():
     print(variant_removal_list)
     print("Run complete. Variants where individuals were removed are stored in removed_variants.json.")
     print(f"Total time taken: {total_time} seconds")
+    a = {}
+    a["Variant_Removal_List"] = variant_removal_list
+    a["Total_Time"] = total_time
+    
+    with open("beacon/scripts/Results.json","w") as f:
+        json.dump(a,f)
 
 if __name__ == "__main__":
     main()
