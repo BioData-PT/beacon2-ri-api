@@ -121,7 +121,7 @@ def pvalue_strategy(access_token, records, qparams):
             # Step 2: check if query has been asked before
             response_history = client.beacon['history'].find_one({"userId": access_token, "query": qparams.summary()})
             if response_history is not None:
-                LOG.debug(f"ESTA NO MONGO E ELE VAI LA BUSCAR EHEH")
+                LOG.debug(f"Query was previously done by the same user")
                 return response_history["response"], helper, total_cases, removed  # Return stored answer if query was asked before by the same user
 
             # Step 3: check if there are records with bj > ri
@@ -152,7 +152,7 @@ def pvalue_strategy(access_token, records, qparams):
             # filter the individuals from the record
             removed = True
             LOG.debug(f"!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!")
-            LOG.debug(f"The individuals removed are: {list(individuals_to_remove)}") # signal to know which individuals have no more budget
+            LOG.debug(f"Removed individuals: {list(individuals_to_remove)}") # signal to know which individuals have no more budget
             LOG.debug(f"!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!")
             record['caseLevelData'] = [case for case in record['caseLevelData'] if case.get('biosampleId') not in individuals_to_remove]
             if  record['caseLevelData'] != []:
@@ -261,7 +261,7 @@ def generic_handler(db_fn, request=None):
                 datasets_query_results[dataset_id] = (dataset_result)
                 
                 if history is not None:
-                    LOG.debug(f"ENTROU PORQUE TEM HISTORYYYYYY")
+                    LOG.debug(f"Query was stored in the database")
                     return await json_stream(request, history)
 
         LOG.debug(f"schema = {entity_schema}")
