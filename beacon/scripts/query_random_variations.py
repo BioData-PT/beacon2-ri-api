@@ -2,6 +2,7 @@ import os
 import subprocess
 from pymongo import MongoClient
 import time
+import json
 
 # Connect to MongoDB
 database_password = os.getenv('DB_PASSWD')
@@ -24,10 +25,9 @@ def clear_budget_and_history_collections():
     client.beacon.get_collection('history').delete_many({})
     print("Cleared budget and history collections.")
     
-def get_random_genomic_variants(exclude_ids, sample_size=1):
-    # Get a random sample of genomic variants excluding already queried ones
+def get_random_genomic_variants(sample_size=1):
+    # Get a random sample of genomic variants
     pipeline = [
-        {"$match": {"variantInternalId": {"$nin": exclude_ids}}},
         {"$sample": {"size": sample_size}},
         {"$project": {"variantInternalId": 1, "alleleFrequency": 1}}
     ]
@@ -73,7 +73,6 @@ def main():
     access_token = input("Enter the access token: ")
     i = 0
     variant_removal_list = []
-    queried_variant_ids = set()  # To track queried variants
     
     start_time = time.time()
     
@@ -86,15 +85,13 @@ def main():
         
         while var == 1:
             
-            variant_docs = get_random_genomic_variants(list(queried_variant_ids))
+            variant_docs = get_random_genomic_variants()
             
             if not variant_docs:
                 print("No genomic variants found in the database.")
                 break
             
             for variant_doc in variant_docs:
-                queried_variant_ids.add(variant_doc['variantInternalId'])  # Add to queried set
-                
                 print(f"Variant number: {count}")
                 count += 1
                 print(f"Querying variant id: {variant_doc['variantInternalId']}")
@@ -125,8 +122,6 @@ def main():
     total_time = end_time - start_time
     
     print(variant_removal_list)
-    print(queried_variant_ids)
-    print("Run complete. Variants where individuals were removed are stored in removed_variants.json.")
     print(f"Total time taken: {total_time} seconds")
 
 if __name__ == "__main__":
