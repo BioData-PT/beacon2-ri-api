@@ -24,9 +24,10 @@ def clear_budget_and_history_collections():
     client.beacon.get_collection('history').delete_many({})
     print("Cleared budget and history collections.")
     
-def get_random_genomic_variants(sample_size=1):
-    # Get a random sample of genomic variants
+def get_random_genomic_variants(exclude_ids, sample_size=1):
+    # Get a random sample of genomic variants excluding already queried ones
     pipeline = [
+        {"$match": {"variantInternalId": {"$nin": exclude_ids}}},
         {"$sample": {"size": sample_size}},
         {"$project": {"variantInternalId": 1, "alleleFrequency": 1}}
     ]
@@ -70,57 +71,47 @@ def query_variant_with_curl(access_token, alt, ref, start, end, vType):
 
 def main():
     access_token = input("Enter the access token: ")
-    i = 0
-    variant_removal_list = []
+    queried_variant_ids = set()  # To track queried variants
     
     start_time = time.time()
+    count = 0
     
-    while i < 100:
-        count = 1
-        var = 1
+    while count < 100:
         
         # Clear budget and history collections before starting queries
         clear_budget_and_history_collections()
+            
+        variant_docs = get_random_genomic_variants(list(queried_variant_ids))
+            
+        if not variant_docs:
+            print("No genomic variants found in the database.")
+            break
         
-        while var == 1:
+        for variant_doc in variant_docs:
+            queried_variant_ids.add(variant_doc['variantInternalId'])  # Add to queried set
             
-            variant_docs = get_random_genomic_variants()
+            print(f"Variant number: {count}")
+            print(f"Querying variant id: {variant_doc['variantInternalId']}")
+            variant_full_doc = collection.find_one({'variantInternalId': variant_doc['variantInternalId']})
+            alt = variant_full_doc["variation"]["alternateBases"]
+            ref = variant_full_doc["variation"]["referenceBases"]
+            start = variant_full_doc["_position"]["startInteger"]
+            end = variant_full_doc["_position"]["endInteger"]
+            vType = variant_full_doc["variation"]['variantType']
+            stdout, stderr = query_variant_with_curl(access_token, alt, ref, start, end, vType)
             
-            if not variant_docs:
-                print("No genomic variants found in the database.")
-                break
+            print(stdout)
+            if stdout == "true":
+                print(f"Individuals were removed")
             
-            for variant_doc in variant_docs:
-                print(f"Variant number: {count}")
-                count += 1
-                print(f"Querying variant id: {variant_doc['variantInternalId']}")
-                variant_full_doc = collection.find_one({'variantInternalId': variant_doc['variantInternalId']})
-                alt = variant_full_doc["variation"]["alternateBases"]
-                ref = variant_full_doc["variation"]["referenceBases"]
-                start = variant_full_doc["_position"]["startInteger"]
-                end = variant_full_doc["_position"]["endInteger"]
-                vType = variant_full_doc["variation"]['variantType']
-                stdout, stderr = query_variant_with_curl(access_token, alt, ref, start, end, vType)
-                print(f"Walk number: {i}")
-                
-                print(stdout)
-                if stdout == "true":
-                    print(f"Individuals were removed")
-                    variant_removal_list.append(count - 2)
-                    var = 0
-                    break
-                
-                #print("Response:", stdout)
-                #if stderr:
-                #    print("Error:", stderr)
-        i += 1
+        count += 1
         
     end_time = time.time()  # End the timer
     
     # Calculate total time taken
     total_time = end_time - start_time
     
-    print(variant_removal_list)
+    print(queried_variant_ids)
     print("Run complete. Variants where individuals were removed are stored in removed_variants.json.")
     print(f"Total time taken: {total_time} seconds")
 
