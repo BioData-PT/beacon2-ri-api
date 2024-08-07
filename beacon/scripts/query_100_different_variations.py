@@ -79,7 +79,7 @@ def main():
     while count < 100:
         
         # Clear budget and history collections before starting queries
-        clear_budget_and_history_collections()
+        # clear_budget_and_history_collections()
             
         variant_docs = get_random_genomic_variants(list(queried_variant_ids))
             
