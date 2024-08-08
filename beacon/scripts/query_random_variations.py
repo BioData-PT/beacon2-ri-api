@@ -74,44 +74,48 @@ def main():
     i = 0
     variant_removal_list = []
     
-    count = 1
-    var = 1
+    start_time = time.time()
     
-    # Clear budget and history collections before starting queries
-    clear_budget_and_history_collections()
-    
-    while var == 1:
+    while i < 100:
+        count = 1
+        var = 1
         
-        variant_docs = get_random_genomic_variants()
+        # Clear budget and history collections before starting queries
+        clear_budget_and_history_collections()
         
-        if not variant_docs:
-            print("No genomic variants found in the database.")
-            break
-        
-        for variant_doc in variant_docs:
-            print(f"Variant number: {count}")
-            count += 1
-            print(f"Querying variant id: {variant_doc['variantInternalId']}")
-            variant_full_doc = collection.find_one({'variantInternalId': variant_doc['variantInternalId']})
-            alt = variant_full_doc["variation"]["alternateBases"]
-            ref = variant_full_doc["variation"]["referenceBases"]
-            start = variant_full_doc["_position"]["startInteger"]
-            end = variant_full_doc["_position"]["endInteger"]
-            vType = variant_full_doc["variation"]['variantType']
-            stdout, stderr = query_variant_with_curl(access_token, alt, ref, start, end, vType)
-            print(f"Walk number: {i}")
+        while var == 1:
             
-            print(stdout)
-            if stdout == "true":
-                print(f"Individuals were removed")
-                variant_removal_list.append(count - 2)
-                var = 0
+            variant_docs = get_random_genomic_variants()
+            
+            if not variant_docs:
+                print("No genomic variants found in the database.")
                 break
             
-            #print("Response:", stdout)
-            #if stderr:
-            #    print("Error:", stderr)
-        
+            for variant_doc in variant_docs:
+                print(f"Variant number: {count}")
+                count += 1
+                print(f"Querying variant id: {variant_doc['variantInternalId']}")
+                variant_full_doc = collection.find_one({'variantInternalId': variant_doc['variantInternalId']})
+                alt = variant_full_doc["variation"]["alternateBases"]
+                ref = variant_full_doc["variation"]["referenceBases"]
+                start = variant_full_doc["_position"]["startInteger"]
+                end = variant_full_doc["_position"]["endInteger"]
+                vType = variant_full_doc["variation"]['variantType']
+                stdout, stderr = query_variant_with_curl(access_token, alt, ref, start, end, vType)
+                print(f"Walk number: {i}")
+                
+                print(stdout)
+                if stdout == "true":
+                    print(f"Individuals were removed")
+                    variant_removal_list.append(count - 2)
+                    var = 0
+                    print(variant_removal_list)
+                    break
+                
+                #print("Response:", stdout)
+                #if stderr:
+                #    print("Error:", stderr)
+        i += 1
     
     print(variant_removal_list)
 
