@@ -74,8 +74,6 @@ def main():
     i = 0
     variant_removal_list = []
     
-    start_time = time.time()
-    
     while i < 100:
         count = 1
         var = 1
@@ -109,12 +107,10 @@ def main():
                     print(f"Individuals were removed")
                     variant_removal_list.append(count - 2)
                     var = 0
-                    print(variant_removal_list)
                     break
                 
-                #print("Response:", stdout)
-                #if stderr:
-                #    print("Error:", stderr)
+                print(variant_removal_list)
+                
         i += 1
     
     print(variant_removal_list)
