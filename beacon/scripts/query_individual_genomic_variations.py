@@ -97,6 +97,8 @@ def main():
             vType = variant_doc["variation"]['variantType']
             stdout, stderr = query_variant_with_curl(access_token, alt, ref, start, end, vType)
             print("Response:", stdout)
+            if biosample_id in stdout:
+                print("The individual was removed")
             if stderr:
                 print("Error:", stderr)
     else:

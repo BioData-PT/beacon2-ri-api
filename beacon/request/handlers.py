@@ -162,7 +162,7 @@ def pvalue_strategy(access_token, records, qparams):
         
         total_cases += len(record['caseLevelData'])        
 
-    return None, helper, total_cases, removed
+    return None, helper, total_cases, removed, individuals_to_remove
 
 
 
@@ -256,7 +256,7 @@ def generic_handler(db_fn, request=None):
             LOG.debug(f"PUBLIC = {public}")
             LOG.debug(f"REGISTERED = {registered}")
             if not public and not registered and db_fn_submodule == "g_variants":
-                history, records, total_cases, removed = pvalue_strategy(access_token, records, qparams)
+                history, records, total_cases, removed, removed_individuals = pvalue_strategy(access_token, records, qparams)
                 dataset_result = (count, records, total_cases)
                 datasets_query_results[dataset_id] = (dataset_result)
                 
@@ -294,7 +294,7 @@ def generic_handler(db_fn, request=None):
             client.beacon['history'].insert_one(document)
         
 
-        return await json_stream(request, response)
+        return await json_stream(request, removed_individuals)
 
     return wrapper
 
