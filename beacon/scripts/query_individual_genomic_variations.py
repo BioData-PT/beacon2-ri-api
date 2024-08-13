@@ -99,7 +99,7 @@ def main():
         
         individual = get_random_individual(queried_individual_ids)[0]["id"]
         print(individual)
-        queried_individual_ids.add(individual["id"])
+        queried_individual_ids.add(individual)
         
         while var == 1:
         
