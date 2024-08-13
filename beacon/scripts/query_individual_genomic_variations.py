@@ -112,7 +112,6 @@ def main():
             if variant_ids:
                 print(f"The genomic variants for biosampleId {individual_id} are (sorted by alleleFrequency):")
                 for vid in variant_ids:
-                    var_count += 1
                     variant_doc = collection.find_one({'variantInternalId': vid})
                     print(f"Querying variant id: {vid}")
                     alt = variant_doc["variation"]["alternateBases"]
