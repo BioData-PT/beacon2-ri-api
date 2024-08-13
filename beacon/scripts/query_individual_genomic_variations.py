@@ -99,18 +99,17 @@ def main():
         
         individual = get_random_individual(queried_individual_ids)[0]
         individual_id = individual["id"]
-        print(individual_id)
         queried_individual_ids.add(individual["_id"])
         
         while var == 1:
         
-            variant_ids = get_genomic_variants_for_individual(individual)
+            variant_ids = get_genomic_variants_for_individual(individual_id)
             
             # Try and query all the variants starting with the lower frequency ones and see when the individual is removed from the output
             if variant_ids:
                 print(f"Variant number: {count}")
                 count += 1
-                print(f"The genomic variants for biosampleId {individual} are (sorted by alleleFrequency):")
+                print(f"The genomic variants for biosampleId {individual_id} are (sorted by alleleFrequency):")
                 for vid in variant_ids:
                     variant_doc = collection.find_one({'variantInternalId': vid})
                     print(f"Querying variant id: {vid}")
@@ -121,7 +120,7 @@ def main():
                     vType = variant_doc["variation"]['variantType']
                     stdout, stderr = query_variant_with_curl(access_token, alt, ref, start, end, vType)
                     print("Removed individuals:", stdout)
-                    if individual in stdout:
+                    if individual_id in stdout:
                         print("!!!!!!!!!!!!!!!!!!!!!!!!!!!")
                         print("The individual was removed")
                         print("!!!!!!!!!!!!!!!!!!!!!!!!!!!")
