@@ -96,10 +96,7 @@ def main():
             end = variant_doc["_position"]["endInteger"]
             vType = variant_doc["variation"]['variantType']
             stdout, stderr = query_variant_with_curl(access_token, alt, ref, start, end, vType)
-            request, response, removed = stdout
-            print("Response:", response)
-            if removed == "true":
-                print("User was removed from output")
+            print("Response:", stdout)
             if stderr:
                 print("Error:", stderr)
     else:
