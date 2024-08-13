@@ -93,7 +93,6 @@ def main():
     
     while i < 100:
         count = 1
-        var_count = 0
         var = 1
     
         # Clear budget and history collections before starting queries
@@ -106,7 +105,7 @@ def main():
         while var == 1:
         
             variant_ids = get_genomic_variants_for_individual(individual_id)
-            print(f"Individual number: {count}")
+            print(f"Individual number: {i}")
             count += 1
             
             # Try and query all the variants starting with the lower frequency ones and see when the individual is removed from the output
