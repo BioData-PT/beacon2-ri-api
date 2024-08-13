@@ -86,8 +86,8 @@ def query_variant_with_curl(access_token, alt, ref, start, end, vType):
     return result.stdout, result.stderr
 
 def main():
+    i = 0
     access_token = input("Enter the access token: ")
-    
     queried_individual_ids = set()
     
     while i < 100:
