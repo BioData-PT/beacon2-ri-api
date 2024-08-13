@@ -87,7 +87,6 @@ def query_variant_with_curl(access_token, alt, ref, start, end, vType):
 
 def main():
     i = 0
-    e = 0
     access_token = input("Enter the access token: ")
     queried_individual_ids = set()
     response = {}
@@ -95,7 +94,7 @@ def main():
     while i < 100:
         count = 1
         var = 1
-        var_count = 0
+        var_count =0
     
         # Clear budget and history collections before starting queries
         clear_budget_and_history_collections()
@@ -111,7 +110,7 @@ def main():
             count += 1
             
             # Try and query all the variants starting with the lower frequency ones and see when the individual is removed from the output
-            while e < len(variant_ids):
+            if variant_ids:
                 print(f"The genomic variants for biosampleId {individual_id} are (sorted by alleleFrequency):")
                 for vid in variant_ids:
                     var_count += 1
@@ -132,7 +131,9 @@ def main():
                         break
                     if stderr:
                         print("Error:", stderr)
-                e += 1
+                    if var_count == len(variant_ids):
+                        break
+            
             response[individual_id] =  var_count
             print(response)
                         
