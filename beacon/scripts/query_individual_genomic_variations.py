@@ -107,7 +107,7 @@ def main():
             
             # Try and query all the variants starting with the lower frequency ones and see when the individual is removed from the output
             if variant_ids:
-                print(f"Variant number: {count}")
+                print(f"Individual number: {count}")
                 count += 1
                 print(f"The genomic variants for biosampleId {individual_id} are (sorted by alleleFrequency):")
                 for vid in variant_ids:
@@ -122,7 +122,7 @@ def main():
                     print("Removed individuals:", stdout)
                     if individual_id in stdout:
                         print("!!!!!!!!!!!!!!!!!!!!!!!!!!!")
-                        print("The individual was removed")
+                        print(f"The individual {individual_id} was removed")
                         print("!!!!!!!!!!!!!!!!!!!!!!!!!!!")
                         var = 0
                         break
