@@ -132,7 +132,7 @@ def main():
                     if stderr:
                         print("Error:", stderr)
             
-            response.append({individual_id: var_count})
+            response[individual_id] =  var_count
             print(response)
                         
         i += 1
