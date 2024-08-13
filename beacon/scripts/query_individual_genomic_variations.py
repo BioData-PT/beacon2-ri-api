@@ -97,7 +97,7 @@ def main():
         # Clear budget and history collections before starting queries
         clear_budget_and_history_collections()
         
-        individual = get_random_individual(queried_individual_ids)["id"]
+        individual = get_random_individual(queried_individual_ids)[0]
         queried_individual_ids.add(individual['_id'])
         
         while var == 1:
