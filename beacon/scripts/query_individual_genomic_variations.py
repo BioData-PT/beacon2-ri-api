@@ -134,6 +134,7 @@ def main():
                     if stderr:
                         print("Error:", stderr)
                     if var_count == len(variant_ids):
+                        var = 0
                         break
             
             response[individual_id] =  var_count
