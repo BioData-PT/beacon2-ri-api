@@ -29,7 +29,7 @@ individuals_collection = client.beacon.get_collection('individuals')
 def get_random_individual(exclude_ids=set()):
     # Get a random individual document excluding already selected ones
     pipeline = [
-        {"$match": {"id": {"$nin": list(exclude_ids)}}},
+        {"$match": {"_id": {"$nin": list(exclude_ids)}}},
         {"$sample": {"size": 1}}
     ]
     return list(individuals_collection.aggregate(pipeline))
@@ -97,9 +97,10 @@ def main():
         # Clear budget and history collections before starting queries
         clear_budget_and_history_collections()
         
-        individual = get_random_individual(queried_individual_ids)[0]["id"]
-        print(individual)
-        queried_individual_ids.add(individual)
+        individual = get_random_individual(queried_individual_ids)[0]
+        individual_id = individual["id"]
+        print(individual_id)
+        queried_individual_ids.add(individual["_id"])
         
         while var == 1:
         
