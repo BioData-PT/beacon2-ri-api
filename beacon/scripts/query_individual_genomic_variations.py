@@ -94,6 +94,7 @@ def main():
     while i < 100:
         count = 1
         var = 1
+        var_count = 0
     
         # Clear budget and history collections before starting queries
         clear_budget_and_history_collections()
@@ -112,6 +113,7 @@ def main():
             if variant_ids:
                 print(f"The genomic variants for biosampleId {individual_id} are (sorted by alleleFrequency):")
                 for vid in variant_ids:
+                    var_count += 1
                     variant_doc = collection.find_one({'variantInternalId': vid})
                     print(f"Querying variant id: {vid}")
                     alt = variant_doc["variation"]["alternateBases"]
