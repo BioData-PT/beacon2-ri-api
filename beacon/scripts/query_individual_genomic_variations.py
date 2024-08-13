@@ -104,6 +104,8 @@ def main():
         queried_individual_ids.add(individual["_id"])
         
         while var == 1:
+            
+            clear_budget_and_history_collections()
         
             variant_ids = get_genomic_variants_for_individual(individual_id)
             print(f"Individual number: {i}")
