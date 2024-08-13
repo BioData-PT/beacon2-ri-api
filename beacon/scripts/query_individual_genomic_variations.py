@@ -24,7 +24,7 @@ def clear_budget_and_history_collections():
     client.beacon.get_collection('history').delete_many({})
     print("Cleared budget and history collections.")
     
-individuals_collection = client.beacon.get_collection('genomicVariations')
+individuals_collection = client.beacon.get_collection('individuals')
     
 def get_random_individual(exclude_ids=set()):
     # Get a random individual document excluding already selected ones
