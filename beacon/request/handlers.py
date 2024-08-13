@@ -90,11 +90,12 @@ def update_individual_budget(user_id, individual_id, amount):
 def pvalue_strategy(access_token, records, qparams):
     helper = []
     total_cases = 0
-    
+    removed_individuals = []
     removed = False
 
     for record in records:
         individual_ids = set()
+        individuals_to_remove = set()
 
         # step 4: compute the risk for that query: ri = -log(1 - Di)
         allele_frequency = record.get('alleleFrequency')
@@ -151,6 +152,7 @@ def pvalue_strategy(access_token, records, qparams):
         if individuals_to_remove:
             # filter the individuals from the record
             removed = True
+            removed_individuals = individuals_to_remove
             LOG.debug(f"!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!")
             LOG.debug(f"Removed individuals: {list(individuals_to_remove)}") # signal to know which individuals have no more budget
             LOG.debug(f"!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!")
@@ -162,7 +164,7 @@ def pvalue_strategy(access_token, records, qparams):
         
         total_cases += len(record['caseLevelData'])        
 
-    return None, helper, total_cases, removed, individuals_to_remove
+    return None, helper, total_cases, removed, removed_individuals
 
 
 
