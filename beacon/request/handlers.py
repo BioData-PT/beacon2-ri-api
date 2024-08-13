@@ -123,7 +123,7 @@ def pvalue_strategy(access_token, records, qparams):
             response_history = client.beacon['history'].find_one({"userId": access_token, "query": qparams.summary()})
             if response_history is not None:
                 LOG.debug(f"Query was previously done by the same user")
-                return response_history["response"], helper, total_cases, removed  # Return stored answer if query was asked before by the same user
+                return response_history["response"], helper, total_cases, removed, removed_individuals  # Return stored answer if query was asked before by the same user
 
             # Step 3: check if there are records with bj > ri
             budget_info = client.beacon['budget'].find_one(search_criteria)
