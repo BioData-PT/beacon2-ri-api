@@ -294,7 +294,7 @@ def generic_handler(db_fn, request=None):
             client.beacon['history'].insert_one(document)
         
 
-        return await json_stream(request, response)
+        return await json_stream(request, response, removed)
 
     return wrapper
 
