@@ -89,9 +89,11 @@ def main():
     i = 0
     access_token = input("Enter the access token: ")
     queried_individual_ids = set()
+    response = {}
     
     while i < 100:
         count = 1
+        var_count = 0
         var = 1
     
         # Clear budget and history collections before starting queries
@@ -111,6 +113,7 @@ def main():
                 count += 1
                 print(f"The genomic variants for biosampleId {individual_id} are (sorted by alleleFrequency):")
                 for vid in variant_ids:
+                    var_count += 1
                     variant_doc = collection.find_one({'variantInternalId': vid})
                     print(f"Querying variant id: {vid}")
                     alt = variant_doc["variation"]["alternateBases"]
@@ -122,12 +125,15 @@ def main():
                     print("Removed individuals:", stdout)
                     if individual_id in stdout:
                         print("!!!!!!!!!!!!!!!!!!!!!!!!!!!")
-                        print(f"The individual {individual_id} was removed")
+                        print(f"The individual {individual_id} was removed in variant number {var_count}")
                         print("!!!!!!!!!!!!!!!!!!!!!!!!!!!")
                         var = 0
                         break
                     if stderr:
                         print("Error:", stderr)
+            
+            response.append({individual_id: var_count})
+            print(response)
                         
         i += 1
 
