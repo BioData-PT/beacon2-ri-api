@@ -106,11 +106,11 @@ def main():
         while var == 1:
         
             variant_ids = get_genomic_variants_for_individual(individual_id)
+            print(f"Individual number: {count}")
+            count += 1
             
             # Try and query all the variants starting with the lower frequency ones and see when the individual is removed from the output
             if variant_ids:
-                print(f"Individual number: {count}")
-                count += 1
                 print(f"The genomic variants for biosampleId {individual_id} are (sorted by alleleFrequency):")
                 for vid in variant_ids:
                     var_count += 1
