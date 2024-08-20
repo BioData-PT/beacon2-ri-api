@@ -86,31 +86,33 @@ def query_variant_with_curl(access_token, alt, ref, start, end, vType):
     return result.stdout, result.stderr
 
 def main():
-    i = 0
     access_token = input("Enter the access token: ")
-    queried_individual_ids = set()
+    individual_ids = ["NA19755", "HG01767", "HG01440", "HG01302", "NA20287", "NA20528", "NA18633", "NA19247", "HG01403", "HG00138",
+                      "HG03259", "HG01915", "HG01761", "NA19209", "NA18945", "NA12413", "HG00245", "HG00110", "HG02345", "NA19074",
+                      "HG02322", "HG00332", "NA19332", "HG03074", "HG01374", "HG01776", "NA19159", "NA19443", "HG00437", "HG00349",
+                      "HG00254", "NA20357", "HG02583", "HG01271", "HG00139", "NA19222", "NA19057", "HG03572", "HG01383", "NA12273",
+                      "HG03919", "HG01800", "NA20334", "HG00620", "HG02009", "HG01398", "HG00662", "HG03871", "HG03086", "HG03079",
+                      "HG00736", "HG00328", "NA19375", "HG02051", "HG03640", "HG00181", "HG03019", "HG00176", "HG02786", "HG01686",
+                      "HG00106", "HG03295", "HG01890", "HG00123", "HG03446", "HG03271", "HG00338", "HG03048", "HG03838", "NA19701", 
+                      "HG02787", "HG03476", "NA18562", "HG01811", "HG01275", "HG02470", "NA21099", "NA18933", "HG00324", "HG01277",
+                      "HG01979", "HG01253", "HG04038", "HG04186", "HG00378", "NA19403", "HG02813", "HG02277", "NA18519", "NA11843",
+                      "NA19310", "NA20809", "NA20525", "NA19334", "HG01254", "HG00553", "NA18613", "HG02655", "HG00513", "NA12006"]
+
     response = {}
-    
-    while i < 100:
-        count = 1
+
+    for individual_id in individual_ids:
         var = 1
-        var_count =0
-    
+        var_count = 0
+        
         # Clear budget and history collections before starting queries
         clear_budget_and_history_collections()
-        
-        individual = get_random_individual(queried_individual_ids)[0]
-        individual_id = individual["id"]
-        queried_individual_ids.add(individual["_id"])
-        
+
         while var == 1:
-            
             clear_budget_and_history_collections()
-        
-            variant_ids = get_genomic_variants_for_individual(individual_id)
-            print(f"Individual number: {i}")
-            count += 1
             
+            variant_ids = get_genomic_variants_for_individual(individual_id)
+            print(f"Processing individual: {individual_id}")
+
             # Try and query all the variants starting with the lower frequency ones and see when the individual is removed from the output
             if variant_ids:
                 print(f"The genomic variants for biosampleId {individual_id} are (sorted by alleleFrequency):")
@@ -136,11 +138,9 @@ def main():
                     if var_count == len(variant_ids):
                         var = 0
                         break
-            
-            response[individual_id] =  var_count
+
+            response[individual_id] = var_count
             print(response)
-                        
-        i += 1
 
 if __name__ == "__main__":
     main()
