@@ -128,7 +128,7 @@ def pvalue_strategy(access_token, records, qparams):
             # Step 3: check if there are records with bj > ri
             budget_info = client.beacon['budget'].find_one(search_criteria)
             if not budget_info:
-                p_value = 0.5 # upper bound on test errors
+                p_value = 0.1 # upper bound on test errors
                 bj = -(math.log10(p_value))  # initial budget
                 budget_info = {
                     "userId": access_token,
