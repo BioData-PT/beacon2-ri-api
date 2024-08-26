@@ -109,8 +109,6 @@ def pvalue_strategy(access_token, records, qparams):
         for case in case_level_data:
             individual_id = case.get('biosampleId')  # biosampleId = individualId
             individual_ids.add(individual_id)
-                
-        individuals_to_remove = set()
 
         for individualId in individual_ids:
             
