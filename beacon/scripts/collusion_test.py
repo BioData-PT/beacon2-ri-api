@@ -152,10 +152,11 @@ def main():
                         print(f"The individual {individual_id} was removed in variant number {var_count}")
                         print("!!!!!!!!!!!!!!!!!!!!!!!!!!!")
                         risk_value += current_budget
-                        user_count += 1
                         if risk_value >= -(math.log10(0.1)):
                             print("The number of users before the re-identification limit is: ", user_count)
+                            var = 0
                             break
+                        user_count += 1
                         update_user_budget_to_initial(individual_id)
                     if stderr:
                         print("Error:", stderr)
