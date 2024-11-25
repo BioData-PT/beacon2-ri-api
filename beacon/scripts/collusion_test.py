@@ -147,7 +147,6 @@ def main():
                     end = variant_doc["_position"]["endInteger"]
                     vType = variant_doc["variation"]['variantType']
                     stdout, stderr = query_variant_with_curl(access_token, alt, ref, start, end, vType)
-                    print("Removed individuals:", stdout)
                     if individual_id in stdout:
                         print("!!!!!!!!!!!!!!!!!!!!!!!!!!!")
                         print(f"The individual {individual_id} was removed in variant number {var_count}")
@@ -155,7 +154,7 @@ def main():
                         risk_value += current_budget
                         user_count += 1
                         if risk_value >= -(math.log10(0.1)):
-                            print("The number of users until the raching the limit before re-identification is: ", user_count)
+                            print("The number of users before the re-identification limit is: ", user_count)
                             break
                         update_user_budget_to_initial(individual_id)
                     if stderr:
