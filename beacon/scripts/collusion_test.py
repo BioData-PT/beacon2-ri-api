@@ -3,7 +3,6 @@ import os
 import subprocess
 from pymongo import MongoClient, ReturnDocument
 
-from beacon.request.model import LOG
 
 # connect to MongoDB
 database_password = os.getenv('DB_PASSWD')
@@ -92,7 +91,6 @@ def query_variant_with_curl(access_token, alt, ref, start, end, vType):
 def update_user_budget_to_initial(individual_id):
     try:
         budget_collection = client.beacon['budget']
-        #LOG.debug(f"Updating budget for individual_id={individual_id} by amount={amount}")
 
         # Find the document and update it, returning the updated document
         budget_collection.find_one_and_update(
@@ -101,7 +99,6 @@ def update_user_budget_to_initial(individual_id):
         )
 
     except Exception as e:
-        LOG.error(f"Error updating budget: {str(e)}")
         return None
     
     
