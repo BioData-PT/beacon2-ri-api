@@ -152,7 +152,7 @@ def main():
                         print(f"The individual {individual_id} was removed in variant number {var_count}")
                         print("!!!!!!!!!!!!!!!!!!!!!!!!!!!")
                         budget = client.beacon.get_collection('budget').find_one({"individualId": individual_id})['budget']
-                        risk_value += budget
+                        risk_value += (-math.log10(0.5) - budget)
                         if risk_value >= -(math.log10(0.1)):
                             print("The number of users before the re-identification limit is: ", user_count)
                             var = 0
