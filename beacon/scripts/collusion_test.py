@@ -139,7 +139,6 @@ def main():
         # Try and query all the variants starting with the lower frequency ones
         if variant_ids:
             print(f"The genomic variants for biosampleId {individual_id} are (sorted by alleleFrequency):")
-            print("THE BUDGET OF THE INDIVIDUAL IS BEGIN: ", client.beacon.get_collection('budget').find_one({"individualId": individual_id})['budget'])
             for vid in variant_ids:
                 var_count += 1
                 variant_doc = collection.find_one({'variantInternalId': vid})
@@ -150,6 +149,7 @@ def main():
                 end = variant_doc["_position"]["endInteger"]
                 vType = variant_doc["variation"]['variantType']
                 stdout, stderr = query_variant_with_curl(access_token, alt, ref, start, end, vType)
+                print("THE BUDGET OF THE INDIVIDUAL IS BEGIN: ", client.beacon.get_collection('budget').find_one({"individualId": individual_id})['budget'])
                 if individual_id in stdout:
                     print("!!!!!!!!!!!!!!!!!!!!!!!!!!!")
                     print(f"The individual {individual_id} was removed in variant number {var_count}")
