@@ -88,21 +88,20 @@ def query_variant_with_curl(access_token, alt, ref, start, end, vType):
     return result.stdout, result.stderr
 
 
-def update_user_budget_to_initial(individual_id):
-    
+def update_individual_budget(individual_id):
     try:
         budget_collection = client.beacon['budget']
+        #LOG.debug(f"Updating budget for individual_id={individual_id} by amount={amount}")
+
+        # Find the document and update it, returning the updated document
         updated_document = budget_collection.find_one_and_update(
-            {"individualId": individual_id, "userId": "Bearer collusion"},
+            {"individualId": individual_id},
             {"$set": {"budget": -math.log10(0.5)}},
             return_document=ReturnDocument.AFTER  # Return the updated document
         )
+
         return updated_document
-        
-        
-        print("BLA BLA BLA")
-        print("THE BUDGET WAS UPDATED, SO 1 MORE USER")
-        print("!!!!!!!!!!!!!!!!!!!!!!!!!!!")
+
     except Exception as e:
         return None
     
