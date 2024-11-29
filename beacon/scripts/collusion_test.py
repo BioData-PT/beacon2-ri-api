@@ -97,10 +97,6 @@ def update_user_budget_to_initial(individual_id):
             {"individualId": individual_id},
             {"$set": {"budget": -(math.log10(0.5))}},
         )
-        print("!!!!!!!!!!!!!!!!!!!!!!!!!!!")
-        print("THE BUDGET WAS UPDATED, SO 1 MORE USER")
-        print("The budget is now: ", client.beacon['budget'].find_one({"individualId": individual_id},))
-        print("!!!!!!!!!!!!!!!!!!!!!!!!!!!")
     except Exception as e:
         return None
     
@@ -151,16 +147,15 @@ def main():
                 if individual_id in stdout:
                     print("!!!!!!!!!!!!!!!!!!!!!!!!!!!")
                     print(f"The individual {individual_id} was removed in variant number {var_count}")
-                    print("!!!!!!!!!!!!!!!!!!!!!!!!!!!")
                     total_risk -= (current_budget - client.beacon.get_collection('budget').find_one({"individualId": individual_id})['budget'])
-                    print("!!!!!!!!!!!!!!!!!!!!!!!!!!!")
                     print("The total risk is now: ", total_risk)
-                    print("!!!!!!!!!!!!!!!!!!!!!!!!!!!")
                     if total_risk <= 0:
                         print("The number of users after the re-identification limit is: ", user_count)
                         break
                     user_count += 1
                     update_user_budget_to_initial(individual_id)
+                    print("THE NUMBER OF COLLUDING USERS IS NOW: ", user_count)
+                    print("!!!!!!!!!!!!!!!!!!!!!!!!!!!")
                 if stderr:
                     print("Error:", stderr)
 
