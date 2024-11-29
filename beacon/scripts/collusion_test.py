@@ -89,7 +89,6 @@ def query_variant_with_curl(access_token, alt, ref, start, end, vType):
 
 
 def update_user_budget_to_initial(individual_id, bt):
-    try:
         budget_collection = client.beacon['budget']
         print("O BUDGET È ESTEEEEEEEEE:", bt)
         print("111111:", client.beacon.get_collection('budget').find_one({"individualId": individual_id})['budget'])
@@ -102,9 +101,6 @@ def update_user_budget_to_initial(individual_id, bt):
         )
         
         print("222222:", client.beacon.get_collection('budget').find_one({"individualId": individual_id})['budget'])
-
-    except Exception as e:
-        return None
     
     
     
