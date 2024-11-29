@@ -146,6 +146,7 @@ def main():
                 vType = variant_doc["variation"]['variantType']
                 stdout, stderr = query_variant_with_curl(access_token, alt, ref, start, end, vType)
                 if individual_id in stdout:
+                    print(stdout)
                     print("!!!!!!!!!!!!!!!!!!!!!!!!!!!")
                     print(f"The individual {individual_id} was removed in variant number {var_count}")
                     total_risk -= (current_budget - client.beacon.get_collection('budget').find_one({"individualId": individual_id})['budget'])

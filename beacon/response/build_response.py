@@ -40,25 +40,16 @@ def build_response_summary(exists, num_total_results):
 def build_generic_response(
     results_by_dataset:Dict[str,Tuple[int,list]], accessible_datasets:List[str], granularity:Granularity,
     qparams, entity_schema, registered:bool, public:bool):
-
-    # flag to check if we need to keep the query and result in database (if user is registered and results include non accessible datasets)
-    store = False
-
+    
     # iterate over all results to get:
     # total count
     # response by dataset
-
+    store = False
     num_total_results = 0
     response_list:List[Dict] = []
     for dataset_id in results_by_dataset:
-        # if user is not authenticated, they cannot see aggregated data from datasets that are not public, so this will prevent
-        # the non public datasets to be appended to non authenticated users responses
-        if public and dataset_id not in accessible_datasets:
-            continue
-
         num_dataset_results = results_by_dataset[dataset_id][0]
         dataset_results = results_by_dataset[dataset_id][1]
-        total_cases = results_by_dataset[dataset_id][2]
         num_total_results += num_dataset_results
         
         dataset_response = {
@@ -66,33 +57,29 @@ def build_generic_response(
             "exists": num_dataset_results > 0,
             "setType": "dataset",
             "results": dataset_results,
-            "resultsCount": total_cases
+            "resultsCount": num_dataset_results
         }
         
         # if dataset is not authorized, erase the records part
-        if dataset_id not in accessible_datasets or not registered:
+        if dataset_id not in accessible_datasets:
             dataset_response["results"] = []
             
         response_list.append(dataset_response)
-
+        
         if dataset_id not in accessible_datasets and not registered and not public:
-            store = True
+                store = True
     
-    beacon_response = []
-            
-    if not dataset_results == []:
-    
-        beacon_response = {
-            'meta': build_meta(qparams, entity_schema, granularity),
-            'responseSummary': build_response_summary(num_total_results > 0, num_total_results),
-            'beaconHandovers': conf.beacon_handovers,
-            'response': {
-                'resultSets': response_list
-            }
+    beacon_response = {
+        'meta': build_meta(qparams, entity_schema, granularity),
+        'responseSummary': build_response_summary(num_total_results > 0, num_total_results),
+        'beaconHandovers': conf.beacon_handovers,
+        'response': {
+            'resultSets': response_list
         }
-    
-
+    }
     return beacon_response, store
+
+
 
 
 def build_response_by_dataset(data, response_dict, num_total_results, qparams, func):

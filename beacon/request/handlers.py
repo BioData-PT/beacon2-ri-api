@@ -252,16 +252,17 @@ def generic_handler(db_fn, request=None):
             ######################## P-VALUE ########################
 
             # apply the p-value strategy if user is authenticated but not registered and only if submodule is genomic variations
-            count = 1
             LOG.debug(f"PUBLIC = {public}")
             LOG.debug(f"REGISTERED = {registered}")
             if not public and not registered and db_fn_submodule == "g_variants":
                 history, records, total_cases, removed, removed_individuals = pvalue_strategy(access_token, records, qparams)
-                dataset_result = (count, records, total_cases)
+                dataset_result = (len(list(records)), list(records))
+                LOG.debug(f"DATASET RESULTS = {dataset_result}")
                 datasets_query_results[dataset_id] = (dataset_result)
                 
                 if history is not None:
                     LOG.debug(f"Query was stored in the database")
+                    LOG.debug(history)
                     return await json_stream(request, history)
 
         LOG.debug(f"schema = {entity_schema}")
@@ -293,8 +294,9 @@ def generic_handler(db_fn, request=None):
         if not store: # !!!!! JUST TESTING TO SEE IF IT KEEPS THE RECORD IN THE DB WHILE ALL DATASETS ARE ACCESSIBLE TO ALL USERS (public or not)
             client.beacon['history'].insert_one(document)
         
+        LOG.debug(f"response = {response}")
 
-        return await json_stream(request, removed_individuals)
+        return await json_stream(request, response)
 
     return wrapper
 
