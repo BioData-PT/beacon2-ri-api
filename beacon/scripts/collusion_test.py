@@ -88,7 +88,7 @@ def query_variant_with_curl(access_token, alt, ref, start, end, vType):
     return result.stdout, result.stderr
 
 
-def update_individual_budget(individual_id):
+def update_user_budget_to_initial(individual_id):
     try:
         budget_collection = client.beacon['budget']
         #LOG.debug(f"Updating budget for individual_id={individual_id} by amount={amount}")
