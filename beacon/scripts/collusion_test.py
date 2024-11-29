@@ -139,6 +139,7 @@ def main():
         # Try and query all the variants starting with the lower frequency ones
         if variant_ids:
             print(f"The genomic variants for biosampleId {individual_id} are (sorted by alleleFrequency):")
+            print("THE BUDGET OF THE INDIVIDUAL IS BEGIN: ", client.beacon.get_collection('budget').find_one({"individualId": individual_id})['budget'])
             for vid in variant_ids:
                 var_count += 1
                 variant_doc = collection.find_one({'variantInternalId': vid})
