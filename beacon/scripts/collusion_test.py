@@ -88,15 +88,16 @@ def query_variant_with_curl(access_token, alt, ref, start, end, vType):
     return result.stdout, result.stderr
 
 
-def update_user_budget_to_initial(individual_id):
+def update_user_budget_to_initial(individual_id, bt):
     try:
         budget_collection = client.beacon['budget']
+        print("O BUDGET È ESTEEEEEEEEE:", bt)
         #LOG.debug(f"Updating budget for individual_id={individual_id} by amount={amount}")
 
         # Find the document and update it, returning the updated document
         updated_document = budget_collection.find_one_and_update(
             {"individualId": individual_id},
-            {"$set": {"budget": -math.log10(0.5)}},
+            {"$inc": {"budget": (-math.log10(0.5) - bt)}},
             return_document=ReturnDocument.AFTER  # Return the updated document
         )
         print(updated_document)
@@ -155,7 +156,8 @@ def main():
                     print("!!!!!!!!!!!!!!!!!!!!!!!!!!!")
                     print(f"The individual {individual_id} was removed in variant number {var_count}")
                     print("!!!!!!!!!!!!!!!!!!!!!!!!!!!")
-                    print("THE BUDGET OF THE INDIVIDUAL IS: ", client.beacon.get_collection('budget').find_one({"individualId": individual_id})['budget'])
+                    bt = client.beacon.get_collection('budget').find_one({"individualId": individual_id})['budget']
+                    print("THE BUDGET OF THE INDIVIDUAL IS: ", bt)
                     total_risk -= (current_budget - client.beacon.get_collection('budget').find_one({"individualId": individual_id})['budget'])
                     print("!!!!!!!!!!!!!!!!!!!!!!!!!!!")
                     print("The total risk is now: ", total_risk)
@@ -165,7 +167,7 @@ def main():
                         break
                     user_count += 1
                     clear_budget_and_history_collections()
-                    update_user_budget_to_initial(individual_id)
+                    update_user_budget_to_initial(individual_id, bt)
                     budget_info = client.beacon.get_collection('budget').find_one({"individualId": individual_id})['budget']
                     print("The budget is now QUERO VER ISTO: ", budget_info)
                     print("!!!!!!!!!!!!!!!!!!!!!!!!!!!")
