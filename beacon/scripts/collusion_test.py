@@ -89,16 +89,16 @@ def query_variant_with_curl(access_token, alt, ref, start, end, vType):
 
 
 def update_user_budget_to_initial(individual_id):
+    
     try:
         budget_collection = client.beacon['budget']
-
-        # Find the document and update it, returning the updated document
         budget_collection.find_one_and_update(
             {"individualId": individual_id},
             {"$inc": {"budget": -(math.log10(0.5))}},
+            return_document=ReturnDocument.AFTER  # Return the updated document
         )
-        print("!!!!!!!!!!!!!!!!!!!!!!!!!!!")
-        budget_info = client.beacon.get_collection('budget').find_one({"individualId": individual_id})
+        
+        budget_info = client.beacon.get_collection('budget').find_one({"individualId": individual_id})['budget']
         print("The budget is now: ", budget_info['budget'])
         print("BLA BLA BLA")
         print("THE BUDGET WAS UPDATED, SO 1 MORE USER")
