@@ -94,7 +94,7 @@ def update_user_budget_to_initial(individual_id):
         budget_collection = client.beacon['budget']
         budget_collection.find_one_and_update(
             {"individualId": individual_id},
-            {"$inc": {"budget": -(math.log10(0.5))}},
+            {"$set": {"budget": -(math.log10(0.5))}},
             return_document=ReturnDocument.AFTER  # Return the updated document
         )
         
