@@ -92,17 +92,16 @@ def update_user_budget_to_initial(individual_id, bt):
     try:
         budget_collection = client.beacon['budget']
         print("O BUDGET È ESTEEEEEEEEE:", bt)
+        print("111111:", client.beacon.get_collection('budget').find_one({"individualId": individual_id})['budget'])
         #LOG.debug(f"Updating budget for individual_id={individual_id} by amount={amount}")
 
         # Find the document and update it, returning the updated document
-        updated_document = budget_collection.find_one_and_update(
+        budget_collection.find_one_and_update(
             {"individualId": individual_id},
-            {"$inc": {"budget": (-math.log10(0.5) - bt)}},
-            return_document=ReturnDocument.AFTER  # Return the updated document
+            {"$inc": {"budget": (-math.log10(0.5) - bt)}}
         )
-        print(updated_document)
-
-        return updated_document
+        
+        print("222222:", client.beacon.get_collection('budget').find_one({"individualId": individual_id})['budget'])
 
     except Exception as e:
         return None
