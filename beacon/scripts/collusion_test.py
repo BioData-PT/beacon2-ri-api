@@ -99,7 +99,8 @@ def update_user_budget_to_initial(individual_id):
         )
         print("!!!!!!!!!!!!!!!!!!!!!!!!!!!")
         print("THE BUDGET WAS UPDATED, SO 1 MORE USER")
-        print("The budget is now: ", client.beacon.get_collection('budget').find_one({"individualId": individual_id})['budget'])
+        budget_info = client.beacon.get_collection('budget').find_one({"individualId": individual_id})
+        print("The budget is now: ", budget_info['budget'])
         print("!!!!!!!!!!!!!!!!!!!!!!!!!!!")
     except Exception as e:
         return None
