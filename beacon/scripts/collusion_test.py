@@ -95,7 +95,7 @@ def update_user_budget_to_initial(individual_id):
         # Find the document and update it, returning the updated document
         budget_collection.find_one_and_update(
             {"individualId": individual_id},
-            {"$inc": {"budget": -(math.log10(0.5))}},
+            {"$set": {"budget": -(math.log10(0.5))}},
         )
         print("!!!!!!!!!!!!!!!!!!!!!!!!!!!")
         print("THE BUDGET WAS UPDATED, SO 1 MORE USER")
