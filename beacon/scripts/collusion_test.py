@@ -90,6 +90,10 @@ def query_variant_with_curl(access_token, alt, ref, start, end, vType):
 
 def update_user_budget_to_initial(individual_id, bt):
         budget_collection = client.beacon['budget']
+        budget_doc = client.beacon.get_collection('budget').find_one({"individualId": individual_id})
+        if budget_doc is None:
+            print(f"No budget document found for individualId: {individual_id}")
+            return  # Or handle this scenario appropriately
         print("O BUDGET È ESTEEEEEEEEE:", bt)
         print("111111:", client.beacon.get_collection('budget').find_one({"individualId": individual_id})['budget'])
         #LOG.debug(f"Updating budget for individual_id={individual_id} by amount={amount}")
