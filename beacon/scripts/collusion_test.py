@@ -97,7 +97,10 @@ def update_user_budget_to_initial(individual_id):
             {"individualId": individual_id},
             {"$inc": {"budget": -(math.log10(0.5))}},
         )
-
+        print("!!!!!!!!!!!!!!!!!!!!!!!!!!!")
+        print("THE BUDGET WAS UPDATED, SO 1 MORE USER")
+        print("The budget is now: ", client.beacon['budget'].find_one({"individualId": individual_id},))
+        print("!!!!!!!!!!!!!!!!!!!!!!!!!!!")
     except Exception as e:
         return None
     
@@ -105,68 +108,65 @@ def update_user_budget_to_initial(individual_id):
     
 def main():
     access_token = input("Enter the access token: ")
-    individual_ids = ["NA19755", "HG01767", "HG01440", "HG01302", "NA20287", "NA20528", "NA18633", "NA19247", "HG01403", "HG00138",
-                      "HG03259", "HG01915", "HG01761", "NA19209", "NA18945", "NA12413", "HG00245", "HG00110", "HG02345", "NA19074",
-                      "HG02322", "HG00332", "NA19332", "HG03074", "HG01374", "HG01776", "NA19159", "NA19443", "HG00437", "HG00349",
-                      "HG00254", "NA20357", "HG02583", "HG01271", "HG00139", "NA19222", "NA19057", "HG03572", "HG01383", "NA12273",
-                      "HG03919", "HG01800", "NA20334", "HG00620", "HG02009", "HG01398", "HG00662", "HG03871", "HG03086", "HG03079",
-                      "HG00736", "HG00328", "NA19375", "HG02051", "HG03640", "HG00181", "HG03019", "HG00176", "HG02786", "HG01686",
-                      "HG00106", "HG03295", "HG01890", "HG00123", "HG03446", "HG03271", "HG00338", "HG03048", "HG03838", "NA19701", 
-                      "HG02787", "HG03476", "NA18562", "HG01811", "HG01275", "HG02470", "NA21099", "NA18933", "HG00324", "HG01277",
-                      "HG01979", "HG01253", "HG04038", "HG04186", "HG00378", "NA19403", "HG02813", "HG02277", "NA18519", "NA11843",
-                      "NA19310", "NA20809", "NA20525", "NA19334", "HG01254", "HG00553", "NA18613", "HG02655", "HG00513", "NA12006"]
+    #individual_ids = ["NA19755", "HG01767", "HG01440", "HG01302", "NA20287", "NA20528", "NA18633", "NA19247", "HG01403", "HG00138",
+     #                 "HG03259", "HG01915", "HG01761", "NA19209", "NA18945", "NA12413", "HG00245", "HG00110", "HG02345", "NA19074",
+      #                "HG02322", "HG00332", "NA19332", "HG03074", "HG01374", "HG01776", "NA19159", "NA19443", "HG00437", "HG00349",
+       #               "HG00254", "NA20357", "HG02583", "HG01271", "HG00139", "NA19222", "NA19057", "HG03572", "HG01383", "NA12273",
+        #              "HG03919", "HG01800", "NA20334", "HG00620", "HG02009", "HG01398", "HG00662", "HG03871", "HG03086", "HG03079",
+         #             "HG00736", "HG00328", "NA19375", "HG02051", "HG03640", "HG00181", "HG03019", "HG00176", "HG02786", "HG01686",
+          #            "HG00106", "HG03295", "HG01890", "HG00123", "HG03446", "HG03271", "HG00338", "HG03048", "HG03838", "NA19701", 
+           #           "HG02787", "HG03476", "NA18562", "HG01811", "HG01275", "HG02470", "NA21099", "NA18933", "HG00324", "HG01277",
+            #          "HG01979", "HG01253", "HG04038", "HG04186", "HG00378", "NA19403", "HG02813", "HG02277", "NA18519", "NA11843",
+             #         "NA19310", "NA20809", "NA20525", "NA19334", "HG01254", "HG00553", "NA18613", "HG02655", "HG00513", "NA12006"]
+
+    individual_ids = ["NA19074"]
 
     response = {}
 
     for individual_id in individual_ids:
-        var = 1
         var_count = 0
-        risk_value = 0.0
-        current_budget = -(math.log10(0.5))
         user_count = 1
+        current_budget = -(math.log10(0.5))
+        total_risk = -(math.log10(0.1))
         
         # Clear budget and history collections before starting queries
         clear_budget_and_history_collections()
 
-        while var == 1:
-            clear_budget_and_history_collections()
-            
-            variant_ids = get_genomic_variants_for_individual(individual_id)
-            print(f"Processing individual: {individual_id}")
+        variant_ids = get_genomic_variants_for_individual(individual_id)
+        print(f"Processing individual: {individual_id}")
 
-            # Try and query all the variants starting with the lower frequency ones
-            if variant_ids:
-                print(f"The genomic variants for biosampleId {individual_id} are (sorted by alleleFrequency):")
-                for vid in variant_ids:
-                    var_count += 1
-                    variant_doc = collection.find_one({'variantInternalId': vid})
-                    print(f"Querying variant id: {vid}")
-                    alt = variant_doc["variation"]["alternateBases"]
-                    ref = variant_doc["variation"]["referenceBases"]
-                    start = variant_doc["_position"]["startInteger"]
-                    end = variant_doc["_position"]["endInteger"]
-                    vType = variant_doc["variation"]['variantType']
-                    stdout, stderr = query_variant_with_curl(access_token, alt, ref, start, end, vType)
-                    if individual_id in stdout:
-                        print("!!!!!!!!!!!!!!!!!!!!!!!!!!!")
-                        print(f"The individual {individual_id} was removed in variant number {var_count}")
-                        print("!!!!!!!!!!!!!!!!!!!!!!!!!!!")
-                        budget = client.beacon.get_collection('budget').find_one({"individualId": individual_id})['budget']
-                        risk_value += (-math.log10(0.5) - budget)
-                        if risk_value >= -(math.log10(0.1)):
-                            print("The number of users before the re-identification limit is: ", user_count)
-                            var = 0
-                            break
-                        user_count += 1
-                        update_user_budget_to_initial(individual_id)
-                    if stderr:
-                        print("Error:", stderr)
-                    if var_count == len(variant_ids):
-                        var = 0
+        # Try and query all the variants starting with the lower frequency ones
+        if variant_ids:
+            print(f"The genomic variants for biosampleId {individual_id} are (sorted by alleleFrequency):")
+            for vid in variant_ids:
+                var_count += 1
+                variant_doc = collection.find_one({'variantInternalId': vid})
+                print(f"Querying variant id: {vid}")
+                alt = variant_doc["variation"]["alternateBases"]
+                ref = variant_doc["variation"]["referenceBases"]
+                start = variant_doc["_position"]["startInteger"]
+                end = variant_doc["_position"]["endInteger"]
+                vType = variant_doc["variation"]['variantType']
+                stdout, stderr = query_variant_with_curl(access_token, alt, ref, start, end, vType)
+                if individual_id in stdout:
+                    print("!!!!!!!!!!!!!!!!!!!!!!!!!!!")
+                    print(f"The individual {individual_id} was removed in variant number {var_count}")
+                    print("!!!!!!!!!!!!!!!!!!!!!!!!!!!")
+                    total_risk -= (current_budget - client.beacon.get_collection('budget').find_one({"individualId": individual_id})['budget'])
+                    print("!!!!!!!!!!!!!!!!!!!!!!!!!!!")
+                    print("The total risk is now: ", total_risk)
+                    print("!!!!!!!!!!!!!!!!!!!!!!!!!!!")
+                    if total_risk <= 0:
+                        print("The number of users after the re-identification limit is: ", user_count)
                         break
+                    user_count += 1
+                    clear_budget_and_history_collections()
+                    update_user_budget_to_initial(individual_id)
+                if stderr:
+                    print("Error:", stderr)
 
-            response[individual_id] = user_count
-            print(response)
+        response[individual_id] = user_count
+        print(response)
 
 if __name__ == "__main__":
     main()
