@@ -98,7 +98,7 @@ def update_user_budget_to_initial(individual_id):
             return_document=ReturnDocument.AFTER  # Return the updated document
         )
         
-        budget_info = client.beacon.get_collection('budget').find_one({"individualId": individual_id})['budget']
+        budget_info = client.beacon.get_collection('budget').find_one({"individualId": individual_id})
         print("The budget is now: ", budget_info['budget'])
         print("BLA BLA BLA")
         print("THE BUDGET WAS UPDATED, SO 1 MORE USER")
