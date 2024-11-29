@@ -152,6 +152,7 @@ def main():
                     print("!!!!!!!!!!!!!!!!!!!!!!!!!!!")
                     print(f"The individual {individual_id} was removed in variant number {var_count}")
                     print("!!!!!!!!!!!!!!!!!!!!!!!!!!!")
+                    print("THE BUDGET OF THE INDIVIDUAL IS: ", client.beacon.get_collection('budget').find_one({"individualId": individual_id})['budget'])
                     total_risk -= (current_budget - client.beacon.get_collection('budget').find_one({"individualId": individual_id})['budget'])
                     print("!!!!!!!!!!!!!!!!!!!!!!!!!!!")
                     print("The total risk is now: ", total_risk)
@@ -162,6 +163,9 @@ def main():
                     user_count += 1
                     clear_budget_and_history_collections()
                     update_user_budget_to_initial(individual_id)
+                    print("!!!!!!!!!!!!!!!!!!!!!!!!!!!")
+                    print("THE NUMBER OF USERS IS NOW:", user_count)
+                    print("!!!!!!!!!!!!!!!!!!!!!!!!!!!")
                 if stderr:
                     print("Error:", stderr)
 
