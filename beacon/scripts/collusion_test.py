@@ -92,14 +92,14 @@ def update_user_budget_to_initial(individual_id):
     
     try:
         budget_collection = client.beacon['budget']
-        budget_collection.find_one_and_update(
-            {"individualId": individual_id},
-            {"$set": {"budget": -(math.log10(0.5))}},
+        updated_document = budget_collection.find_one_and_update(
+            {"individualId": individual_id, "userId": "Bearer collusion"},
+            {"$set": {"budget": -math.log10(0.5)}},
             return_document=ReturnDocument.AFTER  # Return the updated document
         )
+        return updated_document
         
-        budget_info = client.beacon.get_collection('budget').find_one({"individualId": individual_id})
-        print("The budget is now: ", budget_info['budget'])
+        
         print("BLA BLA BLA")
         print("THE BUDGET WAS UPDATED, SO 1 MORE USER")
         print("!!!!!!!!!!!!!!!!!!!!!!!!!!!")
@@ -166,6 +166,8 @@ def main():
                     user_count += 1
                     clear_budget_and_history_collections()
                     update_user_budget_to_initial(individual_id)
+                    budget_info = client.beacon.get_collection('budget').find_one({"individualId": individual_id})
+                    print("The budget is now QUERO VER ISTO: ", budget_info['budget'])
                     print("!!!!!!!!!!!!!!!!!!!!!!!!!!!")
                     print("THE NUMBER OF USERS IS NOW:", user_count)
                     print("!!!!!!!!!!!!!!!!!!!!!!!!!!!")
