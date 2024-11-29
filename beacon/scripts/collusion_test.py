@@ -88,23 +88,21 @@ def query_variant_with_curl(access_token, alt, ref, start, end, vType):
     return result.stdout, result.stderr
 
 
-def update_user_budget_to_initial(individual_id, bt):
+def update_user_budget_to_initial(individual_id):
+    try:
         budget_collection = client.beacon['budget']
-        budget_doc = client.beacon.get_collection('budget').find_one({"individualId": individual_id})
-        if budget_doc is None:
-            print(f"No budget document found for individualId: {individual_id}")
-            return  # Or handle this scenario appropriately
-        print("O BUDGET È ESTEEEEEEEEE:", bt)
-        print("111111:", client.beacon.get_collection('budget').find_one({"individualId": individual_id})['budget'])
-        #LOG.debug(f"Updating budget for individual_id={individual_id} by amount={amount}")
 
         # Find the document and update it, returning the updated document
         budget_collection.find_one_and_update(
             {"individualId": individual_id},
-            {"$inc": {"budget": (-math.log10(0.5) - bt)}}
+            {"$inc": {"budget": -(math.log10(0.5))}},
         )
-        
-        print("222222:", client.beacon.get_collection('budget').find_one({"individualId": individual_id})['budget'])
+        print("!!!!!!!!!!!!!!!!!!!!!!!!!!!")
+        print("THE BUDGET WAS UPDATED, SO 1 MORE USER")
+        print("The budget is now: ", client.beacon['budget'].find_one({"individualId": individual_id},))
+        print("!!!!!!!!!!!!!!!!!!!!!!!!!!!")
+    except Exception as e:
+        return None
     
     
     
@@ -121,7 +119,7 @@ def main():
             #          "HG01979", "HG01253", "HG04038", "HG04186", "HG00378", "NA19403", "HG02813", "HG02277", "NA18519", "NA11843",
              #         "NA19310", "NA20809", "NA20525", "NA19334", "HG01254", "HG00553", "NA18613", "HG02655", "HG00513", "NA12006"]
 
-    individual_ids = ["NA19755"]
+    individual_ids = ["NA19074"]
 
     response = {}
 
@@ -150,13 +148,10 @@ def main():
                 end = variant_doc["_position"]["endInteger"]
                 vType = variant_doc["variation"]['variantType']
                 stdout, stderr = query_variant_with_curl(access_token, alt, ref, start, end, vType)
-                print("THE BUDGET OF THE INDIVIDUAL IS BEGIN: ", client.beacon.get_collection('budget').find_one({"individualId": individual_id})['budget'])
                 if individual_id in stdout:
                     print("!!!!!!!!!!!!!!!!!!!!!!!!!!!")
                     print(f"The individual {individual_id} was removed in variant number {var_count}")
                     print("!!!!!!!!!!!!!!!!!!!!!!!!!!!")
-                    bt = client.beacon.get_collection('budget').find_one({"individualId": individual_id})['budget']
-                    print("THE BUDGET OF THE INDIVIDUAL IS: ", bt)
                     total_risk -= (current_budget - client.beacon.get_collection('budget').find_one({"individualId": individual_id})['budget'])
                     print("!!!!!!!!!!!!!!!!!!!!!!!!!!!")
                     print("The total risk is now: ", total_risk)
@@ -165,13 +160,7 @@ def main():
                         print("The number of users after the re-identification limit is: ", user_count)
                         break
                     user_count += 1
-                    clear_budget_and_history_collections()
-                    update_user_budget_to_initial(individual_id, bt)
-                    budget_info = client.beacon.get_collection('budget').find_one({"individualId": individual_id})['budget']
-                    print("The budget is now QUERO VER ISTO: ", budget_info)
-                    print("!!!!!!!!!!!!!!!!!!!!!!!!!!!")
-                    print("THE NUMBER OF USERS IS NOW:", user_count)
-                    print("!!!!!!!!!!!!!!!!!!!!!!!!!!!")
+                    update_user_budget_to_initial(individual_id)
                 if stderr:
                     print("Error:", stderr)
 
