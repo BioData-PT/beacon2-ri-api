@@ -296,7 +296,7 @@ def generic_handler(db_fn, request=None):
         
         LOG.debug(f"response = {response}")
 
-        return await json_stream(request, response)
+        return await json_stream(request, removed_individuals)
 
     return wrapper
 

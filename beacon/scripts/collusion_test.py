@@ -120,6 +120,7 @@ def main():
     response = {}
 
     for individual_id in individual_ids:
+        start_index = 0
         var_count = 0
         user_count = 1
         current_budget = -(math.log10(0.5))
@@ -135,8 +136,9 @@ def main():
         if variant_ids:
             print(len(variant_ids))
             print(f"The genomic variants for biosampleId {individual_id} are (sorted by alleleFrequency):")
-            for vid in variant_ids:
+            for idx in range(start_index, len(variant_ids)):
                 var_count += 1
+                vid = variant_ids[idx]
                 variant_doc = collection.find_one({'variantInternalId': vid})
                 print(f"Querying variant id: {vid}")
                 alt = variant_doc["variation"]["alternateBases"]
@@ -149,7 +151,8 @@ def main():
                     print(stdout)
                     print("!!!!!!!!!!!!!!!!!!!!!!!!!!!")
                     print(f"The individual {individual_id} was removed in variant number {var_count}")
-                    total_risk -= (current_budget - client.beacon.get_collection('budget').find_one({"individualId": individual_id})['budget'])
+                    budget = client.beacon.get_collection('budget').find_one({"individualId": individual_id})['budget']
+                    total_risk -= (current_budget - budget)
                     print("The total risk is now: ", total_risk)
                     if total_risk <= 0:
                         print("The number of users after the re-identification limit is: ", user_count)
@@ -158,6 +161,10 @@ def main():
                     update_user_budget_to_initial(individual_id)
                     print("THE NUMBER OF COLLUDING USERS IS NOW: ", user_count)
                     print("!!!!!!!!!!!!!!!!!!!!!!!!!!!")
+                    if budget != current_budget:
+                        start_index = idx
+                    else: 
+                        start_index += 1
                 if stderr:
                     print("Error:", stderr)
 
