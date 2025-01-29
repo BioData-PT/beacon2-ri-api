@@ -221,3 +221,13 @@ http POST http://localhost:5050/api/biosamples --json < request.json
 ```
 
 And it will use the ontology filter to filter the results.
+
+## Privacy Strategy
+
+To use the privacy strategy based on the budget strategy from Raisaro et al., you need to run the following command:
+
+```bash
+docker compose exec beacon python /beacon/deploy/mongo-scripts/update_allele_frequencies.py
+```
+
+This command will populate the database with the allele frequency information for each variant, to be used in the privacy strategy. You must run it before using Beacon.
