@@ -30,6 +30,8 @@ from beacon.utils.stream import json_stream
 from beacon.db.datasets import get_datasets, get_public_datasets
 from beacon.utils.auth import get_accessible_datasets, resolve_token
 
+from beacon.db.reidentification_prevention import update_individual_budget, pvalue_strategy
+
 LOG = logging.getLogger(__name__)
 
 
@@ -66,105 +68,6 @@ def collection_handler(db_fn, request=None):
 
     return wrapper
 
-# support functions for the budget strategy
-
-# update the budget of a specific individual for a user in the budget collection
-def update_individual_budget(user_id, individual_id, amount):
-    try:
-        budget_collection = client.beacon['budget']
-        #LOG.debug(f"Updating budget for individual_id={individual_id} by amount={amount}")
-
-        # Find the document and update it, returning the updated document
-        updated_document = budget_collection.find_one_and_update(
-            {"individualId": individual_id, "userId": user_id},
-            {"$inc": {"budget": -amount}},
-            return_document=ReturnDocument.AFTER  # Return the updated document
-        )
-
-        return updated_document
-
-    except Exception as e:
-        LOG.error(f"Error updating budget: {str(e)}")
-        return None
-
-def pvalue_strategy(access_token, records, qparams):
-    helper = []
-    total_cases = 0
-    removed_individuals = []
-    removed = False
-
-    for record in records:
-        individual_ids = set()
-        individuals_to_remove = set()
-
-        # step 4: compute the risk for that query: ri = -log(1 - Di)
-        allele_frequency = record.get('alleleFrequency')
-        N = client.beacon.get_collection('individuals').count_documents({})  # total number of individuals !! if user requestes dataset, N = individuals in that dataset
-        Di = (1 - allele_frequency) ** (2 * N)
-        ri = -(math.log10(1 - Di))
-        LOG.debug(f"O CUSTO DESTA QUERY É ESTE = {ri}")
-
-        # fetch individualId from the biosample collection
-        case_level_data = record.get('caseLevelData', [])
-        for case in case_level_data:
-            individual_id = case.get('biosampleId')  # biosampleId = individualId
-            individual_ids.add(individual_id)
-
-        for individualId in individual_ids:
-            
-            search_criteria = {
-                "userId": access_token,
-                "individualId": individualId
-            }
-
-            # Step 2: check if query has been asked before
-            response_history = client.beacon['history'].find_one({"userId": access_token, "query": qparams.summary()})
-            if response_history is not None:
-                LOG.debug(f"Query was previously done by the same user")
-                return response_history["response"], helper, total_cases, removed, removed_individuals  # Return stored answer if query was asked before by the same user
-
-            # Step 3: check if there are records with bj > ri
-            budget_info = client.beacon['budget'].find_one(search_criteria)
-            if not budget_info:
-                p_value = 0.5 # upper bound on test errors
-                bj = -(math.log10(p_value))  # initial budget
-                budget_info = {
-                    "userId": access_token,
-                    "individualId": individualId,
-                    "budget": bj
-                }
-                client.beacon['budget'].insert_one(budget_info)
-
-            # re-fetch the budget_info to ensure we have the latest data
-            budget_info = client.beacon['budget'].find_one(search_criteria)
-
-            if budget_info and budget_info['budget'] < ri:
-                
-                individuals_to_remove.add(individualId)
-            else:
-                if budget_info['budget'] >= ri:
-                    # Step 7: reduce their budgets by ri
-                    update_individual_budget(access_token, individualId, ri)
-                    budget_info = client.beacon['budget'].find_one(search_criteria)
-
-        if individuals_to_remove:
-            # filter the individuals from the record
-            removed = True
-            removed_individuals = individuals_to_remove
-            LOG.debug(f"!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!")
-            LOG.debug(f"Removed individuals: {list(individuals_to_remove)}") # signal to know which individuals have no more budget
-            LOG.debug(f"!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!")
-            record['caseLevelData'] = [case for case in record['caseLevelData'] if case.get('biosampleId') not in individuals_to_remove]
-            if  record['caseLevelData'] != []:
-                helper.append(record)
-        else:
-            helper.append(record)
-        
-        total_cases += len(record['caseLevelData'])        
-
-    return None, helper, total_cases, removed, removed_individuals
-
-
 
 # handler with authentication & REMS
 # mostly from BioData.pt
@@ -187,8 +90,8 @@ def generic_handler(db_fn, request=None):
         LOG.debug(f"Access token header = {access_token_header}")
         LOG.debug(f"Access token cookies = {access_token_cookies}")
 
-        registered = False
-        public = False
+        is_registered = False
+        is_authenticated = False
 
         # set access_token as the one we receive in the header
         # if not in header, get the one from cookies
@@ -224,12 +127,11 @@ def generic_handler(db_fn, request=None):
 
         # get response of permissions server
         accessible_datasets: List[str] = []  # array of dataset ids
-        accessible_datasets, public, registered = await task_permissions
+        accessible_datasets, is_authenticated, is_registered = await task_permissions
 
         # TODO do this asynchronously
         for dataset_id in target_datasets:
             qparams_dataset = copy.deepcopy(qparams)
-            LOG.debug("")
             LOG.debug(f"=========================")
             LOG.debug(f"dataset_id = {dataset_id}")
             LOG.debug(f"=========================")
@@ -252,9 +154,9 @@ def generic_handler(db_fn, request=None):
             ######################## P-VALUE STRATEGY ########################
             # apply the p-value strategy if user is authenticated but not registered and only if submodule is genomic variations
             count = 1
-            LOG.debug(f"Is the user public? {public}")
-            LOG.debug(f"Is the user registered {registered}")
-            if not public and not registered and db_fn_submodule == "g_variants":
+            LOG.debug(f"is_authenticated: {is_authenticated}")
+            LOG.debug(f"is_registered: {is_registered}")
+            if not is_authenticated and not is_registered and db_fn_submodule == "g_variants":
                 history, records, total_cases, removed, removed_individuals = pvalue_strategy(access_token, records, qparams)
                 dataset_result = (count, records, total_cases)
                 datasets_query_results[dataset_id] = (dataset_result)
@@ -277,8 +179,8 @@ def generic_handler(db_fn, request=None):
             granularity=response_granularity,
             qparams=qparams,
             entity_schema=entity_schema,
-            registered=registered,
-            public=public
+            is_registered=is_registered,
+            is_authenticated=is_authenticated
         )
         LOG.debug(f"Will the response be stored? {store}")
         

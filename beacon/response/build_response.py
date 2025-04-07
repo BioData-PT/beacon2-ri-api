@@ -1,4 +1,5 @@
 from typing import Optional, Tuple, List, Dict
+from warnings import deprecated
 
 from beacon import conf
 from beacon.db.schemas import DefaultSchemas
@@ -39,7 +40,7 @@ def build_response_summary(exists, num_total_results):
 # receives results(count & records) of each queried dataset, authorized datasets, and granularity of results
 def build_generic_response(
     results_by_dataset:Dict[str,Tuple[int,list]], accessible_datasets:List[str], granularity:Granularity,
-    qparams, entity_schema, registered:bool, public:bool):
+    qparams, entity_schema, is_registered:bool, is_authenticated:bool):
 
     # flag to check if we need to keep the query and result in database (if user is registered and results include non accessible datasets)
     store = False
@@ -53,7 +54,7 @@ def build_generic_response(
     for dataset_id in results_by_dataset:
         # if user is not authenticated, they cannot see aggregated data from datasets that are not public, so this will prevent
         # the non public datasets to be appended to non authenticated users responses
-        if public and dataset_id not in accessible_datasets:
+        if is_authenticated and dataset_id not in accessible_datasets:
             continue
 
         num_dataset_results = results_by_dataset[dataset_id][0]
@@ -70,12 +71,12 @@ def build_generic_response(
         }
         
         # if dataset is not authorized, erase the records part
-        if dataset_id not in accessible_datasets or not registered:
+        if dataset_id not in accessible_datasets or not is_registered:
             dataset_response["results"] = []
             
         response_list.append(dataset_response)
 
-        if dataset_id not in accessible_datasets and not registered and not public:
+        if dataset_id not in accessible_datasets and not is_registered and not is_authenticated:
             store = True
     
     beacon_response = []
@@ -94,7 +95,7 @@ def build_generic_response(
 
     return beacon_response, store
 
-
+@deprecated
 def build_response_by_dataset(data, response_dict, num_total_results, qparams, func):
     """"Fills the `response` part with the correct format in `results`"""
     list_of_responses=[]
