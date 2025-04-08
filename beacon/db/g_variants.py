@@ -14,6 +14,7 @@ LOG = logging.getLogger(__name__)
 
 VARIANTS_PROPERTY_MAP = {
     "assemblyId": "_position.assemblyId",
+    "referenceName": "_position.refseqId",
     "Chromosome": "_position.refseqId",
     "start": "_position.start",
     "end": "_position.end",
@@ -24,7 +25,9 @@ VARIANTS_PROPERTY_MAP = {
     "variantMaxLength": None,
     "mateName": None,
     "gene": "molecularAttributes.geneIds",
-    "aachange": "molecularAttributes.aminoacidChanges"
+    "aachange": "molecularAttributes.aminoacidChanges",
+    "aminoacidChange": "molecularAttributes.aminoacidChanges",
+    "genomicAlleleShortForm":"genomicHGVSId"
 }
 
 def include_resultset_responses(query: Dict[str, List[dict]], qparams: RequestParams):
@@ -48,7 +51,7 @@ def generate_position_filter_start(key: str, value: List[int]) -> List[Alphanume
         filters.append(AlphanumericFilter(
             id=VARIANTS_PROPERTY_MAP[key],
             value=[value[0]],
-            operator=Operator.GREATER_EQUAL
+            operator=Operator.EQUAL
         ))
     elif len(value) == 2:
         filters.append(AlphanumericFilter(
@@ -71,7 +74,7 @@ def generate_position_filter_end(key: str, value: List[int]) -> List[Alphanumeri
         filters.append(AlphanumericFilter(
             id=VARIANTS_PROPERTY_MAP[key],
             value=[value[0]],
-            operator=Operator.LESS_EQUAL
+            operator=Operator.EQUAL
         ))
     elif len(value) == 2:
         filters.append(AlphanumericFilter(
