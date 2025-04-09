@@ -1,5 +1,4 @@
-from typing import Optional, Tuple, List, Dict
-from warnings import deprecated
+from typing import Optional, Tuple, List, Dict, Set
 
 from beacon import conf
 from beacon.db.schemas import DefaultSchemas
@@ -37,13 +36,20 @@ def build_response_summary(exists, num_total_results):
             'numTotalResults': num_total_results
         }
 
-# receives results(count & records) of each queried dataset, authorized datasets, and granularity of results
+
 def build_generic_response(
     results_by_dataset:Dict[str,Tuple[int,list]], accessible_datasets:List[str], granularity:Granularity,
-    qparams, entity_schema, is_registered:bool, is_authenticated:bool):
+    qparams, entity_schema, is_registered:bool, is_authenticated:bool, blocked_datasets:Set[str]):
 
+    """Builds the Beacon response, oculting the results from the required datasets.
+    
+    Receives results(count, records) of each queried dataset, authorized datasets, and granularity of results.
+    
+    Note: Blocked datasets are completely removed from the response.
+    """
+    
     # flag to check if we need to keep the query and result in database (if user is registered and results include non accessible datasets)
-    store = False
+    need_to_store = False
 
     # iterate over all results to get:
     # total count
@@ -52,9 +58,8 @@ def build_generic_response(
     num_total_results = 0
     response_list:List[Dict] = []
     for dataset_id in results_by_dataset:
-        # if user is not authenticated, they cannot see aggregated data from datasets that are not public, so this will prevent
-        # the non public datasets to be appended to non authenticated users responses
-        if is_authenticated and dataset_id not in accessible_datasets:
+        
+        if dataset_id in blocked_datasets:
             continue
 
         num_dataset_results = results_by_dataset[dataset_id][0]
@@ -71,13 +76,14 @@ def build_generic_response(
         }
         
         # if dataset is not authorized, erase the records part
-        if dataset_id not in accessible_datasets or not is_registered:
+        if dataset_id not in accessible_datasets:
             dataset_response["results"] = []
             
         response_list.append(dataset_response)
 
+        
         if dataset_id not in accessible_datasets and not is_registered and not is_authenticated:
-            store = True
+            need_to_store = True
     
     beacon_response = []
             
@@ -93,9 +99,9 @@ def build_generic_response(
         }
     
 
-    return beacon_response, store
+    return beacon_response, need_to_store
 
-@deprecated
+# not used at this moment
 def build_response_by_dataset(data, response_dict, num_total_results, qparams, func):
     """"Fills the `response` part with the correct format in `results`"""
     list_of_responses=[]

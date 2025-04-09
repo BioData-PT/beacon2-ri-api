@@ -46,6 +46,7 @@ class Granularity(StrEnum):
     
     # returns the lower granularity between 2 granularities
     def get_lower(g1, g2):
+        """Returns the lower level of granularity between the 2 given"""
         
         if not isinstance(g1, Granularity):
             LOG.error(f"First value is not granularity: {g1.__repr__}")

@@ -3,8 +3,9 @@ import asyncio
 import copy
 import logging
 import math
-from typing import Dict, List, Tuple
+from typing import Dict, List, Set, Tuple
 
+import jwt
 import numpy as np
 from aiohttp import web
 from aiohttp.web_request import Request
@@ -14,7 +15,6 @@ from beacon.db import client
 from pymongo import ReturnDocument
 import yaml
 import math
-
 from beacon.request import ontologies
 from beacon.request.model import AlphanumericFilter, Granularity, RequestParams
 from beacon.response.build_response import (
@@ -28,9 +28,9 @@ from beacon.response.build_response import (
 )
 from beacon.utils.stream import json_stream
 from beacon.db.datasets import get_datasets, get_public_datasets
-from beacon.utils.auth import get_accessible_datasets, resolve_token
+from beacon.utils.auth import get_permission_info, resolve_token
 
-from beacon.db.reidentification_prevention import update_individual_budget, pvalue_strategy
+from beacon.db.reidentification_prevention import apply_rip_logic
 
 LOG = logging.getLogger(__name__)
 
@@ -105,7 +105,7 @@ def generic_handler(db_fn, request=None):
         LOG.debug(f"requested_datasets = {requested_datasets}")
 
         # Start async task to request datasets from permissions server
-        task_permissions = asyncio.create_task(get_accessible_datasets(access_token, requested_datasets))
+        task_permissions = asyncio.create_task(get_permission_info(access_token, requested_datasets))
 
         # if no datasets were specified, use all in DB
         if requested_datasets is None:
@@ -125,11 +125,15 @@ def generic_handler(db_fn, request=None):
         db_fn_submodule = str(db_fn.__module__).split(".")[-1]
         LOG.debug(f"db_fn submodule = {db_fn_submodule}")
 
-        # get response of permissions server
+        # get response from permissions server
         accessible_datasets: List[str] = []  # array of dataset ids
-        accessible_datasets, is_authenticated, is_registered = await task_permissions
+        accessible_datasets, is_authenticated, is_registered, user_id = await task_permissions
 
-        # TODO do this asynchronously
+        LOG.debug(f"user_id: {user_id}")
+        LOG.debug(f"is_authenticated: {is_authenticated}")
+        LOG.debug(f"is_registered: {is_registered}")
+        
+        # TODO: do this asynchronously
         for dataset_id in target_datasets:
             qparams_dataset = copy.deepcopy(qparams)
             LOG.debug(f"=========================")
@@ -151,19 +155,44 @@ def generic_handler(db_fn, request=None):
             LOG.debug(f"Dataset Qparams = {qparams_dataset}")
             entity_schema, count, records = db_fn(entry_id, qparams_dataset)
 
-            ######################## P-VALUE STRATEGY ########################
-            # apply the p-value strategy if user is authenticated but not registered and only if submodule is genomic variations
-            count = 1
-            LOG.debug(f"is_authenticated: {is_authenticated}")
-            LOG.debug(f"is_registered: {is_registered}")
-            if not is_authenticated and not is_registered and db_fn_submodule == "g_variants":
-                history, records, total_cases, removed, removed_individuals = pvalue_strategy(access_token, records, qparams)
-                dataset_result = (count, records, total_cases)
-                datasets_query_results[dataset_id] = (dataset_result)
+            blocked_datasets:Set = set() # datasets to completely remove from the response
+            
+            # apply RIP algorithm, if needed (variants only):
+            # anonymous users get zero access (not even boolean) to non-accessible datasets
+            # authenticated users get RIP algorithm access (boolean, but limited) to non-accessible datasets
+            if conf.USE_RIP_ALG and db_fn_submodule == "g_variants":
                 
-                if history is not None:
-                    LOG.debug(f"Query was previously made by the same user")
-                    return await json_stream(request, history)
+                
+                # block all non-public datasets completely and skip RIP logic
+                if not is_authenticated:
+                    blocked_datasets = set(filter(lambda x: x not in accessible_datasets, all_dataset_ids))
+                
+                ######################## P-VALUE STRATEGY ########################
+                # apply the p-value strategy if user is authenticated but not registered and only if submodule is genomic variations
+                #count = 1
+                
+                #if not is_authenticated and not is_registered:
+                    
+                    #history, records, total_cases, removed, removed_individuals = pvalue_strategy(user_id, records, qparams)
+                    #dataset_result = (count, records, total_cases)
+                    #datasets_query_results[dataset_id] = (dataset_result)
+                    
+                    # if history is not None:
+                    #    LOG.debug(f"Query was previously made by the same user")
+                    #    return await json_stream(request, history)
+                        
+                    
+                # updates count and records with the RIP algorithm values if dataset is not accessible
+                count, records = apply_rip_logic(
+                    query=qparams.summary(), 
+                    query_results=(count, records), 
+                    is_authenticated=is_authenticated, 
+                    is_registered=is_registered,
+                    dataset_is_accessible=(dataset_id in accessible_datasets),
+                    dataset_id=dataset_id
+                )
+                
+                
 
         LOG.debug(f"schema = {entity_schema}")
 
@@ -173,29 +202,29 @@ def generic_handler(db_fn, request=None):
         response_granularity = Granularity.get_lower(requested_granularity, max_granularity)
 
         # build response
-        response, store = build_generic_response(
+        response, need_to_store = build_generic_response(
             results_by_dataset=datasets_query_results,
             accessible_datasets=accessible_datasets,
             granularity=response_granularity,
             qparams=qparams,
             entity_schema=entity_schema,
             is_registered=is_registered,
-            is_authenticated=is_authenticated
+            is_authenticated=is_authenticated,
+            blocked_datasets=blocked_datasets
         )
-        LOG.debug(f"Will the response be stored? {store}")
-        
+        LOG.debug(f"Will the response be stored? {need_to_store}")
 
         document = {
-            "userId": access_token,
+            "userId": user_id,
             "query": qparams.summary(),
             "response": response
         }
 
-        if store:
+        if need_to_store:
             client.beacon['history'].insert_one(document)
         
 
-        return await json_stream(request, removed_individuals)
+        return await json_stream(request, response)
 
     return wrapper
 

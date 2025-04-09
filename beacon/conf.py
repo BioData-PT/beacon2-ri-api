@@ -2,6 +2,9 @@ from datetime import date
 import datetime
 import glob
 import os
+import logging
+
+LOG = logging.getLogger(__name__)
 
 """Beacon Configuration."""
 
@@ -83,6 +86,15 @@ database_user = 'root'
 database_password = 'example'
 database_name = 'beacon'
 database_auth_source = 'admin'
+
+if database_password is None:
+    database_password = 'example'
+    print("WARNING: YOU SHOULD DEFINE A 'DB_PASSWD' ENV VARIABLE IN 'deploy/.env' LIKE IN THE EXAMPLE TO USE A CUSTOM PASSWORD, CURRENTLY USING THE DEFAULT PASSWORD (INSECURE)!")
+    LOG.warning("warning: default passwd for DB in use")
+else:
+    LOG.info("Imported db passwd successfully!")
+    print("Imported DB_PASSWD successfully!")
+
 # database_schema = 'public' # comma-separated list of schemas
 # database_app_name = 'beacon-appname' # Useful to track connections
 
@@ -131,3 +143,10 @@ autocomplete_ellipsis = '...'
 # Ontologies
 #
 ontologies_folder = "deploy/ontologies/"
+
+#
+# Reidentification Prevention (RIP) algorithm 
+#
+USE_RIP_ALG = os.getenv("USE_RIP_ALGORITHM", None) == "True"
+if USE_RIP_ALG:
+    LOG.info("Using Reidentification Prevention (RIP) algorithm")

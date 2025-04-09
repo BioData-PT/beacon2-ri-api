@@ -56,12 +56,12 @@ async def resolve_token(token, requested_datasets_ids):
 
 # async job to request permissions server for
 # specifically authorized datasets from user and handle authentication
-# returns [accessible_datasets, is_authenticated, is_registered]
+# returns [accessible_datasets, is_authenticated, is_registered, user_id]
 async def request_permissions(token) -> Tuple[List[str], bool, bool]:
     
     if token is None:
         LOG.debug("Token is none")
-        return [], False, False
+        return [], False, False, None
     
     LOG.debug("About to ask permissions server...")
     # The permissions server will:
@@ -79,7 +79,7 @@ async def request_permissions(token) -> Tuple[List[str], bool, bool]:
                 LOG.error('Permissions server error %d', resp.status)
                 error = await resp.text()
                 LOG.error('Error: %s', error)
-                return [], False, False
+                return [], False, False, None
                 #raise web.HTTPUnauthorized(body=error)
             
             """
@@ -99,17 +99,18 @@ async def request_permissions(token) -> Tuple[List[str], bool, bool]:
                 content = await resp.json()
                 auth_datasets = content["datasets"]
                 is_registered = content["is_registered"]
+                user_id = content["user_id"]
             except Exception as e:
                 LOG.error(f"Error while getting results from permission server: {e}")
-                return [], False, False
+                return [], False, False, None
             
             LOG.debug(auth_datasets)
-            return auth_datasets, True, is_registered
+            return auth_datasets, True, is_registered, user_id
 
 # returns datasets that are accessible by user
 # TODO if requested_datasets is given, filters them by perms
 # otherwise returns all accessible
-async def get_accessible_datasets(token, requested_datasets=None) -> List[str]:
+async def get_permission_info(token, requested_datasets=None) -> List[str]:
     
     accessible_datasets:List[str] = []
     
@@ -129,7 +130,7 @@ async def get_accessible_datasets(token, requested_datasets=None) -> List[str]:
         LOG.debug(f"registered datasets = {registered_datasets}")
         
     # get the result from task
-    controlled_datasets, is_authenticated, is_registered = await task_permissions
+    controlled_datasets, is_authenticated, is_registered, user_id = await task_permissions
     
     LOG.info(f"User controlled datasets = {controlled_datasets}")
     # Not authenticated, just give access to public datasets
@@ -147,6 +148,6 @@ async def get_accessible_datasets(token, requested_datasets=None) -> List[str]:
         accessible_datasets = list(set(accessible_datasets).intersection(set(requested_datasets)))
     
     # remove duplicates and return result
-    return list(set(accessible_datasets)), is_authenticated, is_registered
+    return list(set(accessible_datasets)), is_authenticated, is_registered, user_id
     
     

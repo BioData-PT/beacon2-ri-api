@@ -90,6 +90,7 @@ services:
       - ./.env:/beacon/.env
     environment:
       DB_PASSWD: ${DB_PASSWD}
+      USE_RIP_ALGORITHM:
     ports:
       - "5050:5050"
     networks:

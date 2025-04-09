@@ -13,7 +13,7 @@ import logging
 
 LOG = logging.getLogger(__name__)
 
-# returns (isOk, exp_date, max_age)
+# returns (is_ok, exp_date, max_age)
 def verify_access_token(access_token) -> Tuple[bool, int, int]:
     
     now = int(time.time())

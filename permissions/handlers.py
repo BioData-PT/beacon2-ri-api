@@ -31,7 +31,7 @@ STATE_DEFAULT = b64encode( ("https://"+ALLOWED_LOCATIONS[0]+"/api/").encode("asc
 # token and registered status are already verified against the username with bearer_required
 # this function gets the datasets specifically authorized for this user
 # returns (specific_datasets, is_registered) in JSON
-async def permission(request: Request, username: Optional[str], is_registered):
+async def permission(request: Request, username: Optional[str], is_registered:bool):
 
     if request.headers.get('Content-Type') == 'application/json':
         post_data = await request.json()
@@ -54,9 +54,10 @@ async def permission(request: Request, username: Optional[str], is_registered):
     LOG.debug('selected datasets: %s', datasets)
     
     response = {"datasets": list(datasets or []),
-                "is_registered": is_registered
+                "is_registered": is_registered,
+                "user_id": username
     }
-
+    LOG.debug(f"response = {response}")
     return web.json_response(response) # cuz python-json doesn't like sets
 
 # Redirect to the login URI

@@ -137,7 +137,7 @@ class RemsPermissions(Permissions):
         headers = CIMultiDict()
         headers.add('content-type', "application/json")
         headers.add('x-rems-api-key', REMS_API_KEY)
-        headers.add('x-rems-user-id', REMS_API_USER)
+        headers.add('x-rems-2user-id', REMS_API_USER)
         
         try:
             response = requests.get(url=request_uri, headers=headers).json()
