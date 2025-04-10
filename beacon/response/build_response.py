@@ -39,13 +39,11 @@ def build_response_summary(exists, num_total_results):
 
 def build_generic_response(
     results_by_dataset:Dict[str,Tuple[int,list]], accessible_datasets:List[str], granularity:Granularity,
-    qparams, entity_schema, is_registered:bool, is_authenticated:bool, blocked_datasets:Set[str]):
+    qparams, entity_schema, is_registered:bool, is_authenticated:bool):
 
     """Builds the Beacon response, oculting the results from the required datasets.
     
     Receives results(count, records) of each queried dataset, authorized datasets, and granularity of results.
-    
-    Note: Blocked datasets are completely removed from the response.
     """
     
     # flag to check if we need to keep the query and result in database (if user is registered and results include non accessible datasets)
@@ -58,9 +56,6 @@ def build_generic_response(
     num_total_results = 0
     response_list:List[Dict] = []
     for dataset_id in results_by_dataset:
-        
-        if dataset_id in blocked_datasets:
-            continue
 
         num_dataset_results = results_by_dataset[dataset_id][0]
         dataset_results = results_by_dataset[dataset_id][1]
@@ -80,10 +75,6 @@ def build_generic_response(
             dataset_response["results"] = []
             
         response_list.append(dataset_response)
-
-        
-        if dataset_id not in accessible_datasets and not is_registered and not is_authenticated:
-            need_to_store = True
     
     beacon_response = []
             

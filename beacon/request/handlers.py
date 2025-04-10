@@ -154,18 +154,11 @@ def generic_handler(db_fn, request=None):
             qparams_dataset.query.filters.append(filter_dataset_id)
             LOG.debug(f"Dataset Qparams = {qparams_dataset}")
             entity_schema, count, records = db_fn(entry_id, qparams_dataset)
-
-            blocked_datasets:Set = set() # datasets to completely remove from the response
             
             # apply RIP algorithm, if needed (variants only):
             # anonymous users get zero access (not even boolean) to non-accessible datasets
             # authenticated users get RIP algorithm access (boolean, but limited) to non-accessible datasets
             if conf.USE_RIP_ALG and db_fn_submodule == "g_variants":
-                
-                
-                # block all non-public datasets completely and skip RIP logic
-                if not is_authenticated:
-                    blocked_datasets = set(filter(lambda x: x not in accessible_datasets, all_dataset_ids))
                 
                 ######################## P-VALUE STRATEGY ########################
                 # apply the p-value strategy if user is authenticated but not registered and only if submodule is genomic variations
@@ -180,7 +173,6 @@ def generic_handler(db_fn, request=None):
                     # if history is not None:
                     #    LOG.debug(f"Query was previously made by the same user")
                     #    return await json_stream(request, history)
-                        
                     
                 # updates count and records with the RIP algorithm values if dataset is not accessible
                 count, records = apply_rip_logic(
@@ -202,7 +194,7 @@ def generic_handler(db_fn, request=None):
         response_granularity = Granularity.get_lower(requested_granularity, max_granularity)
 
         # build response
-        response, need_to_store = build_generic_response(
+        response = build_generic_response(
             results_by_dataset=datasets_query_results,
             accessible_datasets=accessible_datasets,
             granularity=response_granularity,
@@ -210,18 +202,18 @@ def generic_handler(db_fn, request=None):
             entity_schema=entity_schema,
             is_registered=is_registered,
             is_authenticated=is_authenticated,
-            blocked_datasets=blocked_datasets
         )
-        LOG.debug(f"Will the response be stored? {need_to_store}")
+        
+        #LOG.debug(f"Will the response be stored? {need_to_store}")
 
-        document = {
-            "userId": user_id,
-            "query": qparams.summary(),
-            "response": response
-        }
+        # document = {
+        #     "userId": user_id,
+        #     "query": qparams.summary(),
+        #     "response": response
+        # }
 
-        if need_to_store:
-            client.beacon['history'].insert_one(document)
+        # if need_to_store:
+        #     client.beacon['history'].insert_one(document)
         
 
         return await json_stream(request, response)
