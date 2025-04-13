@@ -45,9 +45,6 @@ def build_generic_response(
     
     Receives results(count, records) of each queried dataset, authorized datasets, and granularity of results.
     """
-    
-    # flag to check if we need to keep the query and result in database (if user is registered and results include non accessible datasets)
-    need_to_store = False
 
     # iterate over all results to get:
     # total count
@@ -90,7 +87,7 @@ def build_generic_response(
         }
     
 
-    return beacon_response, need_to_store
+    return beacon_response
 
 # not used at this moment
 def build_response_by_dataset(data, response_dict, num_total_results, qparams, func):

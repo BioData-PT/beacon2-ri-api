@@ -1,9 +1,12 @@
 import logging
 import math
 from os import getenv
+from typing import List, Tuple
 
 from pymongo import ReturnDocument
 from beacon.db import client
+
+from beacon.db.g_variants import is_aachange_query, is_genomicallele_query, is_sequence_query
 
 LOG = logging.getLogger(__name__)
 
@@ -92,13 +95,23 @@ def update_individual_budget(user_id, individual_id, dataset_id, amount):
         LOG.error(f"Unexpected error updating budget: {str(e)}")
         return None
 
-def pvalue_strategy(user_id, records, qparams):
-    helper = []
-    total_cases = 0
-    removed_individuals = []
-    removed = False
+def pvalue_strategy(user_id, records, qparams, dataset_id):
+    """
+    Applies the p-value strategy to the given records.
+    This function computes the risk for each record and updates the budget
+    for the individuals involved in the query.
+    It returns the records that are allowed to be returned.
+    
+    Also updates the history with the response.
+    """
+    
+    response: List[dict] = []
 
     for record in records:
+        
+        # becomes true and blocks whole variant response if any individual has no budget
+        no_budget:bool = False 
+        
         individual_ids = set()
         individuals_to_remove = set()
 
@@ -109,6 +122,19 @@ def pvalue_strategy(user_id, records, qparams):
         Di = (1 - allele_frequency) ** (2 * N)
         ri = -(math.log10(1 - Di))
         LOG.debug(f"Query RIP cost: {ri}")
+        
+    
+        # Check if query has been asked before
+        response_history = client.beacon['history'].find_one({
+            FIELD_USER_ID: user_id, 
+            FIELD_QUERY: qparams.summary(),
+            FIELD_DATASET_ID: dataset_id
+        })
+        
+        if response_history is not None:
+            LOG.debug(f"Query was previously done by the same user")
+            # Return stored answer if query was asked before by the same user
+            response.append(response_history["response"])
 
         # fetch individualId from the biosample collection
         case_level_data = record.get('caseLevelData', [])
@@ -117,66 +143,70 @@ def pvalue_strategy(user_id, records, qparams):
             individual_ids.add(individual_id)
 
         for individual_id in individual_ids:
+
+            # Try to update budget
+            budget_info = update_individual_budget(
+                            user_id=user_id,
+                            individual_id=individual_id,
+                            dataset_id=dataset_id, 
+                            amount=ri)
             
-            budget_search_criteria = {
-                FIELD_USER_ID: user_id,
-                FIELD_INDIVIDUAL_ID: individual_id
-            }
+            # No budget or error, don't add record to response
+            if budget_info is None:
+                break
+            
+        response.append(record)
 
-            # Step 2: check if query has been asked before
-            response_history = client.beacon['history'].find_one({
-                FIELD_USER_ID: user_id, 
-                FIELD_QUERY: qparams.summary()
-            })
-            if response_history is not None:
-                LOG.debug(f"Query was previously done by the same user")
-                # Return stored answer if query was asked before by the same user
-                return response_history["response"], helper, total_cases, removed, removed_individuals
-
-            # Step 3: check if there are records with bj > ri
-            budget_info = client.beacon['budget'].find_one(budget_search_criteria)
-            if not budget_info:
-                
-                budget_info = {
-                    FIELD_USER_ID: user_id,
-                    FIELD_INDIVIDUAL_ID: individual_id,
-                    FIELD_BUDGET: INITIAL_BUDGET
-                }
-                client.beacon['budget'].insert_one(budget_info)
-
-            # re-fetch the budget_info to ensure we have the latest data
-            budget_info = client.beacon['budget'].find_one(budget_search_criteria)
-
-            if budget_info and budget_info['budget'] < ri:
-                
-                individuals_to_remove.add(individual_id)
-            else:
-                if budget_info['budget'] >= ri:
-                    # Step 7: reduce their budgets by ri
-                    update_individual_budget(user_id, individual_id, ri)
-                    budget_info = client.beacon['budget'].find_one(budget_search_criteria)
-
-        if individuals_to_remove:
-            # filter the individuals from the record
-            removed = True
-            removed_individuals = individuals_to_remove
-            LOG.debug(f"Removed individuals: {list(individuals_to_remove)}") # signal to know which individuals have no more budget
-            record['caseLevelData'] = [case for case in record['caseLevelData'] if case.get('biosampleId') not in individuals_to_remove]
-            if record['caseLevelData'] != []:
-                helper.append(record)
-        else:
-            helper.append(record)
+    # If the query was not asked before, we need to store it
+    if response_history is None:
         
-        total_cases += len(record['caseLevelData'])        
+        history_document = {
+            "userId": user_id,
+            "query": qparams.summary(),
+            "response": records,
+            "datasetId": dataset_id
+        }
 
-    return None, helper, total_cases, removed, removed_individuals
+        client.beacon['history'].insert_one(history_document)
+        
+    return response
 
 
-def apply_rip_logic(query, query_results, is_authenticated, is_registered, dataset_is_accessible, dataset_id):
+def apply_rip_logic(user_id, query, records:List[dict], is_authenticated,
+    is_registered, dataset_is_accessible, dataset_id):
+        
     """
     Checks if the query is a sequence or gene query.
     Checks if query is cached
     Censors reponse (if needed) using RIP algorithm
     Updates the user's budget for the targeted individuals
+    
+    Returns (records) response for the dataset
     """
     
+    if dataset_is_accessible:
+        # If the dataset is accessible, we don't touch the result
+        return records
+    
+    if not is_authenticated:
+        # If the dataset is not accessible, we don't want to 
+        # return any results to anonymous users
+        return []
+    
+    if not is_genomicallele_query(query) \
+        and not is_aachange_query(query) \
+        and not is_sequence_query(query):
+            
+        LOG.debug("Query is not a gene id, aminoacid change, or sequence query. Block RIP access")
+        return []
+    
+    #(user_id, records, qparams, dataset_id)
+    records = pvalue_strategy(
+        user_id=user_id,
+        records=records,
+        qparams=query,
+        dataset_id=dataset_id,
+        qparams=query
+    )
+    
+    return records

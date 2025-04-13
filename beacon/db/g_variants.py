@@ -24,11 +24,53 @@ VARIANTS_PROPERTY_MAP = {
     "variantMinLength": None,
     "variantMaxLength": None,
     "mateName": None,
-    "gene": "molecularAttributes.geneIds",
+    "geneId": "molecularAttributes.geneIds",
     "aachange": "molecularAttributes.aminoacidChanges",
     "aminoacidChange": "molecularAttributes.aminoacidChanges",
     "genomicAlleleShortForm":"genomicHGVSId"
 }
+
+def is_genomicallele_query(query: RequestParams) -> bool:
+    """
+    Check if the query is a genomic allele query (short form)
+    """
+    if query is None:
+        return False
+
+    if "genomicAlleleShortForm" in query.request_parameters:
+        return True
+
+    return False
+
+def is_aachange_query(query: RequestParams) -> bool:
+    """
+    Check if the query is an amino acid change query
+    """
+    if query is None:
+        return False
+
+    if "aminoacidChange" in query.request_parameters:
+        return True
+
+    return False
+
+def is_sequence_query(query: RequestParams) -> bool:
+    """
+    Check if the query is a sequence query
+    """
+    if query is None:
+        return False
+    
+    parameters = ("start", "referenceName", "alternateBases", "referenceBases")
+    for param in parameters:
+        if param not in query.request_parameters or query.request_parameters[param] is None:
+            return False
+
+    start = query.request_parameters["start"]
+    if not isinstance(start, int):
+        LOG.debug(f"start is not an int: {start}")
+        return False
+    return False
 
 def include_resultset_responses(query: Dict[str, List[dict]], qparams: RequestParams):
     LOG.debug("Include Resultset Responses = {}".format(qparams.query.include_resultset_responses))

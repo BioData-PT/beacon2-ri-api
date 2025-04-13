@@ -175,15 +175,16 @@ def generic_handler(db_fn, request=None):
                     #    return await json_stream(request, history)
                     
                 # updates count and records with the RIP algorithm values if dataset is not accessible
-                count, records = apply_rip_logic(
+                records = apply_rip_logic(
+                    user_id=user_id,
                     query=qparams.summary(), 
-                    query_results=(count, records), 
+                    records=records, 
                     is_authenticated=is_authenticated, 
                     is_registered=is_registered,
                     dataset_is_accessible=(dataset_id in accessible_datasets),
                     dataset_id=dataset_id
                 )
-                
+                datasets_query_results[dataset_id] = (len(records), records)
                 
 
         LOG.debug(f"schema = {entity_schema}")
@@ -203,17 +204,6 @@ def generic_handler(db_fn, request=None):
             is_registered=is_registered,
             is_authenticated=is_authenticated,
         )
-        
-        #LOG.debug(f"Will the response be stored? {need_to_store}")
-
-        # document = {
-        #     "userId": user_id,
-        #     "query": qparams.summary(),
-        #     "response": response
-        # }
-
-        # if need_to_store:
-        #     client.beacon['history'].insert_one(document)
         
 
         return await json_stream(request, response)
