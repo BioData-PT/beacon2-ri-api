@@ -56,7 +56,6 @@ def build_generic_response(
 
         num_dataset_results = results_by_dataset[dataset_id][0]
         dataset_results = results_by_dataset[dataset_id][1]
-        total_cases = results_by_dataset[dataset_id][2]
         num_total_results += num_dataset_results
         
         dataset_response = {
@@ -64,7 +63,7 @@ def build_generic_response(
             "exists": num_dataset_results > 0,
             "setType": "dataset",
             "results": dataset_results,
-            "resultsCount": total_cases
+            "resultsCount": num_dataset_results
         }
         
         # if dataset is not authorized, erase the records part
@@ -75,16 +74,14 @@ def build_generic_response(
     
     beacon_response = []
             
-    if not dataset_results == []:
-    
-        beacon_response = {
-            'meta': build_meta(qparams, entity_schema, granularity),
-            'responseSummary': build_response_summary(num_total_results > 0, num_total_results),
-            'beaconHandovers': conf.beacon_handovers,
-            'response': {
-                'resultSets': response_list
-            }
+    beacon_response = {
+        'meta': build_meta(qparams, entity_schema, granularity),
+        'responseSummary': build_response_summary(num_total_results > 0, num_total_results),
+        'beaconHandovers': conf.beacon_handovers,
+        'response': {
+            'resultSets': response_list
         }
+    }
     
 
     return beacon_response

@@ -31,7 +31,6 @@ class Permissions():
         raise NotImplementedError('Overload this function in a subclass')
 
 
-
 class DummyPermissions(Permissions):
     """
     Dummy permissions plugin
@@ -65,7 +64,7 @@ class DummyPermissions(Permissions):
         if requested_datasets:
             return set(requested_datasets).intersection(datasets), True
         else:
-            return datasets, True
+            return list(datasets)
 
     async def close(self):
         pass

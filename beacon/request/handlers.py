@@ -34,6 +34,8 @@ from beacon.db.reidentification_prevention import apply_rip_logic
 
 LOG = logging.getLogger(__name__)
 
+DEFAULT_LIMIT = 10
+MAX_LIMIT = 100
 
 def collection_handler(db_fn, request=None):
     async def wrapper(request: Request):
@@ -80,6 +82,12 @@ def generic_handler(db_fn, request=None):
         entry_id = request.match_info.get('id', None)
         json_body = await request.json() if request.method == "POST" and request.has_body and request.can_read_body else {}
         qparams: RequestParams = RequestParams(**json_body).from_request(request)
+        
+        requested_limit = qparams.query.pagination.limit
+        # cap max limit if it's higher than max
+        if requested_limit > conf.MAX_LIMIT:
+            qparams.query.pagination = conf.MAX_LIMIT
+            LOG.debug(f"Limit set to {MAX_LIMIT}, was {requested_limit}")
 
         LOG.debug(f"Query Params = {qparams}")
 
@@ -160,40 +168,31 @@ def generic_handler(db_fn, request=None):
             # authenticated users get RIP algorithm access (boolean, but limited) to non-accessible datasets
             if conf.USE_RIP_ALG and db_fn_submodule == "g_variants":
                 
-                ######################## P-VALUE STRATEGY ########################
-                # apply the p-value strategy if user is authenticated but not registered and only if submodule is genomic variations
-                #count = 1
-                
-                #if not is_authenticated and not is_registered:
+                ######################## RIP Algorithm ########################
                     
-                    #history, records, total_cases, removed, removed_individuals = pvalue_strategy(user_id, records, qparams)
-                    #dataset_result = (count, records, total_cases)
-                    #datasets_query_results[dataset_id] = (dataset_result)
-                    
-                    # if history is not None:
-                    #    LOG.debug(f"Query was previously made by the same user")
-                    #    return await json_stream(request, history)
-                    
+                # convert from mongoDB Cursor because we'll need to iterate over it many times
+                records = list(records)
                 # updates count and records with the RIP algorithm values if dataset is not accessible
                 records = apply_rip_logic(
                     user_id=user_id,
                     query=qparams.summary(), 
                     records=records, 
-                    is_authenticated=is_authenticated, 
-                    is_registered=is_registered,
+                    is_authenticated=is_authenticated,
                     dataset_is_accessible=(dataset_id in accessible_datasets),
                     dataset_id=dataset_id
                 )
-                datasets_query_results[dataset_id] = (len(records), records)
-                
+                count = len(records)
+            
+            datasets_query_results[dataset_id] = (count, records)
 
-        LOG.debug(f"schema = {entity_schema}")
+        #LOG.debug(f"schema = {entity_schema}")
 
         # get the max authorized granularity
         requested_granularity = qparams.query.requested_granularity
         max_granularity = Granularity(conf.max_beacon_granularity)
         response_granularity = Granularity.get_lower(requested_granularity, max_granularity)
-
+        
+        
         # build response
         response = build_generic_response(
             results_by_dataset=datasets_query_results,
@@ -204,18 +203,14 @@ def generic_handler(db_fn, request=None):
             is_registered=is_registered,
             is_authenticated=is_authenticated,
         )
-        
 
         return await json_stream(request, response)
 
     return wrapper
-
-    
     
     
 # handler with authentication
 # mostly from CRG
-
 def generic_handler_crg(db_fn, request=None):
     
     async def wrapper(request: Request):
@@ -404,8 +399,6 @@ def generic_handler_crg(db_fn, request=None):
         return await json_stream(request, response)
 
     return wrapper
-
-
 
 
 def filtering_terms_handler(db_fn, request=None):

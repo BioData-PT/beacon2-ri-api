@@ -61,16 +61,24 @@ def is_sequence_query(query: RequestParams) -> bool:
     if query is None:
         return False
     
+    # check required parameters
     parameters = ("start", "referenceName", "alternateBases", "referenceBases")
     for param in parameters:
         if param not in query.request_parameters or query.request_parameters[param] is None:
             return False
 
+    # bracket query?
     start = query.request_parameters["start"]
     if not isinstance(start, int):
-        LOG.debug(f"start is not an int: {start}")
+        LOG.debug(f"not a sequence query: start is not an int: {start}")
         return False
-    return False
+    
+    # region query?
+    if "end" in query.request_parameters:
+        LOG.debug(f"not a sequence query: 'end' key in request parameters")
+        return False
+    
+    return True
 
 def include_resultset_responses(query: Dict[str, List[dict]], qparams: RequestParams):
     LOG.debug("Include Resultset Responses = {}".format(qparams.query.include_resultset_responses))
@@ -86,14 +94,18 @@ def include_resultset_responses(query: Dict[str, List[dict]], qparams: RequestPa
     return query
 
 
-def generate_position_filter_start(key: str, value: List[int]) -> List[AlphanumericFilter]:
+def generate_position_filter_start(key: str, value: List[int], is_region_query:bool) -> List[AlphanumericFilter]:
     LOG.debug("len value = {}".format(len(value)))
     filters = []
     if len(value) == 1:
+        if is_region_query:
+            operator = Operator.GREATER_EQUAL
+        else:
+            operator = Operator.EQUAL
         filters.append(AlphanumericFilter(
             id=VARIANTS_PROPERTY_MAP[key],
             value=[value[0]],
-            operator=Operator.EQUAL
+            operator=operator
         ))
     elif len(value) == 2:
         filters.append(AlphanumericFilter(
@@ -109,14 +121,18 @@ def generate_position_filter_start(key: str, value: List[int]) -> List[Alphanume
     return filters
 
 
-def generate_position_filter_end(key: str, value: List[int]) -> List[AlphanumericFilter]:
+def generate_position_filter_end(key: str, value: List[int], is_region_query:bool) -> List[AlphanumericFilter]:
     LOG.debug("len value = {}".format(len(value)))
     filters = []
     if len(value) == 1:
+        if is_region_query:
+            operator = Operator.LESS_EQUAL
+        else:
+            operator = Operator.EQUAL
         filters.append(AlphanumericFilter(
             id=VARIANTS_PROPERTY_MAP[key],
             value=[value[0]],
-            operator=Operator.EQUAL
+            operator=operator
         ))
     elif len(value) == 2:
         filters.append(AlphanumericFilter(
@@ -135,19 +151,28 @@ def generate_position_filter_end(key: str, value: List[int]) -> List[Alphanumeri
 def apply_request_parameters(query: Dict[str, List[dict]], qparams: RequestParams):
     collection = 'g_variants'
     LOG.debug("Request parameters len = {}".format(len(qparams.query.request_parameters)))
+    # check if it is a region query (has start and end)
+    is_region_query = True
+    for param in ("start", "end"):
+        if param not in qparams.query.request_parameters.keys():
+            is_region_query = False
+            break
+    
+    #LOG.debug(f"is_region_query = {is_region_query}")
+    
     if len(qparams.query.request_parameters) > 0 and "$and" not in query:
         query["$and"] = []
     for k, v in qparams.query.request_parameters.items():
         if k == "start":
             if isinstance(v, str):
                 v = v.split(',')
-            filters = generate_position_filter_start(k, v)
+            filters = generate_position_filter_start(k, v, is_region_query)
             for filter in filters:
                 query["$and"].append(apply_alphanumeric_filter({}, filter, collection))
         elif k == "end":
             if isinstance(v, str):
                 v = v.split(',')
-            filters = generate_position_filter_end(k, v)
+            filters = generate_position_filter_end(k, v, is_region_query)
             for filter in filters:
                 query["$and"].append(apply_alphanumeric_filter({}, filter, collection))
         elif k == "variantMinLength" or k == "variantMaxLength" or k == "mateName":
@@ -356,7 +381,6 @@ def get_individuals_of_variant(entry_id: Optional[str], qparams: RequestParams):
             qparams.query.pagination.limit
         )
     return schema, count, docs
-
 
 def get_runs_of_variant(entry_id: Optional[str], qparams: RequestParams):
     collection = 'g_variants'

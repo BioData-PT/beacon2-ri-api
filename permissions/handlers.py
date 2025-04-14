@@ -30,7 +30,7 @@ STATE_DEFAULT = b64encode( ("https://"+ALLOWED_LOCATIONS[0]+"/api/").encode("asc
 @bearer_required
 # token and registered status are already verified against the username with bearer_required
 # this function gets the datasets specifically authorized for this user
-# returns (specific_datasets, is_registered) in JSON
+# returns (specific_datasets, is_registered, user_id) in JSON
 async def permission(request: Request, username: Optional[str], is_registered:bool):
 
     if request.headers.get('Content-Type') == 'application/json':

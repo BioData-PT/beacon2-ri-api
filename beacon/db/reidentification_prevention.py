@@ -68,6 +68,7 @@ def update_individual_budget(user_id, individual_id, dataset_id, amount):
         if updated_document is None:
             try:
                 new_doc = create_budget_document()
+                updated_document = new_doc
             except Exception as e:
                 # another thread created the document
                 # try to find and modify it again
@@ -173,11 +174,11 @@ def pvalue_strategy(user_id, records, qparams, dataset_id):
 
 
 def apply_rip_logic(user_id, query, records:List[dict], is_authenticated,
-    is_registered, dataset_is_accessible, dataset_id):
+    dataset_is_accessible, dataset_id):
         
     """
     Checks if the query is a sequence or gene query.
-    Checks if query is cached
+    Checks if query is stored in history
     Censors reponse (if needed) using RIP algorithm
     Updates the user's budget for the targeted individuals
     
@@ -197,7 +198,7 @@ def apply_rip_logic(user_id, query, records:List[dict], is_authenticated,
         and not is_aachange_query(query) \
         and not is_sequence_query(query):
             
-        LOG.debug("Query is not a gene id, aminoacid change, or sequence query. Block RIP access")
+        LOG.debug("Query is not a genomic allele, aminoacid change, or sequence query. Block RIP access")
         return []
     
     #(user_id, records, qparams, dataset_id)
@@ -205,8 +206,7 @@ def apply_rip_logic(user_id, query, records:List[dict], is_authenticated,
         user_id=user_id,
         records=records,
         qparams=query,
-        dataset_id=dataset_id,
-        qparams=query
+        dataset_id=dataset_id
     )
     
     return records
