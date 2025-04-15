@@ -18,6 +18,7 @@ uri = 'https://beacon.biodata.pt/api/'  # URI of the Beacon service
 #
 default_beacon_granularity = "record"
 max_beacon_granularity = "record"
+MAX_LIMIT = 100
 
 #
 #  Organization info

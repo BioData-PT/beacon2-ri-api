@@ -320,7 +320,7 @@ def apply_alphanumeric_filter(query: dict, filter: AlphanumericFilter, collectio
         if filter.id == "_position.refseqId":
             filter.value = str(filter.value)
             formatted_value = filter.value
-            LOG.debug(formatted_value)
+            #LOG.debug(formatted_value)
         else:
             formatted_value = format_value(filter.value)
         formatted_operator = format_operator(filter.operator)
@@ -423,7 +423,7 @@ def apply_alphanumeric_filter(query: dict, filter: AlphanumericFilter, collectio
         query = dict_measures
 
 
-    LOG.debug("QUERY: %s", query)
+    LOG.debug("Alphanumeric filter query: %s", query)
     return query
 
 

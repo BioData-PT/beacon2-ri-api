@@ -35,7 +35,7 @@ def get_count(collection: Collection, query: dict) -> int:
 
 def get_documents(collection: Collection, query: dict, skip: int, limit: int) -> Cursor:
     LOG.debug("FINAL QUERY: {}".format(query))
-    return collection.find(query).skip(skip).limit(limit).max_time_ms(10 * 1000)
+    return collection.find(query, projection={"_id":0, "_position":0, "_info":0}).skip(skip).limit(limit).max_time_ms(10 * 1000)
 
 def get_filtering_documents(collection: Collection, query: dict, remove_id: dict,skip: int, limit: int) -> Cursor:
     LOG.debug("FINAL QUERY: {}".format(query))

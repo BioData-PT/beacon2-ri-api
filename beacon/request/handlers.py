@@ -11,6 +11,7 @@ from aiohttp import web
 from aiohttp.web_request import Request
 from bson import json_util
 from beacon import conf
+from beacon.conf import MAX_LIMIT
 from beacon.db import client
 from pymongo import ReturnDocument
 import yaml
@@ -34,8 +35,7 @@ from beacon.db.reidentification_prevention import apply_rip_logic
 
 LOG = logging.getLogger(__name__)
 
-DEFAULT_LIMIT = 10
-MAX_LIMIT = 100
+
 
 def collection_handler(db_fn, request=None):
     async def wrapper(request: Request):
@@ -48,6 +48,7 @@ def collection_handler(db_fn, request=None):
         
         # backup qparams before db_fn modifies it
         qparams_backup = copy.deepcopy(qparams)
+        
         
         # find permissions for user
         
@@ -80,14 +81,18 @@ def generic_handler(db_fn, request=None):
 
         # Get params
         entry_id = request.match_info.get('id', None)
-        json_body = await request.json() if request.method == "POST" and request.has_body and request.can_read_body else {}
-        qparams: RequestParams = RequestParams(**json_body).from_request(request)
+        try:
+            json_body = await request.json() if request.method == "POST" and request.has_body and request.can_read_body else {}
+            qparams: RequestParams = RequestParams(**json_body).from_request(request)
+        except Exception as e:
+            LOG.error(f"Error parsing JSON body: {e}")
+            return web.json_response({"error": "Invalid arguments"}, status=400)
         
         requested_limit = qparams.query.pagination.limit
         # cap max limit if it's higher than max
-        if requested_limit > conf.MAX_LIMIT:
-            qparams.query.pagination = conf.MAX_LIMIT
-            LOG.debug(f"Limit set to {MAX_LIMIT}, was {requested_limit}")
+        if requested_limit > MAX_LIMIT or requested_limit <= 0:
+            qparams.query.pagination = MAX_LIMIT
+            LOG.debug(f"Limit set to {MAX_LIMIT}. User requested {requested_limit}")
 
         LOG.debug(f"Query Params = {qparams}")
 
@@ -161,8 +166,16 @@ def generic_handler(db_fn, request=None):
 
             qparams_dataset.query.filters.append(filter_dataset_id)
             LOG.debug(f"Dataset Qparams = {qparams_dataset}")
-            entity_schema, count, records = db_fn(entry_id, qparams_dataset)
-            
+            try:
+                # make the query
+                entity_schema, count, records = db_fn(entry_id, qparams_dataset)
+            except Exception as e:
+                LOG.error(f"Error querying dataset {dataset_id}: {e}")
+                return web.json_response(
+                    {"error": f"There was an error running your query, please try again later."},
+                    status=500
+                )
+                
             # apply RIP algorithm, if needed (variants only):
             # anonymous users get zero access (not even boolean) to non-accessible datasets
             # authenticated users get RIP algorithm access (boolean, but limited) to non-accessible datasets
@@ -172,16 +185,19 @@ def generic_handler(db_fn, request=None):
                     
                 # convert from mongoDB Cursor because we'll need to iterate over it many times
                 records = list(records)
+                
+                #LOG.debug(f"RECORDS BEFORE RIP: {records}")
                 # updates count and records with the RIP algorithm values if dataset is not accessible
                 records = apply_rip_logic(
                     user_id=user_id,
-                    query=qparams.summary(), 
+                    qparams=qparams, 
                     records=records, 
                     is_authenticated=is_authenticated,
                     dataset_is_accessible=(dataset_id in accessible_datasets),
                     dataset_id=dataset_id
                 )
                 count = len(records)
+                #LOG.debug(f"RECORDS AFTER RIP: {records}")
             
             datasets_query_results[dataset_id] = (count, records)
 

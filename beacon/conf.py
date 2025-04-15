@@ -21,6 +21,7 @@ uri = 'https://ega-archive.org/test-beacon-apis/cineca/'
 #
 default_beacon_granularity = "record"
 max_beacon_granularity = "record"
+MAX_LIMIT = 100
 
 #
 #  Organization info
