@@ -66,7 +66,11 @@ debug:
 extract:
 	# extract filtering terms
 	nohup docker exec beacon python beacon/db/extract_filtering_terms.py &> /tmp/output_extract_filtering_terms.txt &
-	
+
+# performance test
+performance-test:
+	docker compose exec beacon python3 beacon/scripts/query_100_different_variations.py
+
 # only works with justfile (https://github.com/casey/just#recipe-parameters)
 test COLLECTION REQUEST:
 	http POST http://localhost:5050/api/{{COLLECTION}}/ --json < {{REQUEST}}

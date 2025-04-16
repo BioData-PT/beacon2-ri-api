@@ -107,8 +107,13 @@ class RequestParams(CamelModel):
     query: RequestQuery = RequestQuery()
 
     def from_request(self, request: Request) -> Self:
-        if request.method != "POST" or not request.has_body or not request.can_read_body:
+        
+        # GET request or POST but without body
+        if request.method == "GET" or \
+            request.method == "POST" and (not request.has_body or not request.can_read_body):
+            
             for k, v in request.query.items():
+                LOG.debug(f"Request query parameter {k} = {v}")
                 if k == "requestedSchema":
                     self.meta.requested_schemas = [v]
                 elif k == "skip":
@@ -118,7 +123,21 @@ class RequestParams(CamelModel):
                 elif k == "includeResultsetResponses":
                     self.query.include_resultset_responses = IncludeResultsetResponses(v)
                 else:
+                    # all other request parameters
                     self.query.request_parameters[k] = v
+        
+        # convert start and end to an integer array
+        for k,v in self.query.request_parameters.items():
+            if k in ("start", "end"):
+                    if isinstance(v, str):
+                        res = []
+                        for item in v.split(","):
+                            res.append(int(item))
+                        self.query.request_parameters[k] = res
+                        LOG.debug(f"Request query parameter {k} = {res}")
+                    elif isinstance(v, int):
+                        self.query.request_parameters[k] = [v]
+                        
         return self
 
     def summary(self):

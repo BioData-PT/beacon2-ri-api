@@ -30,51 +30,64 @@ VARIANTS_PROPERTY_MAP = {
     "genomicAlleleShortForm":"genomicHGVSId"
 }
 
-def is_genomicallele_query(query: RequestParams) -> bool:
+def is_genomicallele_query(qparams: RequestParams) -> bool:
     """
     Check if the query is a genomic allele query (short form)
     """
-    if query is None:
+    if qparams is None:
         return False
+    
+    LOG.debug(f"query = {qparams}")
 
-    if "genomicAlleleShortForm" in query.request_parameters:
+    if "genomicAlleleShortForm" in qparams.query.request_parameters:
         return True
 
     return False
 
-def is_aachange_query(query: RequestParams) -> bool:
+def is_aachange_query(qparams: RequestParams) -> bool:
     """
     Check if the query is an amino acid change query
     """
-    if query is None:
+    if qparams is None:
         return False
 
-    if "aminoacidChange" in query.request_parameters:
+    if "aminoacidChange" in qparams.query.request_parameters:
         return True
 
     return False
 
-def is_sequence_query(query: RequestParams) -> bool:
+def is_sequence_query(qparams: RequestParams) -> bool:
     """
     Check if the query is a sequence query
     """
-    if query is None:
+    if qparams is None:
         return False
     
     # check required parameters
     parameters = ("start", "referenceName", "alternateBases", "referenceBases")
     for param in parameters:
-        if param not in query.request_parameters or query.request_parameters[param] is None:
+        if param not in qparams.query.request_parameters \
+            or qparams.query.request_parameters.get(param) is None:
+                
             return False
 
     # bracket query?
-    start = query.request_parameters["start"]
+    failed_start_format = False
+    start = qparams.query.request_parameters["start"]
     if not isinstance(start, int):
-        LOG.debug(f"not a sequence query: start is not an int: {start}")
+        if isinstance(start, list):
+            if len(start) != 1: # it's a list but not a single-element
+                failed_start_format = True
+        else:
+            # not an int nor list
+            failed_start_format = True
+    
+    if failed_start_format:
+        LOG.debug(f"not a sequence query: start is not an int or single-element array: {start} ({type(start)})")
         return False
     
     # region query?
-    if "end" in query.request_parameters:
+    if "end" in qparams.query.request_parameters:
         LOG.debug(f"not a sequence query: 'end' key in request parameters")
         return False
     
@@ -186,7 +199,8 @@ def apply_request_parameters(query: Dict[str, List[dict]], qparams: RequestParam
                     value=v
                 ), collection))
             except KeyError:
-                raise web.HTTPNotFound
+                LOG.error(f"Invalid parameter: {k}")
+                raise ValueError(f"Invalid parameter: {k}")
     return query
 
 
