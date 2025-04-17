@@ -7,6 +7,7 @@ from pymongo import ReturnDocument
 from beacon.db import client
 
 from beacon.db.g_variants import is_aachange_query, is_genomicallele_query, is_sequence_query
+from beacon.request.model import RequestParams
 
 LOG = logging.getLogger(__name__)
 
@@ -74,10 +75,11 @@ def update_individual_budget(user_id, individual_id, dataset_id, amount):
                 # try to find and modify it again
                 updated_document = find_and_modify_document(amount)
         
-        # not found again, something is wrong
-        if updated_document is None:
-            LOG.error(f"Couldn't create nor find document: {new_doc}")
-            raise Exception("Couldn't get nor find budget document")
+            # not found again, something is wrong
+            if updated_document is None:
+                LOG.error(f"Couldn't create nor find document: {new_doc}")
+                raise Exception("Couldn't get nor find budget document")
+            
         res_budget = updated_document[FIELD_BUDGET]
         # not enough budget, might need to increment it back
         if res_budget < 0:
@@ -105,16 +107,10 @@ def pvalue_strategy(user_id, records, qparams, dataset_id):
     
     Also updates the history with the response.
     """
-    
-    response: List[dict] = []
 
     for record in records:
         
-        # becomes true and blocks whole variant response if any individual has no budget
-        no_budget:bool = False 
-        
-        individual_ids = set()
-        individuals_to_remove = set()
+        individual_ids = set() # use a Set so we avoid duplicates
 
         # step 4: compute the risk for that query: ri = -log(1 - Di)
         allele_frequency = record.get('alleleFrequency')
@@ -124,10 +120,9 @@ def pvalue_strategy(user_id, records, qparams, dataset_id):
         ri = -(math.log10(1 - Di))
         LOG.debug(f"Query RIP cost: {ri}")
         
-    
         # Check if query has been asked before
         response_history = client.beacon['history'].find_one({
-            FIELD_USER_ID: user_id, 
+            FIELD_USER_ID: user_id,
             FIELD_QUERY: qparams.summary(),
             FIELD_DATASET_ID: dataset_id
         })
@@ -135,7 +130,7 @@ def pvalue_strategy(user_id, records, qparams, dataset_id):
         if response_history is not None:
             LOG.debug(f"Query was previously done by the same user")
             # Return stored answer if query was asked before by the same user
-            response.append(response_history["response"])
+            return response_history["response"]
 
         # fetch individualId from the biosample collection
         case_level_data = record.get('caseLevelData', [])
@@ -143,7 +138,9 @@ def pvalue_strategy(user_id, records, qparams, dataset_id):
             individual_id = case.get('biosampleId')  # biosampleId = individualId
             individual_ids.add(individual_id)
 
-        for individual_id in individual_ids:
+        individual_ids = list(individual_ids) # get list so we can use enumerate
+        
+        for idx, individual_id in enumerate(individual_ids):
 
             # Try to update budget
             budget_info = update_individual_budget(
@@ -152,37 +149,44 @@ def pvalue_strategy(user_id, records, qparams, dataset_id):
                             dataset_id=dataset_id, 
                             amount=ri)
             
-            # No budget or error, don't add record to response
+            # No budget or error, need to return empty response
             if budget_info is None:
-                break
+                LOG.debug(f"RIP: Not enough budget for individual {individual_id}")
+                # revert previous individual updates
+                for prev_individual_id in individual_ids[0:idx]:
+                    update_individual_budget(
+                        user_id=user_id,
+                        individual_id=prev_individual_id,
+                        dataset_id=dataset_id, 
+                        amount=-ri)
+                    
+                return []
             
-        response.append(record)
-
-    # If the query was not asked before, we need to store it
-    if response_history is None:
+        # -- user has budget for all individuals in the response --
         
-        history_document = {
-            "userId": user_id,
-            "query": qparams.summary(),
-            "response": records,
-            "datasetId": dataset_id
-        }
-
-        client.beacon['history'].insert_one(history_document)
+        # If the query was not asked before, we need to store it now
+        if response_history is None:
+            history_document = {
+                "userId": user_id,
+                "query": qparams.summary(),
+                "response": records,
+                "datasetId": dataset_id
+            }
+            client.beacon['history'].insert_one(history_document)
         
-    return response
+    return records
 
-
-def apply_rip_logic(user_id, query, records:List[dict], is_authenticated,
+# facade function for the RIP logic
+def apply_rip_logic(user_id:str, qparams:RequestParams, records:List[dict], is_authenticated,
     dataset_is_accessible, dataset_id):
         
     """
-    Checks if the query is a sequence or gene query.
+    Checks if the query is a sequence, amino-acid change, or gene query.
     Checks if query is stored in history
     Censors reponse (if needed) using RIP algorithm
     Updates the user's budget for the targeted individuals
     
-    Returns (records) response for the dataset
+    Returns the query's record-level response for the dataset
     """
     
     if dataset_is_accessible:
@@ -192,20 +196,22 @@ def apply_rip_logic(user_id, query, records:List[dict], is_authenticated,
     if not is_authenticated:
         # If the dataset is not accessible, we don't want to 
         # return any results to anonymous users
+        LOG.debug("RIP access denied to anonymous user")
         return []
     
-    if not is_genomicallele_query(query) \
-        and not is_aachange_query(query) \
-        and not is_sequence_query(query):
+    if not( is_genomicallele_query(qparams) \
+        or is_aachange_query(qparams) \
+        or is_sequence_query(qparams) ):
             
         LOG.debug("Query is not a genomic allele, aminoacid change, or sequence query. Block RIP access")
         return []
     
+    LOG.debug("RIP access granted to query")
     #(user_id, records, qparams, dataset_id)
     records = pvalue_strategy(
         user_id=user_id,
         records=records,
-        qparams=query,
+        qparams=qparams,
         dataset_id=dataset_id
     )
     

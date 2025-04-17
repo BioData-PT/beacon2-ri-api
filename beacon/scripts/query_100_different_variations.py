@@ -3,6 +3,7 @@ import os
 import subprocess
 from pymongo import MongoClient
 import time
+import re
 
 # Connect to MongoDB
 database_password = os.getenv('DB_PASSWD')
@@ -26,7 +27,7 @@ def clear_budget_and_history_collections():
     print("Cleared budget and history collections.")
 
 
-def query_variant_with_curl(access_token, alt, ref, start, end, vType):
+def query_variant_with_curl(access_token, chr, start, ref, alt):
     # Construct the curl command
     curl_command = [
         'curl',
@@ -39,11 +40,10 @@ def query_variant_with_curl(access_token, alt, ref, start, end, vType):
             }},
             "query": {{
                 "requestParameters": {{
+                    "referenceName": {chr},
                     "alternateBases": "{alt}",
                     "referenceBases": "{ref}",
-                    "start": [{start}],
-                    "end": [{end}],
-                    "variantType": "{vType}"
+                    "start": [{start}]
                 }},
                 "filters": [],
                 "includeResultsetResponses": "HIT",
@@ -91,13 +91,26 @@ def main():
     for variant_id in queried_variant_ids:
         
         print(f"Querying variant id: {variant_id}")
-        variant_full_doc = collection.find_one({'variantInternalId': variant_id})
-        alt = variant_full_doc["variation"]["alternateBases"]
-        ref = variant_full_doc["variation"]["referenceBases"]
-        start = variant_full_doc["_position"]["startInteger"]
-        end = variant_full_doc["_position"]["endInteger"]
-        vType = variant_full_doc["variation"]['variantType']
-        stdout, stderr = query_variant_with_curl(access_token, alt, ref, start, end, vType)
+        
+        # Find variant in the DB. This is wrong! This way the DB will have the result cached :/
+        # variant_full_doc = collection.find_one({'variantInternalId': variant_id})
+        # alt = variant_full_doc["variation"]["alternateBases"]
+        # ref = variant_full_doc["variation"]["referenceBases"]
+        # start = variant_full_doc["_position"]["startInteger"]
+        # end = variant_full_doc["_position"]["endInteger"]
+        # vType = variant_full_doc["variation"]['variantType']
+        
+        match = re.match(r"^chr(.+)_(\d+)_(\w+)_(\w+)$", variant_id)
+        chr = match.group(1)
+        start = int(match.group(2))-1 # start is 0-based
+        ref = match.group(3)
+        alt = match.group(4)
+        
+        stdout, stderr = query_variant_with_curl(access_token=access_token, 
+                                                 chr=chr,
+                                                 start=start,
+                                                 ref=ref,
+                                                 alt=alt)
         
         print(stdout)
         

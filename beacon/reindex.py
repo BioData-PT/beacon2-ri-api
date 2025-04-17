@@ -1,5 +1,5 @@
 from pymongo.mongo_client import MongoClient
-from pymongo import ASCENDING
+from pymongo import ASCENDING, HASHED
 import conf
 import os
 
@@ -38,4 +38,22 @@ client.beacon.genomicVariations.create_index([
     ],
     name="genomic variation & region query"
 )
+
+client.beacon.budget.create_index([
+        ("userId", ASCENDING),
+        ("individualId", ASCENDING),
+        ("datasetId", ASCENDING)
+    ],
+    unique=True,
+    name="budget unique constraint"
+)
+
+client.beacon.history.create_index([
+        ("query", HASHED),
+        ("individualId", ASCENDING),
+        ("datasetId", ASCENDING)
+    ],
+    name="history index"
+)
+
 print("*** Reindex completed OK! ***")
