@@ -25,13 +25,13 @@ idp_client_secret = config('CLIENT_SECRET')
 idp_authorize = config('OIDC_AUTHORIZE_URL')
 idp_callback_url = config('OIDC_CALLBACK_URL')
 idp_issuer = config('OIDC_ISSUER')
-idp_user_info = 'https://login.elixir-czech.org/oidc/userinfo'
+idp_user_info = 'https://login.aai.lifescience-ri.eu/oidc/userinfo'
 #idp_user_info  = 'http://idp:8080/auth/realms/Beacon/protocol/openid-connect/userinfo'
-idp_introspection = 'https://login.elixir-czech.org/oidc/introspect'
+idp_introspection = 'https://login.aai.lifescience-ri.eu/oidc/introspect'
 #idp_introspection = 'http://idp:8000/auth/realms/Beacon/protocol/openid-connect/token/introspect'
 #idp_user_info     = 'http://idp:8080/auth/realms/Beacon/protocol/openid-connect/userinfo'
 #idp_introspection = 'http://idp:8080/auth/realms/Beacon/protocol/openid-connect/token/introspect'
-idp_token_url = 'https://login.elixir-czech.org/oidc/token'
+idp_token_url = 'https://login.aai.lifescience-ri.eu/oidc/token'
 
 ALLOWED_LOCATIONS = config('BEACON_DOMAINS', cast=lambda v: [s.strip() for s in v.split(',')])
 SCOPES = set(["openid", "email", "profile", "country", "ga4gh_passport_v1"])
