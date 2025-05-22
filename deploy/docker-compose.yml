@@ -12,12 +12,12 @@ services:
   # beacon-ri-tools
   ###########################################
 
-  beacon-ri-tools:
-    image: beacon2ri/beacon_reference_implementation:v2.0.0
-    hostname: beacon-ri-tools
-    networks:
-      - beacon-priv 
-    tty: true
+  # beacon-ri-tools:
+   # image: beacon2ri/beacon_reference_implementation:v2.0.0
+   # hostname: beacon-ri-tools
+   # networks:
+   #   - beacon-priv 
+   # tty: true
 
   ###########################################
   # training-ui
@@ -32,6 +32,7 @@ services:
       - 9500:8080
     networks:
       - beacon-priv
+      - pub
 
   ###########################################
   # MongoDB Database
@@ -147,6 +148,19 @@ services:
     #entrypoint: ['/bin/sleep','100000000']
     working_dir: '/beacon'
     entrypoint: ['python','-m', 'permissions']
+
+  ###########################################
+  # Nginx reverse proxy
+  ###########################################
+  nginx:
+    image: nginx:latest
+    ports:
+      - 5060:5060
+    volumes:
+      - ./icons:/etc/beacon/icons:ro
+      - ./nginx_confs/nginx_docker.conf:/etc/nginx/nginx.conf:ro
+    networks:
+      - pub   
 
   ###########################################
   # Local Identity Provider
