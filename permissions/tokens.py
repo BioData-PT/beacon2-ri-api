@@ -71,8 +71,7 @@ def parse_visa(visa, user_id):
         if payload['exp'] < time.time():
             raise web.HTTPUnauthorized(text="Visa is expired")
         
-        # unify @lifescience and @elixir-europe user ids
-        jwt_sub = payload["sub"].replace("@lifescience-ri.eu","@elixir-europe.org")
+        jwt_sub = payload["sub"]
         
         if jwt_sub != user_id:
             raise web.HTTPUnauthorized(text=f"Visa is not for the right user.\n"

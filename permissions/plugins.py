@@ -136,12 +136,15 @@ class RemsPermissions(Permissions):
         headers = CIMultiDict()
         headers.add('content-type', "application/json")
         headers.add('x-rems-api-key', REMS_API_KEY)
-        headers.add('x-rems-2user-id', REMS_API_USER)
-        
+        headers.add('x-rems-user-id', REMS_API_USER)
+        response_raw = None # avoid having error when logging error
         try:
-            response = requests.get(url=request_uri, headers=headers).json()
+            response_raw = requests.get(url=request_uri, headers=headers)
+            response = response_raw.json()
         except Exception as e:
-            LOG.error(f"Error while getting permissions from REMS:\n{str(e)}")
+            LOG.error(f"Error while getting permissions from REMS:\n"
+            f"response raw = {response_raw.__dict__}\n"
+            f"{str(response_raw.status_code)} - {str(e)}")
             return []
         
         LOG.debug(f"Response from REMS:\n\n{response}\n")
